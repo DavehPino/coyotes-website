@@ -88,14 +88,14 @@ export async function playbackUrlFor(key: string): Promise<{ url: string; expire
   return { url, expiresAt: new Date(Date.now() + ttl * 1000).toISOString() }
 }
 
-/** Título legible a partir de la clave: "videos/2026-09-10 vs Pumas.mp4" → "2026-09-10 vs Pumas". */
+/** Título legible a partir de la clave: "games/2026-09-06-vs-onas/set-1.mp4" → "set 1". */
 export function titleFromKey(key: string): string {
   const file = key.split('/').pop() ?? key
   return file.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || file
 }
 
 /**
- * Slug del partido según la carpeta: "<prefijo>partidos/2026-09-10-vs-pumas/set-1.mp4" → "2026-09-10-vs-pumas".
+ * Slug del partido según la carpeta: "<prefijo>games/2026-09-06-vs-onas/set-1.mp4" → "2026-09-06-vs-onas".
  * Devuelve null si el video no está dentro de una carpeta de partido.
  */
 export function matchSlugFromKey(key: string): string | null {

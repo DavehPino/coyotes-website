@@ -183,8 +183,10 @@ Por ahora **solo partidos pasados** (`played_on <= hoy`), del más reciente al m
 Los archivos **se suben fuera de la app** (consola de R2, rclone, Cyberduck). Convención de carpetas:
 
 ```
-<S3_VIDEO_PREFIX>partidos/<slug-del-partido>/<archivo>.mp4   → se vincula al partido con ese slug
-<S3_VIDEO_PREFIX><cualquier-otra-ruta>.mp4                  → queda sin partido
+<S3_VIDEO_PREFIX>games/<slug-del-partido>/<archivo>.mp4   → se vincula al partido con ese slug
+<S3_VIDEO_PREFIX><cualquier-otra-ruta>.mp4               → queda sin partido
+
+Ejemplo real: games/2026-09-06-vs-onas/set-1.mp4  (S3_VIDEO_PREFIX vacío)
 ```
 
 - Crea `api/cron/sync-videos.ts` y **sustituye el cron `keepalive`** por este en `vercel.json`
@@ -296,7 +298,7 @@ desde el dashboard. También está previsto mostrar partidos próximos en la sec
 - [ ] El carrusel muestra los partidos pasados del seed con marcador y resultado, y funciona con swipe, flechas y teclado.
 - [ ] El detalle de un partido muestra parciales y videos, reproduce un video del bucket (público o con URL firmada)
       y cambia de video desde la playlist.
-- [ ] Subir `videos/partidos/<slug>/set-1.mp4` y ejecutar el cron (`curl` con `CRON_SECRET`) lo vincula al partido
+- [ ] Subir `games/<slug>/set-1.mp4` y ejecutar el cron (`curl` con `CRON_SECRET`) lo vincula al partido
       como "Set 1". Una segunda ejecución no crea duplicados.
 - [ ] La API solo responde a `GET`; `sync-videos` responde 401 sin `CRON_SECRET`.
 - [ ] Todas las vistas funcionan a 375 px de ancho y con teclado.

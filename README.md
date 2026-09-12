@@ -39,8 +39,8 @@ npm i -g vercel        # CLI de Vercel para `vercel dev` y deploy
 1. En Cloudflare → R2, crea el bucket `coyotes-videos`.
 2. Crea un API token con permiso **Object Read** sobre ese bucket y cópialo en `S3_ACCESS_KEY_ID` y `S3_SECRET_ACCESS_KEY`.
 3. Usa `S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com` y `S3_REGION=auto`.
-4. Sube los videos de cada partido a `videos/partidos/<slug-del-partido>/`, por ejemplo
-   `videos/partidos/2026-09-10-vs-pumas/set-1.mp4`. El slug debe coincidir con `matches.slug`.
+4. Sube los videos de cada partido a `games/<slug-del-partido>/`, por ejemplo
+   `games/2026-09-06-vs-onas/set-1.mp4`. El slug debe coincidir con `matches.slug`.
 5. Para la reproducción: deja `STORAGE_PUBLIC_BASE_URL` vacío si quieres URLs firmadas temporales (bucket privado),
    o pon ahí el dominio público del bucket.
 
