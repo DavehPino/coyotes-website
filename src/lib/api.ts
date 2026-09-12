@@ -12,12 +12,9 @@ export class ApiError extends Error {
   }
 }
 
-export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
-  const headers = new Headers(init.headers)
-  if (init.body && !headers.has('Content-Type')) headers.set('Content-Type', 'application/json')
-
-  const res = await fetch(`/api${path}`, { ...init, headers, credentials: 'same-origin' })
-  const body = res.status === 204 ? null : await res.json().catch(() => null)
+export async function apiGet<T>(path: string, signal?: AbortSignal): Promise<T> {
+  const res = await fetch(`/api${path}`, { signal, credentials: 'same-origin' })
+  const body = await res.json().catch(() => null)
 
   if (!res.ok) {
     const err = (body as ApiErrorBody | null)?.error
@@ -25,10 +22,3 @@ export async function api<T>(path: string, init: RequestInit = {}): Promise<T> {
   }
   return body as T
 }
-
-export const apiGet = <T>(path: string) => api<T>(path)
-export const apiPost = <T>(path: string, data?: unknown) =>
-  api<T>(path, { method: 'POST', body: data === undefined ? undefined : JSON.stringify(data) })
-export const apiPatch = <T>(path: string, data: unknown) =>
-  api<T>(path, { method: 'PATCH', body: JSON.stringify(data) })
-export const apiDelete = <T>(path: string) => api<T>(path, { method: 'DELETE' })

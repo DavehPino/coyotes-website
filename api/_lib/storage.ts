@@ -9,7 +9,7 @@ import {
   type _Object,
 } from '@aws-sdk/client-s3'
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
-import { VIDEO_FILE_EXTENSIONS } from '../../shared/domain.js'
+import { MATCH_VIDEOS_FOLDER, VIDEO_FILE_EXTENSIONS } from '../../shared/domain.js'
 import { env } from './env.js'
 
 let client: S3Client | undefined
@@ -92,6 +92,16 @@ export async function playbackUrlFor(key: string): Promise<{ url: string; expire
 export function titleFromKey(key: string): string {
   const file = key.split('/').pop() ?? key
   return file.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || file
+}
+
+/**
+ * Slug del partido según la carpeta: "<prefijo>partidos/2026-09-10-vs-pumas/set-1.mp4" → "2026-09-10-vs-pumas".
+ * Devuelve null si el video no está dentro de una carpeta de partido.
+ */
+export function matchSlugFromKey(key: string): string | null {
+  const relative = key.slice(env.s3.videoPrefix.length)
+  const [folder, slug, ...rest] = relative.split('/')
+  return folder === MATCH_VIDEOS_FOLDER && slug && rest.length > 0 ? slug : null
 }
 
 function toBucketVideo(obj: _Object): BucketVideo {

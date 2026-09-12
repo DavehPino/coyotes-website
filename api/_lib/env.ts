@@ -12,14 +12,6 @@ function optional(name: string): string | undefined {
 }
 
 export const env = {
-  get internalAccessCode() {
-    return required('INTERNAL_ACCESS_CODE')
-  },
-  get sessionSecret() {
-    const secret = required('SESSION_SECRET')
-    if (secret.length < 32) throw new Error('SESSION_SECRET debe tener al menos 32 caracteres')
-    return secret
-  },
   get supabaseUrl() {
     return required('SUPABASE_URL')
   },
@@ -40,8 +32,5 @@ export const env = {
   },
   get cronSecret() {
     return optional('CRON_SECRET')
-  },
-  get isLocal() {
-    return process.env.VERCEL_ENV === undefined || process.env.VERCEL_ENV === 'development'
   },
 }

@@ -6,11 +6,9 @@
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
   "headers": [
     {
-      "source": "/vestuario(.*)",
-      "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-        { "key": "Cache-Control", "value": "no-store" }
-      ]
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "dashboard\\..*" }],
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {
       "source": "/api/(.*)",

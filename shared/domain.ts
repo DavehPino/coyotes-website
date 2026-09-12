@@ -51,7 +51,9 @@ export type VideoSource = (typeof VIDEO_SOURCES)[number]
 export const VIDEO_STATUSES = ['pending', 'ready', 'archived'] as const
 export type VideoStatus = (typeof VIDEO_STATUSES)[number]
 
-export const VIDEO_TEAM_ROLES = ['home', 'away', 'involved'] as const
-export type VideoTeamRole = (typeof VIDEO_TEAM_ROLES)[number]
+export type MatchOutcome = 'win' | 'loss' | 'pending'
+
+/** Carpeta del bucket cuyos subdirectorios son slugs de partido: videos/partidos/<slug>/archivo.mp4 */
+export const MATCH_VIDEOS_FOLDER = 'partidos'
 
 export const VIDEO_FILE_EXTENSIONS = ['.mp4', '.mov', '.m4v', '.webm', '.mkv'] as const
