@@ -1,0 +1,41 @@
+@import 'tailwindcss';
+
+/*
+ * Paleta Coyotes — extraída del logo (public/brand/logo-coyotes.jpeg).
+ * Uso: bg-coyote-black, text-coyote-gold, border-coyote-orange, etc.
+ */
+@theme {
+  --color-coyote-black: #0a0a0a; /* fondo principal */
+  --color-coyote-night: #151311; /* superficies / tarjetas */
+  --color-coyote-ember: #2b170c; /* superficies cálidas, hover */
+  --color-coyote-rust: #7a3412; /* acentos oscuros, bordes cálidos */
+  --color-coyote-orange: #f07c13; /* acento secundario (pelaje) */
+  --color-coyote-gold: #f5b014; /* acento principal (contorno) */
+  --color-coyote-yellow: #f8d31c; /* resaltado puntual (ojos) */
+  --color-coyote-silver: #e4e4e4; /* texto principal */
+  --color-coyote-ash: #9a9a9a; /* texto secundario */
+  --color-coyote-steel: #3a3a3a; /* bordes neutros */
+
+  --font-display: 'Teko', 'Arial Narrow', sans-serif;
+  --font-sans: 'Inter', ui-sans-serif, system-ui, sans-serif;
+}
+
+@layer base {
+  html {
+    color-scheme: dark;
+  }
+
+  body {
+    @apply bg-coyote-black font-sans text-coyote-silver antialiased;
+  }
+
+  h1,
+  h2,
+  h3 {
+    @apply font-display tracking-wide uppercase;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-coyote-gold;
+  }
+}
