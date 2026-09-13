@@ -177,7 +177,7 @@ Después del sync, edita en el Table Editor el `title` de cada video y, si hace 
 | Método | Ruta | Respuesta |
 |---|---|---|
 | GET | `/api/teams` | Rivales por nombre (sin caché) |
-| GET | `/api/activities?week=YYYY-MM-DD` | Actividades de la semana (lunes) con el rival embebido |
+| GET | `/api/activities?from=YYYY-MM-DD&limit=30` | Próximas actividades no canceladas, de la más cercana a la más lejana, con el rival embebido |
 | GET | `/api/matches?until=YYYY-MM-DD&limit=50` | Partidos jugados hasta la fecha, del más reciente al más antiguo |
 | GET | `/api/matches/:slug` | Detalle con parciales y videos ordenados (404 si no existe) |
 | GET | `/api/videos/:id/playback` | URL de reproducción (pública o firmada temporal) |
