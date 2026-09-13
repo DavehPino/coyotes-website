@@ -1,7 +1,18 @@
-// Acceso a datos de partidos. Solo lectura por ahora.
-import type { MatchDetail, MatchSummary, TeamSummary, Video } from '../../shared/schemas.js'
+// Acceso a datos de partidos: lecturas del dashboard y alta desde /api/admin/matches.
+import { addDays, todayIsoDate } from '../../shared/dates.js'
+import { matchSlugBase, tallySets } from '../../shared/matches.js'
+import type {
+  MatchCreated,
+  MatchCreateInput,
+  MatchDetail,
+  MatchSummary,
+  TeamSummary,
+  Video,
+} from '../../shared/schemas.js'
+import { badRequest } from './http.js'
 import { compareVideos, outcomeOf, TEAM_SUMMARY_SELECT, toSetScores, toVideo } from './mappers.js'
 import { db, type Tables } from './supabase.js'
+import { createRivalTeam, deleteTeam, getRivalTeam } from './teams.js'
 
 type MatchRow = Tables['matches']['Row']
 
@@ -62,5 +73,83 @@ export async function getMatchBySlug(slug: string): Promise<MatchDetail | null> 
     set_scores: toSetScores(row.set_scores),
     summary: row.summary,
     videos,
+  }
+}
+
+export type MatchRef = Pick<MatchRow, 'id' | 'slug' | 'played_on'>
+
+export async function getMatchRef(id: string): Promise<MatchRef | null> {
+  const { data, error } = await db().from('matches').select('id,slug,played_on').eq('id', id).maybeSingle()
+  if (error) throw error
+  return data
+}
+
+const UNIQUE_VIOLATION = '23505'
+const SLUG_ATTEMPTS = 3
+
+/** Primer slug libre: base, base-2, base-3... */
+async function freeSlug(base: string): Promise<string> {
+  const { data, error } = await db().from('matches').select('slug').like('slug', `${base}%`)
+  if (error) throw error
+  const taken = new Set(data.map((row) => row.slug))
+  let slug = base
+  for (let n = 2; taken.has(slug); n += 1) slug = `${base}-${n}`
+  return slug
+}
+
+/**
+ * Crea el partido y, si hace falta, el rival. Siempre como visitante (is_home = false).
+ * Si el partido no se puede guardar, el rival recién creado se borra para no dejar restos.
+ */
+export async function createMatch(input: MatchCreateInput): Promise<MatchCreated> {
+  // Tolerancia de un día: el reloj del servidor puede ir por detrás de la hora local del equipo.
+  if (input.played_on > addDays(todayIsoDate(), 1)) {
+    throw badRequest('La fecha del partido no puede estar en el futuro')
+  }
+
+  let opponent: TeamSummary
+  let createdTeamId: string | null = null
+  if (input.opponent.kind === 'existing') {
+    const team = await getRivalTeam(input.opponent.team_id)
+    if (!team) throw badRequest('El equipo rival elegido no existe')
+    opponent = team
+  } else {
+    opponent = await createRivalTeam(input.opponent.team)
+    createdTeamId = opponent.id
+  }
+
+  const { won, lost } = tallySets(input.set_scores)
+  const base = matchSlugBase(input.played_on, opponent.name)
+
+  try {
+    for (let attempt = 1; ; attempt += 1) {
+      const slug = await freeSlug(base)
+      const { data, error } = await db()
+        .from('matches')
+        .insert({
+          slug,
+          played_on: input.played_on,
+          start_time: input.start_time,
+          opponent_team_id: opponent.id,
+          is_home: false,
+          location: input.location,
+          competition: input.competition,
+          phase: input.phase,
+          sets_won: won,
+          sets_lost: lost,
+          set_scores: input.set_scores,
+        })
+        .select('id,slug')
+        .single()
+      // Un alta simultánea se quedó con el mismo slug: se recalcula.
+      if (error?.code === UNIQUE_VIOLATION && attempt < SLUG_ATTEMPTS) continue
+      if (error) throw error
+      return { id: data.id, slug: data.slug, opponent }
+    }
+  } catch (err) {
+    if (createdTeamId) {
+      await deleteTeam(createdTeamId).catch((cleanupError: unknown) => console.error(cleanupError))
+    }
+    throw err
   }
 }

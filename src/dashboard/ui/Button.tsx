@@ -23,20 +23,24 @@ const SIZES: Record<Size, string> = {
   icon: 'size-11 p-0 md:size-10',
 }
 
-export function Button({ variant = 'secondary', size = 'md', static: isStatic, className = '', type = 'button', ...rest }: ButtonProps) {
-  return (
-    <button
-      type={type}
-      className={[
-        'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium select-none',
-        'transition-[background-color,color,box-shadow,scale] duration-150 ease-out',
-        'disabled:pointer-events-none disabled:opacity-50',
-        isStatic ? '' : 'active:scale-[0.96]',
-        VARIANTS[variant],
-        SIZES[size],
-        className,
-      ].join(' ')}
-      {...rest}
-    />
-  )
+/** Clases del botón, también para enlaces con aspecto de botón (`<Link className={buttonClasses(...)}>`). */
+export function buttonClasses({
+  variant = 'secondary',
+  size = 'md',
+  static: isStatic = false,
+  className = '',
+}: Pick<ButtonProps, 'variant' | 'size' | 'static' | 'className'> = {}) {
+  return [
+    'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium select-none',
+    'transition-[background-color,color,box-shadow,scale] duration-150 ease-out',
+    'disabled:pointer-events-none disabled:opacity-50',
+    isStatic ? '' : 'active:scale-[0.96]',
+    VARIANTS[variant],
+    SIZES[size],
+    className,
+  ].join(' ')
+}
+
+export function Button({ variant, size, static: isStatic, className, type = 'button', ...rest }: ButtonProps) {
+  return <button type={type} className={buttonClasses({ variant, size, static: isStatic, className })} {...rest} />
 }

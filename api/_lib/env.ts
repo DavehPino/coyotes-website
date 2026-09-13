@@ -30,6 +30,10 @@ export const env = {
       signedUrlTtlSeconds: Number(optional('SIGNED_URL_TTL_SECONDS') ?? 3600),
     }
   },
+  /** Palabra clave para cargar datos desde el dashboard. Sin ella, /api/admin/* queda cerrado. */
+  get adminSafeword() {
+    return optional('ADMIN_SAFEWORD')
+  },
   get cronSecret() {
     return optional('CRON_SECRET')
   },

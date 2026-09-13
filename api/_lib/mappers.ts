@@ -1,10 +1,12 @@
 // Conversión de filas de Postgres a los contratos de shared/schemas.ts.
 // Los enums viajan como `text` en la base de datos; aquí se validan contra shared/domain.ts.
 import {
+  ACTIVITY_CATEGORIES,
   ACTIVITY_TYPES,
   VIDEO_CATEGORIES,
   VIDEO_SOURCES,
   VIDEO_STATUSES,
+  type ActivityCategory,
   type ActivityType,
   type MatchOutcome,
   type VideoCategory,
@@ -33,6 +35,7 @@ export function toActivity(row: ActivityRow, opponent: TeamSummary | null): Acti
     id: row.id,
     title: row.title,
     activity_type: oneOf<ActivityType>(ACTIVITY_TYPES, row.activity_type, 'otro'),
+    category: oneOf<ActivityCategory>(ACTIVITY_CATEGORIES, row.category, 'general'),
     activity_date: row.activity_date,
     week_start: row.week_start ?? row.activity_date,
     start_time: row.start_time,

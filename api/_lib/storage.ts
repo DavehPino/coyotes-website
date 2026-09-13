@@ -1,6 +1,6 @@
 // Acceso al bucket de videos vía API S3 (Cloudflare R2, AWS S3, MinIO, Backblaze B2...).
-// Los videos se suben por fuera de la app (consola de R2, rclone, Cyberduck...);
-// aquí solo se listan y se generan URLs de reproducción.
+// Aquí se listan los videos y se generan URLs de reproducción. Las subidas desde el
+// dashboard viven en uploads.ts; también se pueden subir por fuera (consola de R2, rclone...).
 import {
   GetObjectCommand,
   HeadObjectCommand,
@@ -92,6 +92,11 @@ export async function playbackUrlFor(key: string): Promise<{ url: string; expire
 export function titleFromKey(key: string): string {
   const file = key.split('/').pop() ?? key
   return file.replace(/\.[^.]+$/, '').replace(/[_-]+/g, ' ').trim() || file
+}
+
+/** Carpeta de un partido dentro del bucket: "<prefijo>games/<slug>/". */
+export function matchFolderKey(slug: string): string {
+  return `${env.s3.videoPrefix}${MATCH_VIDEOS_FOLDER}/${slug}/`
 }
 
 /**

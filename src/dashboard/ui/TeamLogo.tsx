@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { LOGO_SRC, TEAM_NAME } from '@/config'
 import type { TeamSummary } from '@shared/schemas'
 
@@ -30,14 +31,23 @@ function initials(team: TeamSummary): string {
     .toUpperCase()
 }
 
-/** Escudo circular; si el rival no tiene logo se muestran sus iniciales. */
+/** Escudo circular; si el rival no tiene logo, o no carga, se muestran sus iniciales. */
 export function TeamLogo({ team, size = 'md', className = '', loading = 'lazy' }: TeamLogoProps) {
   const name = team?.name ?? TEAM_NAME
   const src = team ? team.logo_url : LOGO_SRC
+  const [failedSrc, setFailedSrc] = useState<string | null>(null)
   const classes = ['shrink-0 rounded-full', SIZES[size], className].join(' ')
 
-  if (src) {
-    return <img src={src} alt={`Escudo de ${name}`} loading={loading} className={`${classes} bg-coyote-black object-cover`} />
+  if (src && src !== failedSrc) {
+    return (
+      <img
+        src={src}
+        alt={`Escudo de ${name}`}
+        loading={loading}
+        onError={() => setFailedSrc(src)}
+        className={`${classes} bg-coyote-black object-cover`}
+      />
+    )
   }
   return (
     <span

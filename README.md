@@ -39,12 +39,30 @@ npm i -g vercel        # CLI de Vercel para `vercel dev` y deploy
 ### 3. Bucket de videos: Cloudflare R2 (10 GB gratis y sin coste por salida de datos)
 
 1. En Cloudflare → R2, crea el bucket `coyotes-videos`.
-2. Crea un API token con permiso **Object Read** sobre ese bucket y cópialo en `S3_ACCESS_KEY_ID` y `S3_SECRET_ACCESS_KEY`.
+2. Crea un API token con permiso **Object Read & Write** sobre ese bucket y cópialo en `S3_ACCESS_KEY_ID` y
+   `S3_SECRET_ACCESS_KEY`. Con solo lectura se ven los videos, pero la subida desde el dashboard responde
+   "Las credenciales del bucket no permiten subir videos".
 3. Usa `S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com` y `S3_REGION=auto`.
-4. Sube los videos de cada partido a `games/<slug-del-partido>/` (ver [convención del bucket](#convención-del-bucket-de-videos)).
+4. En Bucket → Settings → **CORS Policy**, añade esta regla. El navegador sube los videos directo al bucket, así que
+   hace falta `PUT` desde los dominios del dashboard y exponer `ETag`:
+
+   ```json
+   [
+     {
+       "AllowedOrigins": ["https://tudominio.com", "https://coyotes.vercel.app", "http://localhost:5173"],
+       "AllowedMethods": ["PUT"],
+       "AllowedHeaders": ["*"],
+       "ExposeHeaders": ["ETag"],
+       "MaxAgeSeconds": 3600
+     }
+   ]
+   ```
+
+   Las URLs de preview de Vercel cambian en cada deploy: si quieres subir desde una preview, añade su dominio.
 5. Para la reproducción: deja `STORAGE_PUBLIC_BASE_URL` vacío si quieres URLs firmadas temporales (bucket privado),
    o pon ahí el dominio público del bucket.
 6. Define `CRON_SECRET` (cualquier cadena larga): protege el cron de sincronización.
+7. Define `ADMIN_SAFEWORD` (una frase larga): es la palabra clave del botón **Cargar partido**.
 
 Para usar **AWS S3**, deja `S3_ENDPOINT` vacío y pon la región real.
 
@@ -91,9 +109,25 @@ Con `npm run dev` las llamadas a `/api` no tienen servidor. Para desarrollar el 
 `<dominio>/dashboard` no está enlazado desde la web pública y va marcado como `noindex`, pero **no tiene login**:
 cualquiera que conozca la URL puede ver actividades, partidos y videos. Usuarios y roles están previstos más adelante.
 
-## Cómo cargar actividades y partidos
+## Cargar un partido desde el dashboard
 
-Todavía no hay administración en el dashboard: los datos se editan en **Supabase → Table Editor**
+En **Partidos → Cargar partido** se pide la palabra clave (`ADMIN_SAFEWORD`, se recuerda mientras la pestaña siga
+abierta) y se abre un formulario en tres pasos:
+
+1. **Rival:** uno existente o uno nuevo con nombre, abreviatura y URL del logo opcionales. Se guarda con
+   `is_own_team = false` y sin categoría ni ciudad.
+2. **Partido:** fecha, hora, competición (`Liga Podio` o `Amistoso`), fase, lugar y parciales. Los sets ganados y
+   perdidos se calculan de los parciales y el partido se guarda siempre como visitante (`is_home = false`). El slug
+   se genera solo (`2026-09-20-vs-las-onas`, con `-2` si ya existe).
+3. **Videos (opcional):** se suben al guardar, directo del navegador al bucket con subida multiparte (trozos de 25 MB,
+   3 en paralelo, reintentos automáticos) en `games/<slug>/`, y quedan vinculados al partido. Máximo 10 GB por video.
+   Si una subida falla, el partido ya está guardado y se puede reintentar desde la misma pantalla.
+
+Si el rival es nuevo y el partido no se puede guardar, el rival se borra para no dejar restos.
+
+## Cómo cargar actividades y datos a mano
+
+Las actividades, los resúmenes y las portadas todavía se editan en **Supabase → Table Editor**
 (o con SQL). `supabase/seed.sql` es un ejemplo completo y se puede ejecutar varias veces sin duplicar filas:
 `npx supabase db query --linked -f supabase/seed.sql`.
 
@@ -115,7 +149,8 @@ Todavía no hay administración en el dashboard: los datos se editan en **Supaba
 
 ### Convención del bucket de videos
 
-Los archivos se suben fuera de la app (consola de R2, rclone, Cyberduck…):
+El formulario de alta sube los videos a esta ruta. También se pueden subir por fuera (consola de R2, rclone,
+Cyberduck…) siguiendo la misma convención:
 
 ```
 <S3_VIDEO_PREFIX>games/<slug-del-partido>/<archivo>.mp4   → se vincula al partido con ese slug
@@ -137,15 +172,26 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://<dominio>/api/cron/sync-vid
 
 Después del sync, edita en el Table Editor el `title` de cada video y, si hace falta, `set_number` y `sort_order`.
 
-## API (solo lectura)
+## API
 
 | Método | Ruta | Respuesta |
 |---|---|---|
+| GET | `/api/teams` | Rivales por nombre (sin caché) |
 | GET | `/api/activities?week=YYYY-MM-DD` | Actividades de la semana (lunes) con el rival embebido |
 | GET | `/api/matches?until=YYYY-MM-DD&limit=50` | Partidos jugados hasta la fecha, del más reciente al más antiguo |
 | GET | `/api/matches/:slug` | Detalle con parciales y videos ordenados (404 si no existe) |
 | GET | `/api/videos/:id/playback` | URL de reproducción (pública o firmada temporal) |
 | GET | `/api/cron/sync-videos` | Sincroniza el bucket; requiere `Authorization: Bearer <CRON_SECRET>` |
+
+Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` codificada con `encodeURIComponent`.
+
+| Método | Ruta | Respuesta |
+|---|---|---|
+| POST | `/api/admin/verify` | `{ ok: true }` o 401 |
+| POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
+| POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
+| POST | `/api/admin/uploads/complete` | 201 Video: cierra la subida y registra el video en el partido |
+| POST | `/api/admin/uploads/abort` | Descarta los trozos de una subida cancelada o fallida |
 
 Los contratos viven en `shared/schemas.ts`; el acceso a datos está centralizado en `api/_lib/` para poder añadir
 autenticación más adelante sin rehacer rutas.

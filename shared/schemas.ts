@@ -1,13 +1,16 @@
 // Contratos de la API (validados en backend, tipos compartidos con el frontend).
-// Por ahora el dashboard es de solo lectura: los datos se cargan desde el Table Editor
-// de Supabase. Los esquemas de escritura llegarán con usuarios y roles de administrador.
+// Lecturas públicas para el dashboard; las escrituras (/api/admin/*) exigen la palabra clave.
 import { z } from 'zod'
-import type {
-  ActivityType,
-  MatchOutcome,
-  VideoCategory,
-  VideoSource,
-  VideoStatus,
+import {
+  MATCH_COMPETITIONS,
+  MAX_SETS,
+  MAX_VIDEO_BYTES,
+  type ActivityCategory,
+  type ActivityType,
+  type MatchOutcome,
+  type VideoCategory,
+  type VideoSource,
+  type VideoStatus,
 } from './domain.js'
 
 const isoDate = z.iso.date()
@@ -30,6 +33,7 @@ export type Activity = {
   id: string
   title: string
   activity_type: ActivityType
+  category: ActivityCategory
   activity_date: string // YYYY-MM-DD
   week_start: string // lunes, YYYY-MM-DD
   start_time: string | null // HH:MM:SS
@@ -40,16 +44,11 @@ export type Activity = {
   opponent: TeamSummary | null
 }
 
-export const activityListQuery = z.object({
-  // Lunes de la semana a consultar (YYYY-MM-DD). Por defecto, la semana actual.
-  week: isoDate.optional(),
+export const upcomingActivitiesQuery = z.object({
+  // Primer día a incluir (YYYY-MM-DD): el "hoy" de quien consulta. Por defecto, hoy en el servidor.
+  from: isoDate.optional(),
+  limit: z.coerce.number().int().min(1).max(100).default(30),
 })
-
-export type WeekActivities = {
-  week_start: string
-  week_end: string
-  items: Activity[]
-}
 
 // ─── Videos ──────────────────────────────────────────────────────────────────
 export type Video = {
@@ -84,8 +83,8 @@ export type SyncResult = {
 
 // ─── Matches ─────────────────────────────────────────────────────────────────
 export const setScoreSchema = z.object({
-  us: z.number().int().min(0),
-  them: z.number().int().min(0),
+  us: z.number().int().min(0).max(99),
+  them: z.number().int().min(0).max(99),
 })
 export type SetScore = z.infer<typeof setScoreSchema>
 
@@ -117,6 +116,95 @@ export const matchListQuery = z.object({
   until: isoDate.optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
 })
+
+// ─── Escritura desde el dashboard (/api/admin/*) ─────────────────────────────
+// La palabra clave viaja en la cabecera ADMIN_SAFEWORD_HEADER (shared/domain.ts).
+
+/** Texto opcional: recorta espacios y convierte la cadena vacía en null. */
+const optionalText = (max: number) =>
+  z
+    .string()
+    .trim()
+    .max(max)
+    .nullish()
+    .transform((value) => value || null)
+
+const isHttpUrl = (value: string) => {
+  try {
+    return ['http:', 'https:'].includes(new URL(value).protocol)
+  } catch {
+    return false
+  }
+}
+
+export const newTeamInput = z.object({
+  name: z.string().trim().min(1, 'Escribe el nombre del equipo').max(80),
+  short_name: optionalText(4).transform((value) => value?.toUpperCase() ?? null),
+  logo_url: optionalText(2048).refine((value) => value === null || isHttpUrl(value), 'La URL del logo no es válida'),
+})
+export type NewTeamInput = z.infer<typeof newTeamInput>
+
+export const matchCreateInput = z.object({
+  opponent: z.discriminatedUnion('kind', [
+    z.object({ kind: z.literal('existing'), team_id: z.uuid() }),
+    z.object({ kind: z.literal('new'), team: newTeamInput }),
+  ]),
+  played_on: isoDate,
+  start_time: z
+    .string()
+    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora no válida')
+    .nullable(),
+  location: optionalText(120),
+  competition: z.enum(MATCH_COMPETITIONS),
+  phase: optionalText(60),
+  set_scores: z
+    .array(setScoreSchema.refine((set) => set.us !== set.them, 'Un set no puede terminar empatado'))
+    .min(1, 'Carga al menos un set')
+    .max(MAX_SETS),
+})
+export type MatchCreateInput = z.infer<typeof matchCreateInput>
+
+export type MatchCreated = { id: string; slug: string; opponent: TeamSummary }
+
+const videoFileName = z.string().trim().min(1).max(200)
+
+export const uploadStartInput = z.object({
+  match_id: z.uuid(),
+  file_name: videoFileName,
+  content_type: z.string().max(100).nullable(),
+  size_bytes: z.number().int().positive().max(MAX_VIDEO_BYTES),
+})
+export type UploadStartInput = z.infer<typeof uploadStartInput>
+
+/** Subida multiparte: el navegador envía cada trozo directo al bucket con su URL firmada. */
+export type UploadStart = {
+  key: string
+  upload_id: string
+  part_size: number
+  parts: { part_number: number; url: string }[]
+  expires_at: string
+}
+
+const uploadRef = {
+  match_id: z.uuid(),
+  key: z.string().min(1).max(1024),
+  upload_id: z.string().min(1).max(1024),
+}
+
+export const uploadCompleteInput = z.object({
+  ...uploadRef,
+  parts: z
+    .array(z.object({ part_number: z.number().int().min(1).max(10_000), etag: z.string().min(1).max(200) }))
+    .min(1)
+    .max(10_000),
+  title: z.string().trim().min(1).max(120),
+  set_number: z.number().int().min(1).max(MAX_SETS).nullable(),
+  sort_order: z.number().int().min(0).max(1000),
+})
+export type UploadCompleteInput = z.infer<typeof uploadCompleteInput>
+
+export const uploadAbortInput = z.object(uploadRef)
+export type UploadAbortInput = z.infer<typeof uploadAbortInput>
 
 // ─── Errores ─────────────────────────────────────────────────────────────────
 export type ApiErrorBody = {

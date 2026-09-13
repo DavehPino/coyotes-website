@@ -24,6 +24,10 @@ export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
   otro: "Otro",
 };
 
+/** Categoría de la actividad: las de Liga Podio se destacan y van primero en el carrusel. */
+export const ACTIVITY_CATEGORIES = ["general", "podio"] as const;
+export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
+
 export const VIDEO_CATEGORIES = [
   "partido",
   "entrenamiento",
@@ -63,3 +67,16 @@ export const VIDEO_FILE_EXTENSIONS = [
   ".webm",
   ".mkv",
 ] as const;
+
+/** Competiciones que se pueden elegir al cargar un partido desde el dashboard. */
+export const MATCH_COMPETITIONS = ["Liga Podio", "Amistoso"] as const;
+export type MatchCompetition = (typeof MATCH_COMPETITIONS)[number];
+
+/** Un partido de vóley tiene como máximo 5 sets (igual que `videos.set_number`). */
+export const MAX_SETS = 5;
+
+/** Tamaño máximo de un video subido desde el dashboard (10 GiB, el plan gratuito de R2). */
+export const MAX_VIDEO_BYTES = 10 * 1024 ** 3;
+
+/** Cabecera con la palabra clave de carga, codificada con encodeURIComponent (admite tildes y ñ). */
+export const ADMIN_SAFEWORD_HEADER = "x-admin-safeword";

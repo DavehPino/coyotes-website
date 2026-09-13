@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "dev:full": "vercel dev",
+    "dev:full": "node scripts/dev-full.mjs",
     "build": "tsc -b && vite build",
     "typecheck": "tsc -b",
     "preview": "vite preview",

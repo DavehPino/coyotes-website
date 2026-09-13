@@ -1,6 +1,6 @@
 import type { HTMLAttributes } from 'react'
 
-export type ChipTone = 'gold' | 'gold-solid' | 'orange' | 'yellow' | 'rust' | 'silver' | 'ash' | 'steel'
+export type ChipTone = 'gold' | 'gold-solid' | 'orange' | 'yellow' | 'rust' | 'silver' | 'ash' | 'steel' | 'podio'
 
 const TONES: Record<ChipTone, string> = {
   gold: 'bg-coyote-gold/15 text-coyote-gold',
@@ -11,6 +11,7 @@ const TONES: Record<ChipTone, string> = {
   silver: 'bg-coyote-silver/12 text-coyote-silver',
   ash: 'bg-coyote-ash/12 text-coyote-ash',
   steel: 'bg-coyote-steel/70 text-coyote-silver',
+  podio: 'bg-podio-mist text-podio-deep',
 }
 
 type ChipProps = HTMLAttributes<HTMLSpanElement> & {

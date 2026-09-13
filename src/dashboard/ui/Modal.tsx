@@ -9,14 +9,30 @@ type ModalProps = {
   /** Texto pequeño encima del título (p.ej. tipo o fecha). */
   eyebrow?: ReactNode
   children: ReactNode
+  /** Pie fijo bajo el contenido desplazable (botones de acción). */
+  footer?: ReactNode
+  /** false: ni Esc, ni clic en el fondo, ni botón de cerrar (p.ej. durante una subida). */
+  dismissible?: boolean
+  /** Al cambiar, el contenido vuelve arriba (p.ej. al pasar de paso en un formulario). */
+  scrollResetKey?: string | number
 }
 
 /**
  * Diálogo modal sobre `<dialog>` nativo: Esc, foco atrapado y fondo inerte sin código extra.
- * Al cerrarse devuelve el foco al elemento que lo abrió.
+ * Al abrirse enfoca el elemento con `data-autofocus`; al cerrarse devuelve el foco a quien lo abrió.
  */
-export function Modal({ open, onClose, title, eyebrow, children }: ModalProps) {
+export function Modal({
+  open,
+  onClose,
+  title,
+  eyebrow,
+  children,
+  footer,
+  dismissible = true,
+  scrollResetKey,
+}: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
+  const contentRef = useRef<HTMLDivElement>(null)
   const openerRef = useRef<HTMLElement | null>(null)
   const titleId = useId()
 
@@ -26,20 +42,30 @@ export function Modal({ open, onClose, title, eyebrow, children }: ModalProps) {
     if (open && !dialog.open) {
       openerRef.current = document.activeElement instanceof HTMLElement ? document.activeElement : null
       dialog.showModal()
+      dialog.querySelector<HTMLElement>('[data-autofocus]')?.focus()
     } else if (!open && dialog.open) {
       dialog.close()
       openerRef.current?.focus()
     }
   }, [open])
 
+  useEffect(() => {
+    contentRef.current?.scrollTo({ top: 0 })
+  }, [scrollResetKey])
+
   return (
     <dialog
       ref={dialogRef}
       aria-labelledby={titleId}
+      onCancel={(event) => {
+        // Esc: el cierre lo decide el estado de React, nunca el navegador por su cuenta.
+        event.preventDefault()
+        if (dismissible) onClose()
+      }}
       onClose={onClose}
       onClick={(event) => {
         // Clic en el fondo (fuera del panel): el propio <dialog> es el objetivo.
-        if (event.target === event.currentTarget) onClose()
+        if (dismissible && event.target === event.currentTarget) onClose()
       }}
       className={[
         'm-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl bg-coyote-night p-0 text-coyote-silver shadow-border',
@@ -51,18 +77,27 @@ export function Modal({ open, onClose, title, eyebrow, children }: ModalProps) {
       ].join(' ')}
     >
       <div className="flex max-h-[85dvh] flex-col">
-        <header className="flex items-start gap-3 p-4 pb-2 pl-5">
+        <header className="flex min-h-14 items-start gap-3 p-4 pb-2 pl-5">
           <div className="min-w-0 flex-1">
             {eyebrow && <div className="mb-1.5 flex flex-wrap items-center gap-1.5">{eyebrow}</div>}
             <h2 id={titleId} className="text-3xl leading-none text-coyote-gold">
               {title}
             </h2>
           </div>
-          <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="-mt-1 -mr-1">
-            <CloseIcon strokeWidth={2} />
-          </Button>
+          {dismissible && (
+            <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="-mt-1 -mr-1">
+              <CloseIcon strokeWidth={2} />
+            </Button>
+          )}
         </header>
-        <div className="overflow-y-auto px-5 pt-2 pb-5">{children}</div>
+        <div ref={contentRef} className="overflow-y-auto px-5 pt-2 pb-5">
+          {children}
+        </div>
+        {footer && (
+          <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-coyote-steel/60 px-5 py-3">
+            {footer}
+          </footer>
+        )}
       </div>
     </dialog>
   )

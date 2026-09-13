@@ -1,49 +1,38 @@
 import { useState } from 'react'
-import { useSearchParams } from 'react-router'
 import { todayIsoDate } from '@shared/dates'
 import type { Activity } from '@shared/schemas'
-import { ErrorState, PageHeader } from '../ui'
+import { Carousel, EmptyState, ErrorState, PageHeader } from '../ui'
+import { CAROUSEL_TRACK_CLASSES, carouselSlideClasses } from '../ui/Carousel'
+import { CalendarIcon } from '../ui/icons'
 import { ActivityDetailModal } from './ActivityDetailModal'
-import { usePrefetchAdjacentWeeks, useWeekActivities } from './api'
-import { WeekBoard, WeekBoardSkeleton } from './WeekBoard'
-import { WeekNav } from './WeekNav'
-import { WEEK_PARAM, currentWeekStart, weekFromSearch } from './week'
+import { useUpcomingActivities } from './api'
+import { UpcomingActivityCard, UpcomingActivityCardSkeleton } from './UpcomingActivityCard'
+import { orderUpcoming } from './upcoming'
 
-/** Tablero semanal de actividades (solo lectura). La semana va en ?week=YYYY-MM-DD. */
+// En móvil asoma la siguiente tarjeta para invitar a deslizar.
+const SLIDE_WIDTH = 'basis-[88%] sm:basis-[62%] lg:basis-[44%] xl:basis-[34%]'
+
+/** Carrusel informativo con las próximas actividades; la primera es la de Liga Podio más cercana. */
 export function ActivitiesPage() {
-  const [params, setParams] = useSearchParams()
-  const weekStart = weekFromSearch(params)
-  const thisWeek = currentWeekStart()
   const today = todayIsoDate()
   const [selected, setSelected] = useState<Activity | null>(null)
-
-  const query = useWeekActivities(weekStart)
-  usePrefetchAdjacentWeeks(weekStart)
-
-  const goToWeek = (week: string) => {
-    setParams((prev) => {
-      if (week === thisWeek) prev.delete(WEEK_PARAM)
-      else prev.set(WEEK_PARAM, week)
-      return prev
-    })
-  }
+  const query = useUpcomingActivities(today)
+  const items = query.data ? orderUpcoming(query.data) : []
 
   return (
     <section>
-      <PageHeader
-        title="Actividades"
-        actions={
-          <WeekNav
-            weekStart={weekStart}
-            isCurrentWeek={weekStart === thisWeek}
-            onChange={goToWeek}
-            onReset={() => goToWeek(thisWeek)}
-          />
-        }
-      />
+      <PageHeader title="Actividades" description="Lo que viene para el equipo." />
 
       {query.isPending ? (
-        <WeekBoardSkeleton />
+        <div className="overflow-hidden" aria-busy aria-label="Cargando actividades">
+          <div className={CAROUSEL_TRACK_CLASSES}>
+            {[0, 1, 2].map((i) => (
+              <div key={i} className={carouselSlideClasses(SLIDE_WIDTH)}>
+                <UpcomingActivityCardSkeleton />
+              </div>
+            ))}
+          </div>
+        </div>
       ) : query.isError ? (
         <ErrorState
           title="No se pudieron cargar las actividades"
@@ -51,8 +40,22 @@ export function ActivitiesPage() {
           onRetry={() => void query.refetch()}
           retrying={query.isFetching}
         />
+      ) : items.length === 0 ? (
+        <EmptyState
+          icon={<CalendarIcon className="size-8" />}
+          title="No hay actividades próximas"
+          description="Cuando se programe una actividad aparecerá aquí."
+        />
       ) : (
-        <WeekBoard weekStart={weekStart} items={query.data.items} today={today} onOpen={setSelected} />
+        <Carousel
+          items={items}
+          label="Próximas actividades"
+          getKey={(activity) => activity.id}
+          renderSlide={(activity) => <UpcomingActivityCard activity={activity} today={today} onOpen={setSelected} />}
+          slideClassName={SLIDE_WIDTH}
+          prevLabel="Actividad anterior"
+          nextLabel="Actividad siguiente"
+        />
       )}
 
       <ActivityDetailModal activity={selected} onClose={() => setSelected(null)} />

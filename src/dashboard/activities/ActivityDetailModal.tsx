@@ -3,7 +3,6 @@ import { ACTIVITY_TYPE_LABELS } from '@shared/domain'
 import type { Activity } from '@shared/schemas'
 import { formatDateFull, formatTimeRange } from '@/lib/dates'
 import { Chip, Modal, TeamLogo } from '../ui'
-import { ACTIVITY_TYPE_TONES } from './activityTypeStyles'
 
 type ActivityDetailModalProps = {
   activity: Activity | null
@@ -34,20 +33,14 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
       open={activity !== null}
       onClose={onClose}
       title={shown?.title ?? ''}
-      eyebrow={
-        shown && (
-          <>
-            <Chip tone={ACTIVITY_TYPE_TONES[shown.activity_type]}>{ACTIVITY_TYPE_LABELS[shown.activity_type]}</Chip>
-            {shown.is_cancelled && <Chip tone="orange">Cancelada</Chip>}
-          </>
-        )
-      }
+      eyebrow={shown?.category === 'podio' && <Chip tone="podio">Podio</Chip>}
     >
       {shown && (
         <dl className="flex flex-col gap-4">
+          <Field label="Tipo">{ACTIVITY_TYPE_LABELS[shown.activity_type]}</Field>
           <Field label="Fecha">{formatDateFull(shown.activity_date)}</Field>
           <Field label="Horario">
-            <span className="tabular-nums">{time ?? 'Sin hora'}</span>
+            <span className="tabular-nums">{time ?? 'Hora por confirmar'}</span>
           </Field>
           {shown.location && <Field label="Lugar">{shown.location}</Field>}
           {shown.opponent && (
@@ -63,7 +56,6 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
               <span className="whitespace-pre-line">{shown.description}</span>
             </Field>
           )}
-          <Field label="Estado">{shown.is_cancelled ? 'Cancelada' : 'Confirmada'}</Field>
         </dl>
       )}
     </Modal>

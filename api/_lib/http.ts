@@ -18,6 +18,7 @@ export const badRequest = (message: string, details?: unknown) =>
   new HttpError(400, 'bad_request', message, details)
 export const unauthorized = (message = 'No autorizado') => new HttpError(401, 'unauthorized', message)
 export const notFound = (message = 'No encontrado') => new HttpError(404, 'not_found', message)
+export const conflict = (message: string) => new HttpError(409, 'conflict', message)
 
 /** Lecturas del dashboard: cacheables en el navegador durante un minuto. */
 export const CACHE_PRIVATE = 'private, max-age=60'
@@ -32,8 +33,8 @@ export function cached<T>(data: T, cacheControl: string = CACHE_PRIVATE): Respon
   return json(data, { headers: { 'Cache-Control': cacheControl } })
 }
 
-export function noStore<T>(data: T): Response {
-  return json(data, { headers: { 'Cache-Control': NO_STORE } })
+export function noStore<T>(data: T, status = 200): Response {
+  return json(data, { status, headers: { 'Cache-Control': NO_STORE } })
 }
 
 export function errorResponse(err: unknown): Response {
