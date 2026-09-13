@@ -1,6 +1,7 @@
 // Utilidades HTTP para Vercel Functions con la firma Web estándar (Request → Response).
 import type { z } from 'zod'
 import type { ApiErrorBody } from '../../shared/schemas.js'
+import { env } from './env.js'
 
 export class HttpError extends Error {
   constructor(
@@ -18,18 +19,31 @@ export const badRequest = (message: string, details?: unknown) =>
 export const unauthorized = (message = 'No autorizado') => new HttpError(401, 'unauthorized', message)
 export const notFound = (message = 'No encontrado') => new HttpError(404, 'not_found', message)
 
+/** Lecturas del dashboard: cacheables en el navegador durante un minuto. */
+export const CACHE_PRIVATE = 'private, max-age=60'
+/** URLs firmadas y crons: nunca se cachean. */
+export const NO_STORE = 'no-store'
+
 export function json<T>(data: T, init: ResponseInit = {}): Response {
   return Response.json(data, init)
+}
+
+export function cached<T>(data: T, cacheControl: string = CACHE_PRIVATE): Response {
+  return json(data, { headers: { 'Cache-Control': cacheControl } })
+}
+
+export function noStore<T>(data: T): Response {
+  return json(data, { headers: { 'Cache-Control': NO_STORE } })
 }
 
 export function errorResponse(err: unknown): Response {
   if (err instanceof HttpError) {
     const body: ApiErrorBody = { error: { code: err.code, message: err.message, details: err.details } }
-    return json(body, { status: err.status })
+    return json(body, { status: err.status, headers: { 'Cache-Control': NO_STORE } })
   }
   console.error(err)
   const body: ApiErrorBody = { error: { code: 'internal_error', message: 'Error interno del servidor' } }
-  return json(body, { status: 500 })
+  return json(body, { status: 500, headers: { 'Cache-Control': NO_STORE } })
 }
 
 type Handler = (request: Request) => Promise<Response>
@@ -64,10 +78,19 @@ export function parseQuery<S extends z.ZodType>(request: Request, schema: S): z.
   return result.data
 }
 
-/** Último segmento de la ruta, p.ej. /api/videos/<id> → <id>. */
+/** Último segmento de la ruta, p.ej. /api/videos/<id> → <id>. `fromEnd` cuenta hacia atrás. */
 export function pathParam(request: Request, fromEnd = 0): string {
   const segments = new URL(request.url).pathname.split('/').filter(Boolean)
   const value = segments[segments.length - 1 - fromEnd]
   if (!value) throw badRequest('Falta un parámetro en la ruta')
   return decodeURIComponent(value)
+}
+
+/**
+ * Crons de Vercel: la plataforma envía `Authorization: Bearer <CRON_SECRET>`.
+ * Sin secreto configurado el endpoint queda cerrado.
+ */
+export function requireCronSecret(request: Request): void {
+  const secret = env.cronSecret
+  if (!secret || request.headers.get('authorization') !== `Bearer ${secret}`) throw unauthorized()
 }

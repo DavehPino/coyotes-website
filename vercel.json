@@ -6,17 +6,16 @@
   "rewrites": [{ "source": "/((?!api/).*)", "destination": "/index.html" }],
   "headers": [
     {
-      "source": "/(.*)",
-      "has": [{ "type": "host", "value": "dashboard\\..*" }],
+      "source": "/dashboard(.*)",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {
       "source": "/api/(.*)",
-      "headers": [
-        { "key": "X-Robots-Tag", "value": "noindex, nofollow" },
-        { "key": "Cache-Control", "value": "no-store" }
-      ]
+      "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     }
   ],
-  "crons": [{ "path": "/api/cron/keepalive", "schedule": "0 12 * * *" }]
+  "functions": {
+    "api/cron/sync-videos.ts": { "maxDuration": 60 }
+  },
+  "crons": [{ "path": "/api/cron/sync-videos", "schedule": "0 12 * * *" }]
 }

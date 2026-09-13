@@ -1,27 +1,32 @@
 import { createBrowserRouter, Navigate } from 'react-router'
-import { NotFoundPage } from '@/public/NotFoundPage'
+import { DASHBOARD_PATH } from '@/config'
 import { DashboardLayout } from './DashboardLayout'
+import { NotFoundPage } from './NotFoundPage'
 
-export const router = createBrowserRouter([
+// Todas las rutas y enlaces del dashboard son relativos a /dashboard (basename).
+export const router = createBrowserRouter(
+  [
   {
     path: '/',
     element: <DashboardLayout />,
     children: [
       // Actividades es la sección por defecto
-      { index: true, element: <Navigate to="/actividades" replace /> },
+      { index: true, element: <Navigate to="/activities" replace /> },
       {
-        path: 'actividades',
+        path: 'activities',
         lazy: async () => ({ Component: (await import('./activities/ActivitiesPage')).ActivitiesPage }),
       },
       {
-        path: 'partidos',
+        path: 'matches',
         lazy: async () => ({ Component: (await import('./matches/MatchesPage')).MatchesPage }),
       },
       {
-        path: 'partidos/:slug',
+        path: 'matches/:slug',
         lazy: async () => ({ Component: (await import('./matches/MatchDetailPage')).MatchDetailPage }),
       },
       { path: '*', element: <NotFoundPage /> },
     ],
   },
-])
+  ],
+  { basename: DASHBOARD_PATH },
+)

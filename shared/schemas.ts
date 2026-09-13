@@ -122,3 +122,11 @@ export const matchListQuery = z.object({
 export type ApiErrorBody = {
   error: { code: string; message: string; details?: unknown }
 }
+
+// ─── Rutas ───────────────────────────────────────────────────────────────────
+/** Mismo formato que el CHECK `matches_slug_format` de la migración. */
+export const matchSlugSchema = z
+  .string()
+  .min(1)
+  .max(120)
+  .regex(/^[a-z0-9]+(-[a-z0-9]+)*$/)

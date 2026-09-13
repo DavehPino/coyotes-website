@@ -1,0 +1,92 @@
+// Conversión de filas de Postgres a los contratos de shared/schemas.ts.
+// Los enums viajan como `text` en la base de datos; aquí se validan contra shared/domain.ts.
+import {
+  ACTIVITY_TYPES,
+  VIDEO_CATEGORIES,
+  VIDEO_SOURCES,
+  VIDEO_STATUSES,
+  type ActivityType,
+  type MatchOutcome,
+  type VideoCategory,
+  type VideoSource,
+  type VideoStatus,
+} from '../../shared/domain.js'
+import { setScoreSchema, type Activity, type SetScore, type TeamSummary, type Video } from '../../shared/schemas.js'
+import type { Tables } from './supabase.js'
+
+type ActivityRow = Tables['weekly_activities']['Row']
+type VideoRow = Tables['videos']['Row']
+
+export const TEAM_SUMMARY_SELECT = 'id,name,short_name,logo_url'
+
+function oneOf<T extends string>(values: readonly T[], value: string, fallback: T): T {
+  return (values as readonly string[]).includes(value) ? (value as T) : fallback
+}
+
+export function toTeamSummary(row: TeamSummary | null): TeamSummary | null {
+  if (!row) return null
+  return { id: row.id, name: row.name, short_name: row.short_name, logo_url: row.logo_url }
+}
+
+export function toActivity(row: ActivityRow, opponent: TeamSummary | null): Activity {
+  return {
+    id: row.id,
+    title: row.title,
+    activity_type: oneOf<ActivityType>(ACTIVITY_TYPES, row.activity_type, 'otro'),
+    activity_date: row.activity_date,
+    week_start: row.week_start ?? row.activity_date,
+    start_time: row.start_time,
+    end_time: row.end_time,
+    location: row.location,
+    description: row.description,
+    is_cancelled: row.is_cancelled,
+    opponent: toTeamSummary(opponent),
+  }
+}
+
+export function toVideo(row: VideoRow): Video {
+  return {
+    id: row.id,
+    title: row.title,
+    description: row.description,
+    source: oneOf<VideoSource>(VIDEO_SOURCES, row.source, 'bucket'),
+    storage_key: row.storage_key,
+    url: row.url,
+    thumbnail_url: row.thumbnail_url,
+    content_type: row.content_type,
+    size_bytes: row.size_bytes,
+    duration_seconds: row.duration_seconds,
+    category: oneOf<VideoCategory>(VIDEO_CATEGORIES, row.category, 'sin_clasificar'),
+    recorded_on: row.recorded_on,
+    tags: row.tags,
+    status: oneOf<VideoStatus>(VIDEO_STATUSES, row.status, 'pending'),
+    match_id: row.match_id,
+    set_number: row.set_number,
+    sort_order: row.sort_order,
+  }
+}
+
+export function outcomeOf(setsWon: number | null, setsLost: number | null): MatchOutcome {
+  if (setsWon === null || setsLost === null) return 'pending'
+  if (setsWon > setsLost) return 'win'
+  if (setsWon < setsLost) return 'loss'
+  return 'pending'
+}
+
+/** Valida el jsonb de parciales; descarta entradas mal formadas en vez de romper la respuesta. */
+export function toSetScores(raw: unknown): SetScore[] {
+  if (!Array.isArray(raw)) return []
+  return raw.flatMap((item) => {
+    const parsed = setScoreSchema.safeParse(item)
+    return parsed.success ? [parsed.data] : []
+  })
+}
+
+/** Orden de los videos dentro de un partido: set_number (null primero), sort_order y título. */
+export function compareVideos(a: Video, b: Video): number {
+  const setA = a.set_number ?? -1
+  const setB = b.set_number ?? -1
+  if (setA !== setB) return setA - setB
+  if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
+  return a.title.localeCompare(b.title, 'es')
+}
