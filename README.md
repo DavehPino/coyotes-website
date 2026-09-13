@@ -99,6 +99,7 @@ npm run dev:full     # frontend + /api con vercel dev (requiere `vercel link`)
 | `npm run dev` / `dev:full` | Desarrollo |
 | `npm run build` | Typecheck (app + api) y build de producción |
 | `npm run typecheck` | Solo TypeScript |
+| `npm run check:functions` | Comprueba que `api/` no supere las 12 Vercel Functions del plan Hobby (corre en `build`) |
 | `npm run db:types` | Genera los tipos de Supabase (`shared/database.types.ts`) tras cada migración |
 
 Con `npm run dev` las llamadas a `/api` no tienen servidor. Para desarrollar el frontend contra otro backend local,
@@ -207,3 +208,25 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 
 Los contratos viven en `shared/schemas.ts`; el acceso a datos está centralizado en `api/_lib/` para poder añadir
 autenticación más adelante sin rehacer rutas.
+
+### Límite de 12 funciones (plan Hobby de Vercel)
+
+Vercel crea una Serverless Function por **cada archivo** de `api/` (salvo los que empiezan por `_`, como `api/_lib/`)
+y el plan Hobby rechaza el deploy con más de 12:
+`No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan`.
+
+Por eso las rutas de escritura se agrupan en archivos con un segmento dinámico y una tabla de handlers (`routeFor`
+en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
+
+| Archivo | Rutas |
+|---|---|
+| `api/admin/[action].ts` | `/api/admin/verify`, `/api/admin/activities`, `/api/admin/matches` |
+| `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
+
+Al añadir un endpoint:
+
+- **No crees un archivo nuevo** si puede ir en uno existente: una escritura de admin es una entrada más en
+  `api/admin/[action].ts`; una lectura nueva puede agruparse igual (p.ej. `api/[resource].ts`).
+- La lógica va en `api/_lib/`, que no cuenta como función.
+- `npm run build` (y por tanto el deploy) empieza con `npm run check:functions`, que falla si `api/` supera las 12
+  funciones y lista cuáles son.

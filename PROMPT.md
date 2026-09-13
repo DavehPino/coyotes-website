@@ -238,7 +238,9 @@ Errores: `{ error: { code, message, details? } }` (ya lo implementa `handle()`).
 | GET | `/api/cron/sync-videos` | `SyncResult` (requiere `CRON_SECRET`) |
 
 Implementación: un archivo por ruta (`api/activities/index.ts`, `api/matches/index.ts`, `api/matches/[slug].ts`,
-`api/videos/[id]/playback.ts`, …), usando `handle`, `parseQuery` y `pathParam`. Usa embeds de PostgREST
+`api/videos/[id]/playback.ts`, …), usando `handle`, `parseQuery` y `pathParam`.
+El plan Hobby de Vercel admite como máximo 12 funciones (un archivo de `api/` = una función): cuando una ruta nueva
+pasaría del límite, agrúpala en un archivo con segmento dinámico (como `api/admin/[action].ts`); ver README → API. Usa embeds de PostgREST
 (`opponent:teams(id,name,short_name,logo_url)`, `videos(count)`) para evitar consultas N+1.
 Respuestas de lectura con `Cache-Control: private, max-age=60` (salvo `playback` y `cron`: `no-store`).
 Ajusta `vercel.json` para que el header `no-store` genérico de `/api` no pise ese caché.

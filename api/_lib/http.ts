@@ -47,7 +47,7 @@ export function errorResponse(err: unknown): Response {
   return json(body, { status: 500, headers: { 'Cache-Control': NO_STORE } })
 }
 
-type Handler = (request: Request) => Promise<Response>
+export type Handler = (request: Request) => Promise<Response>
 
 /** Envuelve un handler para convertir cualquier excepción en una respuesta JSON coherente. */
 export function handle(handler: Handler): Handler {
@@ -85,6 +85,15 @@ export function pathParam(request: Request, fromEnd = 0): string {
   const value = segments[segments.length - 1 - fromEnd]
   if (!value) throw badRequest('Falta un parámetro en la ruta')
   return decodeURIComponent(value)
+}
+
+/**
+ * Handler de un segmento de ruta dentro de una función que agrupa varias rutas (p.ej. /api/admin/:action).
+ * 404 si el segmento no está en la tabla.
+ */
+export function routeFor<T>(routes: Record<string, T>, key: string): T {
+  if (!Object.hasOwn(routes, key)) throw notFound()
+  return routes[key]
 }
 
 /**

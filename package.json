@@ -6,7 +6,8 @@
   "scripts": {
     "dev": "vite",
     "dev:full": "node scripts/dev-full.mjs",
-    "build": "tsc -b && vite build",
+    "build": "node scripts/check-functions.mjs && tsc -b && vite build",
+    "check:functions": "node scripts/check-functions.mjs",
     "typecheck": "tsc -b",
     "preview": "vite preview",
     "db:types": "supabase gen types typescript --linked --schema public > shared/database.types.ts"
