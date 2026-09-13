@@ -19,10 +19,10 @@ import type {
   Video,
 } from '../../shared/schemas.js'
 import { env } from './env.js'
-import { badRequest, conflict, HttpError, notFound } from './http.js'
+import { badRequest, conflict, notFound } from './http.js'
 import { toVideo } from './mappers.js'
 import { getMatchRef, type MatchRef } from './matches.js'
-import { headVideo, isVideoKey, matchFolderKey, publicUrlFor, s3 } from './storage.js'
+import { headVideo, isVideoKey, matchFolderKey, publicUrlFor, s3, storage } from './storage.js'
 import { db } from './supabase.js'
 
 /** 25 MiB por trozo: pocos reintentos caros en redes móviles y muy por debajo de 10.000 trozos. */
@@ -30,23 +30,6 @@ const PART_SIZE = 25 * 1024 * 1024
 /** Las URLs de los trozos duran lo suficiente para subir varios GB con una conexión lenta. */
 const PART_URL_TTL_SECONDS = 6 * 60 * 60
 const MAX_NAME_ATTEMPTS = 100
-
-/** Traduce los errores de permisos del bucket a un mensaje accionable. */
-async function storage<T>(operation: () => Promise<T>): Promise<T> {
-  try {
-    return await operation()
-  } catch (err) {
-    const name = err instanceof Error ? err.name : ''
-    if (name === 'AccessDenied' || name === 'Forbidden') {
-      throw new HttpError(
-        503,
-        'storage_forbidden',
-        'Las credenciales del bucket no permiten subir videos. El token de R2 necesita permiso de lectura y escritura.',
-      )
-    }
-    throw err
-  }
-}
 
 async function requireMatch(matchId: string): Promise<MatchRef> {
   const match = await getMatchRef(matchId)

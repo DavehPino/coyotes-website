@@ -138,9 +138,22 @@ Formulario en tres pasos:
 En los dos formularios, si el rival es nuevo y la actividad o el partido no se puede guardar, el rival se borra para
 no dejar restos.
 
+### Editar un partido
+
+En el detalle de un partido (`/dashboard/matches/<slug>`), **Editar partido** abre un diálogo con dos pestañas (también
+con la palabra clave):
+
+- **Datos del partido:** rival (existente o uno nuevo), fecha, hora, competición, fase, lugar y parciales. El slug
+  **no cambia** aunque cambien la fecha o el rival: es la URL del partido y la carpeta de sus videos en el bucket. Si
+  cambia la fecha, los videos que tenían la fecha anterior en `recorded_on` pasan a la nueva. El rival anterior no se
+  borra.
+- **Videos:** cambiar el título y el set de cada video, eliminarlo (se borra el archivo del bucket y después la fila;
+  en los externos solo la fila) y subir videos nuevos a `games/<slug>/`, igual que en el alta. El botón
+  **Gestionar** de la sección de videos abre directamente esta pestaña.
+
 ## Cómo editar datos a mano
 
-Editar o cancelar actividades, los resúmenes y las portadas todavía se hace en **Supabase → Table Editor**
+Editar o cancelar actividades, borrar partidos, los resúmenes y las portadas todavía se hace en **Supabase → Table Editor**
 (o con SQL). `supabase/seed.sql` es un ejemplo completo y se puede ejecutar varias veces sin duplicar filas:
 `npx supabase db query --linked -f supabase/seed.sql`.
 
@@ -182,7 +195,8 @@ curl -H "Authorization: Bearer $CRON_SECRET" https://<dominio>/api/cron/sync-vid
 # → {"scanned":3,"created":3,"updated":0,"linked_to_match":3,"missing_in_bucket":0}
 ```
 
-Después del sync, edita en el Table Editor el `title` de cada video y, si hace falta, `set_number` y `sort_order`.
+Después del sync, cambia el título y el set de cada video desde **Editar partido → Videos** (o `sort_order` en el Table
+Editor).
 
 ## API
 
@@ -202,6 +216,9 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/verify` | `{ ok: true }` o 401 |
 | POST | `/api/admin/activities` | 201 Activity: crea la actividad y, si se pide, el rival (409 si el nombre ya existe) |
 | POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
+| POST | `/api/admin/match-update` | `{ id, slug, opponent }`: edita el partido `id` con los campos del alta; el slug no cambia |
+| POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
+| POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
 | POST | `/api/admin/uploads/complete` | 201 Video: cierra la subida y registra el video en el partido |
 | POST | `/api/admin/uploads/abort` | Descarta los trozos de una subida cancelada o fallida |
@@ -220,7 +237,7 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 
 | Archivo | Rutas |
 |---|---|
-| `api/admin/[action].ts` | `/api/admin/verify`, `/api/admin/activities`, `/api/admin/matches` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/matches`, `/match-update`, `/video-update`, `/video-delete` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
 
 Al añadir un endpoint:

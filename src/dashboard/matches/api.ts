@@ -61,6 +61,11 @@ export async function refreshMatchData(queryClient: QueryClient, slug?: string):
   void queryClient.invalidateQueries({ queryKey: rivalsKey })
 }
 
+/** Aplica un cambio ya guardado al detalle en caché, para verlo al instante mientras llega el refresco. */
+export function patchMatchDetail(queryClient: QueryClient, slug: string, update: (match: MatchDetail) => MatchDetail) {
+  queryClient.setQueryData<MatchDetail>(matchesKeys.detail(slug), (match) => match && update(match))
+}
+
 export const useMatches = () => useQuery(matchListOptions())
 export const useMatch = (slug: string) => useQuery(matchDetailOptions(slug))
 export const useVideoPlayback = (videoId: string) => useQuery(playbackOptions(videoId))

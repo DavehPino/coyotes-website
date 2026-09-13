@@ -180,6 +180,20 @@ export type MatchCreateInput = z.infer<typeof matchCreateInput>
 
 export type MatchCreated = { id: string; slug: string; opponent: TeamSummary }
 
+/** Edición de un partido: los mismos campos que el alta. El slug (y la carpeta del bucket) no cambian. */
+export const matchUpdateInput = matchCreateInput.extend({ id: z.uuid() })
+export type MatchUpdateInput = z.infer<typeof matchUpdateInput>
+
+export const videoUpdateInput = z.object({
+  id: z.uuid(),
+  title: z.string().trim().min(1, 'Ponle un título al video').max(120),
+  set_number: z.number().int().min(1).max(MAX_SETS).nullable(),
+})
+export type VideoUpdateInput = z.infer<typeof videoUpdateInput>
+
+export const videoDeleteInput = z.object({ id: z.uuid() })
+export type VideoDeleteInput = z.infer<typeof videoDeleteInput>
+
 const videoFileName = z.string().trim().min(1).max(200)
 
 export const uploadStartInput = z.object({

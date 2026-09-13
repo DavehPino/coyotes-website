@@ -1,4 +1,4 @@
-import type { FormEvent } from 'react'
+import { useId, type FormEvent } from 'react'
 import { TEAM_NAME } from '@/config'
 import { todayIsoDate } from '@shared/dates'
 import { MATCH_COMPETITIONS, MAX_SETS, type MatchCompetition } from '@shared/domain'
@@ -36,10 +36,7 @@ function ResultPreview({ sets }: { sets: SetDraft[] }) {
 }
 
 /** Paso 2: fecha, competición, lugar y parciales. Siempre como visitante. */
-export function MatchStep({ formId, match, rivalName, errors, onChange, onSubmit }: MatchStepProps) {
-  const updateSet = (key: number, patch: Partial<SetDraft>) =>
-    onChange({ sets: match.sets.map((set) => (set.key === key ? { ...set, ...patch } : set)) })
-
+export function MatchStep({ formId, onSubmit, ...fields }: MatchStepProps) {
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
     onSubmit()
@@ -47,10 +44,28 @@ export function MatchStep({ formId, match, rivalName, errors, onChange, onSubmit
 
   return (
     <form id={formId} onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
+      <MatchFields autoFocus {...fields} />
+    </form>
+  )
+}
+
+type MatchFieldsProps = Omit<MatchStepProps, 'formId' | 'onSubmit'> & {
+  /** Enfoca la fecha al abrir. */
+  autoFocus?: boolean
+}
+
+/** Campos del partido, compartidos por el alta y la edición. Van dentro de un `<form>` de quien los usa. */
+export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: MatchFieldsProps) {
+  const setsId = useId()
+  const updateSet = (key: number, patch: Partial<SetDraft>) =>
+    onChange({ sets: match.sets.map((set) => (set.key === key ? { ...set, ...patch } : set)) })
+
+  return (
+    <>
       <div className="grid grid-cols-2 gap-3">
         <Field label="Fecha" error={errors.playedOn}>
           <Input
-            data-autofocus
+            data-autofocus={autoFocus || undefined}
             type="date"
             max={todayIsoDate()}
             value={match.playedOn}
@@ -94,9 +109,9 @@ export function MatchStep({ formId, match, rivalName, errors, onChange, onSubmit
         />
       </Field>
 
-      <section aria-labelledby={`${formId}-sets`} className="flex flex-col gap-2 pt-1">
+      <section aria-labelledby={setsId} className="flex flex-col gap-2 pt-1">
         <div className="flex min-h-8 items-center justify-between gap-3">
-          <h3 id={`${formId}-sets`} className="text-2xl leading-none text-coyote-silver">
+          <h3 id={setsId} className="text-2xl leading-none text-coyote-silver">
             Parciales
           </h3>
           <ResultPreview sets={match.sets} />
@@ -174,6 +189,6 @@ export function MatchStep({ formId, match, rivalName, errors, onChange, onSubmit
         </Button>
         <p className="text-xs text-coyote-ash">Los sets vacíos no se guardan.</p>
       </section>
-    </form>
+    </>
   )
 }

@@ -157,6 +157,14 @@ export function TrashIcon(props: IconProps) {
   )
 }
 
+export function PencilIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 20h4L19 9a2.83 2.83 0 0 0-4-4L4 16v4zM13.5 6.5l4 4" />
+    </svg>
+  )
+}
+
 export function UploadIcon(props: IconProps) {
   return (
     <svg {...base(props)}>

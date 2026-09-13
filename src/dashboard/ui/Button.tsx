@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes } from 'react'
 
-type Variant = 'primary' | 'secondary' | 'ghost'
+type Variant = 'primary' | 'secondary' | 'ghost' | 'danger'
 type Size = 'md' | 'sm' | 'icon'
 
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
@@ -14,6 +14,8 @@ const VARIANTS: Record<Variant, string> = {
   primary: 'bg-coyote-gold text-coyote-black hover:bg-coyote-yellow',
   secondary: 'bg-coyote-ember text-coyote-silver shadow-border hover:shadow-border-hover hover:bg-coyote-rust/50',
   ghost: 'text-coyote-ash hover:bg-coyote-ember/60 hover:text-coyote-silver',
+  /** Acciones que borran datos. */
+  danger: 'bg-coyote-orange text-coyote-black hover:bg-coyote-orange/85',
 }
 
 // Área de pulsación mínima de 44 px en todos los tamaños (uso principal desde el móvil).

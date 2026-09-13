@@ -1,7 +1,15 @@
-// Acceso a datos de videos y sincronización con el bucket.
-import type { Playback, SyncResult, Video } from '../../shared/schemas.js'
+// Acceso a datos de videos, edición desde el dashboard y sincronización con el bucket.
+import type { Playback, SyncResult, Video, VideoDeleteInput, VideoUpdateInput } from '../../shared/schemas.js'
+import { notFound } from './http.js'
 import { toVideo } from './mappers.js'
-import { listBucketVideos, matchSlugFromKey, playbackUrlFor, publicUrlFor, titleFromKey } from './storage.js'
+import {
+  deleteObject,
+  listBucketVideos,
+  matchSlugFromKey,
+  playbackUrlFor,
+  publicUrlFor,
+  titleFromKey,
+} from './storage.js'
 import { db, type Tables } from './supabase.js'
 
 type VideoInsert = Tables['videos']['Insert']
@@ -10,6 +18,32 @@ export async function getVideoById(id: string): Promise<Video | null> {
   const { data, error } = await db().from('videos').select('*').eq('id', id).maybeSingle()
   if (error) throw error
   return data ? toVideo(data) : null
+}
+
+/** Cambia el título y el set de un video. */
+export async function updateVideo(input: VideoUpdateInput): Promise<Video> {
+  const { data, error } = await db()
+    .from('videos')
+    .update({ title: input.title, set_number: input.set_number })
+    .eq('id', input.id)
+    .select('*')
+    .maybeSingle()
+  if (error) throw error
+  if (!data) throw notFound('Video no encontrado')
+  return toVideo(data)
+}
+
+/**
+ * Borra un video: primero el archivo del bucket y después la fila. En ese orden, si el bucket falla la fila sigue
+ * ahí; al revés, la sincronización volvería a crear la fila a partir del archivo que quedó.
+ */
+export async function deleteVideo(input: VideoDeleteInput): Promise<void> {
+  const video = await getVideoById(input.id)
+  if (!video) throw notFound('Video no encontrado')
+  if (video.source === 'bucket' && video.storage_key) await deleteObject(video.storage_key)
+
+  const { error } = await db().from('videos').delete().eq('id', video.id)
+  if (error) throw error
 }
 
 /** URL de reproducción: la del enlace externo, la pública del bucket o una firmada temporal. */

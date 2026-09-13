@@ -1,4 +1,4 @@
-// Acceso a datos de partidos: lecturas del dashboard y alta desde /api/admin/matches.
+// Acceso a datos de partidos: lecturas del dashboard, alta y edición desde /api/admin/*.
 import { addDays, todayIsoDate } from '../../shared/dates.js'
 import { matchSlugBase, tallySets } from '../../shared/matches.js'
 import type {
@@ -6,10 +6,11 @@ import type {
   MatchCreateInput,
   MatchDetail,
   MatchSummary,
+  MatchUpdateInput,
   TeamSummary,
   Video,
 } from '../../shared/schemas.js'
-import { badRequest } from './http.js'
+import { badRequest, notFound } from './http.js'
 import { compareVideos, outcomeOf, TEAM_SUMMARY_SELECT, toSetScores, toVideo } from './mappers.js'
 import { db, type Tables } from './supabase.js'
 import { discardCreatedTeam, resolveOpponent } from './teams.js'
@@ -85,6 +86,11 @@ export async function getMatchRef(id: string): Promise<MatchRef | null> {
 }
 
 const UNIQUE_VIOLATION = '23505'
+
+/** Solo partidos ya jugados. Tolerancia de un día: el reloj del servidor puede ir por detrás de la hora local del equipo. */
+function assertPlayed(playedOn: string): void {
+  if (playedOn > addDays(todayIsoDate(), 1)) throw badRequest('La fecha del partido no puede estar en el futuro')
+}
 const SLUG_ATTEMPTS = 3
 
 /** Primer slug libre: base, base-2, base-3... */
@@ -102,10 +108,7 @@ async function freeSlug(base: string): Promise<string> {
  * Si el partido no se puede guardar, el rival recién creado se borra para no dejar restos.
  */
 export async function createMatch(input: MatchCreateInput): Promise<MatchCreated> {
-  // Tolerancia de un día: el reloj del servidor puede ir por detrás de la hora local del equipo.
-  if (input.played_on > addDays(todayIsoDate(), 1)) {
-    throw badRequest('La fecha del partido no puede estar en el futuro')
-  }
+  assertPlayed(input.played_on)
 
   const resolved = await resolveOpponent(input.opponent)
   const opponent = resolved.team as TeamSummary // los partidos siempre tienen rival
@@ -142,4 +145,49 @@ export async function createMatch(input: MatchCreateInput): Promise<MatchCreated
     await discardCreatedTeam(resolved)
     throw err
   }
+}
+
+/**
+ * Edita los datos de un partido (rival, fecha, competición, parciales...). El slug no cambia: es la URL del
+ * partido y el nombre de su carpeta en el bucket, donde ya pueden estar sus videos.
+ */
+export async function updateMatch(input: MatchUpdateInput): Promise<MatchCreated> {
+  assertPlayed(input.played_on)
+  const current = await getMatchRef(input.id)
+  if (!current) throw notFound('Partido no encontrado')
+
+  const resolved = await resolveOpponent(input.opponent)
+  const opponent = resolved.team as TeamSummary
+  const { won, lost } = tallySets(input.set_scores)
+
+  const { error } = await db()
+    .from('matches')
+    .update({
+      played_on: input.played_on,
+      start_time: input.start_time,
+      opponent_team_id: opponent.id,
+      location: input.location,
+      competition: input.competition,
+      phase: input.phase,
+      sets_won: won,
+      sets_lost: lost,
+      set_scores: input.set_scores,
+    })
+    .eq('id', input.id)
+  if (error) {
+    await discardCreatedTeam(resolved)
+    throw error
+  }
+
+  // Los videos que tenían la fecha del partido la siguen teniendo; una fecha editada a mano se respeta.
+  if (input.played_on !== current.played_on) {
+    const { error: videosError } = await db()
+      .from('videos')
+      .update({ recorded_on: input.played_on })
+      .eq('match_id', current.id)
+      .eq('recorded_on', current.played_on)
+    if (videosError) console.error(videosError)
+  }
+
+  return { id: current.id, slug: current.slug, opponent }
 }

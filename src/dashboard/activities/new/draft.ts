@@ -2,10 +2,7 @@
 import { todayIsoDate } from '@shared/dates'
 import type { ActivityCategory } from '@shared/domain'
 import type { ActivityCreateInput, TeamSummary } from '@shared/schemas'
-import { emptyNewTeam, toNewTeamInput, validateNewTeam, type NewTeamDraft } from '../../admin/teams'
-
-/** Valor del selector de rival para "crear uno nuevo". El vacío es "sin rival". */
-export const NEW_TEAM = '__new__'
+import { emptyNewTeam, NEW_TEAM, toNewTeamInput, validateNewTeam, type NewTeamDraft } from '../../admin/teams'
 
 export type ActivityDraft = {
   title: string
@@ -13,7 +10,7 @@ export type ActivityDraft = {
   date: string
   time: string
   category: ActivityCategory
-  /** '' = sin rival · id de un equipo existente · NEW_TEAM */
+  /** '' = sin rival · id de un equipo existente · NEW_TEAM (admin/teams) */
   teamChoice: string
   newTeam: NewTeamDraft
   location: string

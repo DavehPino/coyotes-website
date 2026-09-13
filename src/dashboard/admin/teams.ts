@@ -16,6 +16,9 @@ export function rivalTeamsOptions() {
 
 export const useRivalTeams = () => useQuery(rivalTeamsOptions())
 
+/** Valor del selector de rival para "crear uno nuevo" (RivalField). */
+export const NEW_TEAM = '__new__'
+
 export type NewTeamDraft = { name: string; shortName: string; logoUrl: string }
 
 export const emptyNewTeam = (): NewTeamDraft => ({ name: '', shortName: '', logoUrl: '' })

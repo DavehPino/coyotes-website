@@ -3,7 +3,8 @@ import { formatBytes, formatPercent } from '@/lib/format'
 import { Button, FormError } from '../../ui'
 import { AlertIcon, CheckIcon, CloseIcon, RefreshIcon } from '../../ui/icons'
 import type { VideoDraft } from './draft'
-import type { Submission, VideoUploadStatus } from './useMatchSubmission'
+import type { Submission } from './useMatchSubmission'
+import { QUEUED, type VideoUploads, type VideoUploadStatus } from './useVideoUploads'
 
 type SubmitProgressProps = {
   submission: Submission
@@ -77,48 +78,65 @@ export function SubmitProgress({ submission, videos, matchLabel, onRetryVideo }:
     <div className="flex flex-col gap-3">
       <ol className="flex flex-col gap-2" aria-live="polite">
         <Row tone={matchTone} title={matchLabel} detail={matchDetail} />
-
-        {videos.map((video) => {
-          const upload = submission.uploads[video.key] ?? { status: 'queued', loaded: 0, error: null }
-          const ratio = video.file.size ? upload.loaded / video.file.size : 0
-          const detail: Record<VideoUploadStatus, string> = {
-            queued: `En cola · ${formatBytes(video.file.size)}`,
-            uploading: `${formatPercent(ratio)} · ${formatBytes(upload.loaded)} de ${formatBytes(video.file.size)}`,
-            done: `Subido · ${formatBytes(video.file.size)}`,
-            error: 'Error en la subida',
-            cancelled: 'Cancelado',
-          }
-          const canRetry = match && (upload.status === 'error' || upload.status === 'cancelled') && phase === 'finished'
-          return (
-            <Row key={video.key} tone={VIDEO_TONE[upload.status]} title={video.title} detail={detail[upload.status]}>
-              {upload.status === 'uploading' && (
-                <div
-                  role="progressbar"
-                  aria-label={`Subida de ${video.title}`}
-                  aria-valuemin={0}
-                  aria-valuemax={100}
-                  aria-valuenow={Math.floor(ratio * 100)}
-                  className="h-1.5 overflow-hidden rounded-full bg-coyote-steel/70"
-                >
-                  <div
-                    className="h-full origin-left rounded-full bg-coyote-gold transition-transform duration-300 ease-out"
-                    style={{ transform: `scaleX(${ratio})` }}
-                  />
-                </div>
-              )}
-              {upload.error && <p className="text-xs text-coyote-orange">{upload.error}</p>}
-              {canRetry && (
-                <Button size="sm" className="self-start pr-3.5 pl-3" onClick={() => onRetryVideo(video.key)}>
-                  <RefreshIcon className="size-4" strokeWidth={2} />
-                  Reintentar
-                </Button>
-              )}
-            </Row>
-          )
-        })}
+        <VideoUploadRows
+          videos={videos}
+          uploads={submission.uploads}
+          canRetry={match !== null && phase === 'finished'}
+          onRetryVideo={onRetryVideo}
+        />
       </ol>
 
       {submission.error && <FormError>{submission.error}</FormError>}
     </div>
   )
+}
+
+type VideoUploadRowsProps = {
+  videos: VideoDraft[]
+  uploads: VideoUploads
+  /** Muestra "Reintentar" en los videos que fallaron o se cancelaron. */
+  canRetry: boolean
+  onRetryVideo: (key: string) => void
+}
+
+/** Filas `<li>` con el estado y el progreso de cada video; van dentro de un `<ol>` de quien las usa. */
+export function VideoUploadRows({ videos, uploads, canRetry, onRetryVideo }: VideoUploadRowsProps) {
+  return videos.map((video) => {
+    const upload = uploads[video.key] ?? QUEUED
+    const ratio = video.file.size ? upload.loaded / video.file.size : 0
+    const detail: Record<VideoUploadStatus, string> = {
+      queued: `En cola · ${formatBytes(video.file.size)}`,
+      uploading: `${formatPercent(ratio)} · ${formatBytes(upload.loaded)} de ${formatBytes(video.file.size)}`,
+      done: `Subido · ${formatBytes(video.file.size)}`,
+      error: 'Error en la subida',
+      cancelled: 'Cancelado',
+    }
+    const retryable = canRetry && (upload.status === 'error' || upload.status === 'cancelled')
+    return (
+      <Row key={video.key} tone={VIDEO_TONE[upload.status]} title={video.title} detail={detail[upload.status]}>
+        {upload.status === 'uploading' && (
+          <div
+            role="progressbar"
+            aria-label={`Subida de ${video.title}`}
+            aria-valuemin={0}
+            aria-valuemax={100}
+            aria-valuenow={Math.floor(ratio * 100)}
+            className="h-1.5 overflow-hidden rounded-full bg-coyote-steel/70"
+          >
+            <div
+              className="h-full origin-left rounded-full bg-coyote-gold transition-transform duration-300 ease-out"
+              style={{ transform: `scaleX(${ratio})` }}
+            />
+          </div>
+        )}
+        {upload.error && <p className="text-xs text-coyote-orange">{upload.error}</p>}
+        {retryable && (
+          <Button size="sm" className="self-start pr-3.5 pl-3" onClick={() => onRetryVideo(video.key)}>
+            <RefreshIcon className="size-4" strokeWidth={2} />
+            Reintentar
+          </Button>
+        )}
+      </Row>
+    )
+  })
 }

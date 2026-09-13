@@ -5,15 +5,14 @@ import { ACTIVITY_CATEGORIES, ACTIVITY_CATEGORY_LABELS, type ActivityCategory } 
 import type { Activity } from '@shared/schemas'
 import { formatDateFull, formatTimeRange } from '@/lib/dates'
 import { adminPost, errorMessage, isUnauthorized, safewordStore } from '../../admin/adminApi'
-import { NewTeamFields } from '../../admin/NewTeamFields'
+import { RivalField } from '../../admin/RivalField'
 import { SafewordStep } from '../../admin/SafewordStep'
-import { rivalsKey, useRivalTeams, type NewTeamDraft } from '../../admin/teams'
-import { Button, Chip, Field, FormError, Input, Modal, Select, Skeleton, Textarea, TeamLogo } from '../../ui'
+import { NEW_TEAM, rivalsKey, useRivalTeams, type NewTeamDraft } from '../../admin/teams'
+import { Button, Chip, Field, FormError, Input, Modal, Select, Textarea, TeamLogo } from '../../ui'
 import { CheckIcon } from '../../ui/icons'
 import { refreshUpcomingActivities } from '../api'
 import {
   initialActivityDraft,
-  NEW_TEAM,
   toActivityInput,
   validateActivity,
   type ActivityDraft,
@@ -192,31 +191,14 @@ export default function NewActivityDialog({ open, onClose, onRestart }: NewActiv
             </Select>
           </Field>
 
-          {rivals.isPending ? (
-            <Skeleton className="h-[4.25rem] rounded-lg" />
-          ) : (
-            <Field
-              label="Equipo rival"
-              optional
-              error={errors.teamChoice ?? (rivals.isError ? 'No se pudo cargar la lista de equipos' : null)}
-            >
-              <Select value={draft.teamChoice} onChange={(event) => patch({ teamChoice: event.target.value })}>
-                <option value="">Sin rival</option>
-                {rivals.data?.map((rival) => (
-                  <option key={rival.id} value={rival.id}>
-                    {rival.name}
-                  </option>
-                ))}
-                <option value={NEW_TEAM}>+ Nuevo equipo…</option>
-              </Select>
-            </Field>
-          )}
-
-          {draft.teamChoice === NEW_TEAM && (
-            <div className="rounded-xl bg-coyote-black/40 p-3 shadow-border">
-              <NewTeamFields autoFocus team={draft.newTeam} errors={errors} onChange={patchNewTeam} />
-            </div>
-          )}
+          <RivalField
+            allowNone
+            value={draft.teamChoice}
+            onChange={(teamChoice) => patch({ teamChoice })}
+            newTeam={draft.newTeam}
+            onNewTeamChange={patchNewTeam}
+            errors={errors}
+          />
 
           <Field label="Lugar" optional>
             <Input

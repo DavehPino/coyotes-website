@@ -1,13 +1,17 @@
 import { useSearchParams } from 'react-router'
 import type { Video } from '@shared/schemas'
 import { formatDuration } from '@/lib/dates'
-import { Card, Chip, EmptyState } from '../ui'
-import { ExternalLinkIcon, FilmIcon, PlayIcon } from '../ui/icons'
+import { Button, Card, Chip, EmptyState } from '../ui'
+import { ExternalLinkIcon, FilmIcon, PlayIcon, UploadIcon } from '../ui/icons'
 import { videoCountLabel, videoLabel } from './matchLabels'
 import { VideoPlayer } from './VideoPlayer'
 import { youtubeEmbedUrl } from './videoUtils'
 
-type VideoSectionProps = { videos: Video[] }
+type VideoSectionProps = {
+  videos: Video[]
+  /** Abre la gestión de videos (subir, renombrar, eliminar). */
+  onManage?: () => void
+}
 
 export const VIDEO_PARAM = 'video'
 
@@ -44,7 +48,7 @@ function ExternalVideo({ video }: { video: Video }) {
 }
 
 /** Reproductor principal + playlist. El video activo va en ?video=<id>. */
-export function VideoSection({ videos }: VideoSectionProps) {
+export function VideoSection({ videos, onManage }: VideoSectionProps) {
   const [params, setParams] = useSearchParams()
   const requestedId = params.get(VIDEO_PARAM)
   const active = videos.find((video) => video.id === requestedId) ?? videos[0]
@@ -65,18 +69,36 @@ export function VideoSection({ videos }: VideoSectionProps) {
         <h2 id="videos-title" className="mb-3 text-3xl leading-none text-coyote-silver">
           Videos del partido
         </h2>
-        <EmptyState icon={<FilmIcon className="size-8" />} title="Este partido no tiene videos todavía" />
+        <EmptyState
+          icon={<FilmIcon className="size-8" />}
+          title="Este partido no tiene videos todavía"
+          action={
+            onManage && (
+              <Button onClick={onManage} className="pr-4 pl-3.5">
+                <UploadIcon className="size-4" strokeWidth={2} />
+                Subir videos
+              </Button>
+            )
+          }
+        />
       </section>
     )
   }
 
   return (
     <section aria-labelledby="videos-title">
-      <div className="mb-3 flex items-baseline justify-between gap-3">
+      <div className="mb-3 flex items-center justify-between gap-3">
         <h2 id="videos-title" className="text-3xl leading-none text-coyote-silver">
           Videos del partido
         </h2>
-        <span className="text-sm text-coyote-ash tabular-nums">{videoCountLabel(videos.length)}</span>
+        <div className="flex items-center gap-3">
+          <span className="text-sm text-coyote-ash tabular-nums">{videoCountLabel(videos.length)}</span>
+          {onManage && (
+            <Button variant="ghost" size="sm" onClick={onManage} className="-mr-2">
+              Gestionar
+            </Button>
+          )}
+        </div>
       </div>
 
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem] lg:items-start">

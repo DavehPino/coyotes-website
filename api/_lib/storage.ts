@@ -1,7 +1,8 @@
 // Acceso al bucket de videos vía API S3 (Cloudflare R2, AWS S3, MinIO, Backblaze B2...).
-// Aquí se listan los videos y se generan URLs de reproducción. Las subidas desde el
+// Aquí se listan y borran los videos y se generan URLs de reproducción. Las subidas desde el
 // dashboard viven en uploads.ts; también se pueden subir por fuera (consola de R2, rclone...).
 import {
+  DeleteObjectCommand,
   GetObjectCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
@@ -11,6 +12,7 @@ import {
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner'
 import { MATCH_VIDEOS_FOLDER, VIDEO_FILE_EXTENSIONS } from '../../shared/domain.js'
 import { env } from './env.js'
+import { HttpError } from './http.js'
 
 let client: S3Client | undefined
 
@@ -26,6 +28,23 @@ export function s3(): S3Client {
     responseChecksumValidation: 'WHEN_REQUIRED',
   })
   return client
+}
+
+/** Traduce los errores de permisos del bucket a un mensaje accionable. */
+export async function storage<T>(operation: () => Promise<T>): Promise<T> {
+  try {
+    return await operation()
+  } catch (err) {
+    const name = err instanceof Error ? err.name : ''
+    if (name === 'AccessDenied' || name === 'Forbidden') {
+      throw new HttpError(
+        503,
+        'storage_forbidden',
+        'Las credenciales del bucket no permiten subir ni borrar videos. El token de R2 necesita permiso de lectura y escritura.',
+      )
+    }
+    throw err
+  }
 }
 
 export type BucketVideo = {
@@ -66,6 +85,11 @@ export async function listBucketVideos(): Promise<BucketVideo[]> {
 export async function headVideo(key: string) {
   const res = await s3().send(new HeadObjectCommand({ Bucket: env.s3.bucket, Key: key }))
   return { contentType: res.ContentType ?? null, size: res.ContentLength ?? null }
+}
+
+/** Borra un objeto del bucket. Si ya no existía no es un error. */
+export async function deleteObject(key: string): Promise<void> {
+  await storage(() => s3().send(new DeleteObjectCommand({ Bucket: env.s3.bucket, Key: key })))
 }
 
 /** URL pública estable si el bucket es público; si no, null. */
