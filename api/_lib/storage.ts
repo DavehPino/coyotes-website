@@ -92,6 +92,20 @@ export async function deleteObject(key: string): Promise<void> {
   await storage(() => s3().send(new DeleteObjectCommand({ Bucket: env.s3.bucket, Key: key })))
 }
 
+/** Claves de todos los objetos bajo un prefijo (maneja paginación). */
+export async function listObjectKeys(prefix: string): Promise<string[]> {
+  const keys: string[] = []
+  let token: string | undefined
+  do {
+    const page = await storage(() =>
+      s3().send(new ListObjectsV2Command({ Bucket: env.s3.bucket, Prefix: prefix, ContinuationToken: token })),
+    )
+    for (const obj of page.Contents ?? []) if (obj.Key) keys.push(obj.Key)
+    token = page.IsTruncated ? page.NextContinuationToken : undefined
+  } while (token)
+  return keys
+}
+
 /** URL pública estable si el bucket es público; si no, null. */
 export function publicUrlFor(key: string): string | null {
   const base = env.s3.publicBaseUrl

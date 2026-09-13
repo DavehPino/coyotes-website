@@ -1,7 +1,7 @@
-// Borrador del formulario de alta de actividad: estado, validación y payload para la API.
+// Borrador del formulario de actividad (alta y edición): estado, validación y payload para la API.
 import { todayIsoDate } from '@shared/dates'
 import type { ActivityCategory } from '@shared/domain'
-import type { ActivityCreateInput, TeamSummary } from '@shared/schemas'
+import type { Activity, ActivityCreateInput, ActivityUpdateInput, TeamSummary } from '@shared/schemas'
 import { emptyNewTeam, NEW_TEAM, toNewTeamInput, validateNewTeam, type NewTeamDraft } from '../../admin/teams'
 
 export type ActivityDraft = {
@@ -71,4 +71,22 @@ export function toActivityInput(draft: ActivityDraft): ActivityCreateInput {
           : { kind: 'existing', team_id: draft.teamChoice },
     location: draft.location.trim() || null,
   }
+}
+
+/** Borrador con los datos guardados de una actividad, para editarla. */
+export function draftFromActivity(activity: Activity): ActivityDraft {
+  return {
+    title: activity.title,
+    description: activity.description ?? '',
+    date: activity.activity_date,
+    time: activity.start_time?.slice(0, 5) ?? '',
+    category: activity.category,
+    teamChoice: activity.opponent?.id ?? '',
+    newTeam: emptyNewTeam(),
+    location: activity.location ?? '',
+  }
+}
+
+export function toActivityUpdateInput(id: string, draft: ActivityDraft): ActivityUpdateInput {
+  return { id, ...toActivityInput(draft) }
 }

@@ -4,6 +4,7 @@ import { matchSlugBase, tallySets } from '../../shared/matches.js'
 import type {
   MatchCreated,
   MatchCreateInput,
+  MatchDeleteInput,
   MatchDetail,
   MatchSummary,
   MatchUpdateInput,
@@ -12,6 +13,7 @@ import type {
 } from '../../shared/schemas.js'
 import { badRequest, notFound } from './http.js'
 import { compareVideos, outcomeOf, TEAM_SUMMARY_SELECT, toSetScores, toVideo } from './mappers.js'
+import { deleteObject, listObjectKeys, matchFolderKey } from './storage.js'
 import { db, type Tables } from './supabase.js'
 import { discardCreatedTeam, resolveOpponent } from './teams.js'
 
@@ -190,4 +192,38 @@ export async function updateMatch(input: MatchUpdateInput): Promise<MatchCreated
   }
 
   return { id: current.id, slug: current.slug, opponent }
+}
+
+/** Archivos que se borran a la vez al eliminar un partido. */
+const DELETE_CONCURRENCY = 5
+
+/**
+ * Elimina el partido con todos sus videos: primero los archivos del bucket (su carpeta y cualquier otro vinculado),
+ * después las filas de videos y por último el partido. Si el bucket falla no se borra nada de la base de datos, y
+ * repetir la operación es seguro. El rival no se borra.
+ */
+export async function deleteMatch(input: MatchDeleteInput): Promise<void> {
+  const match = await getMatchRef(input.id)
+  if (!match) throw notFound('Partido no encontrado')
+
+  const { data: videoRows, error: videosError } = await db()
+    .from('videos')
+    .select('storage_key')
+    .eq('match_id', match.id)
+    .eq('source', 'bucket')
+  if (videosError) throw videosError
+
+  const keys = new Set(await listObjectKeys(matchFolderKey(match.slug)))
+  for (const row of videoRows) if (row.storage_key) keys.add(row.storage_key)
+  const pending = [...keys]
+  await Promise.all(
+    Array.from({ length: Math.min(DELETE_CONCURRENCY, pending.length) }, async () => {
+      for (let key = pending.pop(); key !== undefined; key = pending.pop()) await deleteObject(key)
+    }),
+  )
+
+  const { error: deleteVideosError } = await db().from('videos').delete().eq('match_id', match.id)
+  if (deleteVideosError) throw deleteVideosError
+  const { error } = await db().from('matches').delete().eq('id', match.id)
+  if (error) throw error
 }

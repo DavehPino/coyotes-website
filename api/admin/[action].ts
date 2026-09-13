@@ -2,15 +2,18 @@
 // Todas exigen la cabecera x-admin-safeword.
 import {
   activityCreateInput,
+  activityDeleteInput,
+  activityUpdateInput,
   matchCreateInput,
+  matchDeleteInput,
   matchUpdateInput,
   videoDeleteInput,
   videoUpdateInput,
 } from '../../shared/schemas.js'
-import { createActivity } from '../_lib/activities.js'
+import { createActivity, deleteActivity, updateActivity } from '../_lib/activities.js'
 import { requireAdmin } from '../_lib/admin.js'
 import { handle, noStore, parseBody, pathParam, routeFor, type Handler } from '../_lib/http.js'
-import { createMatch, updateMatch } from '../_lib/matches.js'
+import { createMatch, deleteMatch, updateMatch } from '../_lib/matches.js'
 import { deleteVideo, updateVideo } from '../_lib/videos.js'
 
 const actions: Record<string, Handler> = {
@@ -21,11 +24,27 @@ const actions: Record<string, Handler> = {
   activities: async (request) =>
     noStore(await createActivity(await parseBody(request, activityCreateInput)), 201),
 
+  // POST /api/admin/activity-update → Activity. Edita la actividad y, si se pide, crea el rival.
+  'activity-update': async (request) =>
+    noStore(await updateActivity(await parseBody(request, activityUpdateInput))),
+
+  // POST /api/admin/activity-delete → { ok: true }. Borra la actividad.
+  'activity-delete': async (request) => {
+    await deleteActivity(await parseBody(request, activityDeleteInput))
+    return noStore({ ok: true })
+  },
+
   // POST /api/admin/matches → 201 MatchCreated. Crea el partido y, si se pide, el rival.
   matches: async (request) => noStore(await createMatch(await parseBody(request, matchCreateInput)), 201),
 
   // POST /api/admin/match-update → MatchCreated. Edita el partido (el slug no cambia) y, si se pide, crea el rival.
   'match-update': async (request) => noStore(await updateMatch(await parseBody(request, matchUpdateInput))),
+
+  // POST /api/admin/match-delete → { ok: true }. Borra el partido, sus videos y sus archivos del bucket.
+  'match-delete': async (request) => {
+    await deleteMatch(await parseBody(request, matchDeleteInput))
+    return noStore({ ok: true })
+  },
 
   // POST /api/admin/video-update → Video. Cambia el título y el set de un video.
   'video-update': async (request) => noStore(await updateVideo(await parseBody(request, videoUpdateInput))),

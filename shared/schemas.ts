@@ -164,6 +164,13 @@ export const activityCreateInput = z.object({
 })
 export type ActivityCreateInput = z.infer<typeof activityCreateInput>
 
+/** Edición de una actividad: los mismos campos que el alta. */
+export const activityUpdateInput = activityCreateInput.extend({ id: z.uuid() })
+export type ActivityUpdateInput = z.infer<typeof activityUpdateInput>
+
+export const activityDeleteInput = z.object({ id: z.uuid() })
+export type ActivityDeleteInput = z.infer<typeof activityDeleteInput>
+
 export const matchCreateInput = z.object({
   opponent: z.discriminatedUnion('kind', [existingOpponent, newOpponent]),
   played_on: isoDate,
@@ -183,6 +190,9 @@ export type MatchCreated = { id: string; slug: string; opponent: TeamSummary }
 /** Edición de un partido: los mismos campos que el alta. El slug (y la carpeta del bucket) no cambian. */
 export const matchUpdateInput = matchCreateInput.extend({ id: z.uuid() })
 export type MatchUpdateInput = z.infer<typeof matchUpdateInput>
+
+export const matchDeleteInput = z.object({ id: z.uuid() })
+export type MatchDeleteInput = z.infer<typeof matchDeleteInput>
 
 export const videoUpdateInput = z.object({
   id: z.uuid(),

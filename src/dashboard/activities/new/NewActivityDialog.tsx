@@ -1,16 +1,15 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useId, useState, type FormEvent, type ReactNode } from 'react'
 import { todayIsoDate } from '@shared/dates'
-import { ACTIVITY_CATEGORIES, ACTIVITY_CATEGORY_LABELS, type ActivityCategory } from '@shared/domain'
 import type { Activity } from '@shared/schemas'
 import { formatDateFull, formatTimeRange } from '@/lib/dates'
 import { adminPost, errorMessage, isUnauthorized, safewordStore } from '../../admin/adminApi'
-import { RivalField } from '../../admin/RivalField'
 import { SafewordStep } from '../../admin/SafewordStep'
-import { NEW_TEAM, rivalsKey, useRivalTeams, type NewTeamDraft } from '../../admin/teams'
-import { Button, Chip, Field, FormError, Input, Modal, Select, Textarea, TeamLogo } from '../../ui'
+import { NEW_TEAM, rivalsKey, useRivalTeams } from '../../admin/teams'
+import { Button, Chip, FormError, Modal, TeamLogo } from '../../ui'
 import { CheckIcon } from '../../ui/icons'
 import { refreshUpcomingActivities } from '../api'
+import { ActivityFields } from './ActivityFields'
 import {
   initialActivityDraft,
   toActivityInput,
@@ -45,8 +44,6 @@ export default function NewActivityDialog({ open, onClose, onRestart }: NewActiv
   const [created, setCreated] = useState<Activity | null>(null)
 
   const patch = (changes: Partial<ActivityDraft>) => setDraft((prev) => ({ ...prev, ...changes }))
-  const patchNewTeam = (changes: Partial<NewTeamDraft>) =>
-    setDraft((prev) => ({ ...prev, newTeam: { ...prev.newTeam, ...changes } }))
 
   function requireSafeword(message: string) {
     safewordStore.clear()
@@ -122,8 +119,6 @@ export default function NewActivityDialog({ open, onClose, onRestart }: NewActiv
     )
   }
 
-  const today = todayIsoDate()
-
   return (
     <Modal
       open={open}
@@ -150,65 +145,7 @@ export default function NewActivityDialog({ open, onClose, onRestart }: NewActiv
 
       {step === 'form' && (
         <form id={formId} onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-          <Field label="Título" error={errors.title}>
-            <Input
-              data-autofocus
-              value={draft.title}
-              maxLength={120}
-              placeholder="Entrenamiento técnico"
-              onChange={(event) => patch({ title: event.target.value })}
-            />
-          </Field>
-
-          <Field label="Descripción" optional>
-            <Textarea
-              value={draft.description}
-              maxLength={2000}
-              placeholder="Qué hay que traer, horario de llegada…"
-              onChange={(event) => patch({ description: event.target.value })}
-            />
-          </Field>
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Fecha" error={errors.date}>
-              <Input type="date" min={today} value={draft.date} onChange={(event) => patch({ date: event.target.value })} />
-            </Field>
-            <Field label="Hora" error={errors.time}>
-              <Input type="time" value={draft.time} onChange={(event) => patch({ time: event.target.value })} />
-            </Field>
-          </div>
-
-          <Field label="Categoría" hint="Las de Liga Podio se destacan y van primero en el carrusel.">
-            <Select
-              value={draft.category}
-              onChange={(event) => patch({ category: event.target.value as ActivityCategory })}
-            >
-              {ACTIVITY_CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {ACTIVITY_CATEGORY_LABELS[category]}
-                </option>
-              ))}
-            </Select>
-          </Field>
-
-          <RivalField
-            allowNone
-            value={draft.teamChoice}
-            onChange={(teamChoice) => patch({ teamChoice })}
-            newTeam={draft.newTeam}
-            onNewTeamChange={patchNewTeam}
-            errors={errors}
-          />
-
-          <Field label="Lugar" optional>
-            <Input
-              value={draft.location}
-              maxLength={120}
-              placeholder="Gimnasio o club"
-              onChange={(event) => patch({ location: event.target.value })}
-            />
-          </Field>
-
+          <ActivityFields draft={draft} errors={errors} onChange={patch} />
           {saveError && <FormError>{saveError}</FormError>}
         </form>
       )}

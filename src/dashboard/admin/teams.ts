@@ -14,7 +14,9 @@ export function rivalTeamsOptions() {
   })
 }
 
-export const useRivalTeams = () => useQuery(rivalTeamsOptions())
+/** `enabled: false` evita pedirlos hasta que el formulario los necesita. */
+export const useRivalTeams = ({ enabled = true }: { enabled?: boolean } = {}) =>
+  useQuery({ ...rivalTeamsOptions(), enabled })
 
 /** Valor del selector de rival para "crear uno nuevo" (RivalField). */
 export const NEW_TEAM = '__new__'

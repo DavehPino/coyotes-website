@@ -138,6 +138,12 @@ Formulario en tres pasos:
 En los dos formularios, si el rival es nuevo y la actividad o el partido no se puede guardar, el rival se borra para
 no dejar restos.
 
+### Editar o eliminar una actividad
+
+Al abrir una tarjeta del carrusel, el detalle tiene **Editar** y **Eliminar** (con la palabra clave). La edición usa
+el mismo formulario del alta; el tipo no cambia y la hora de fin de las cargadas a mano se conserva solo si sigue
+siendo posterior a la de inicio. Eliminar borra la fila (los partidos o videos vinculados quedan sin actividad).
+
 ### Editar un partido
 
 En el detalle de un partido (`/dashboard/matches/<slug>`), **Editar partido** abre un diálogo con dos pestañas (también
@@ -151,9 +157,13 @@ con la palabra clave):
   en los externos solo la fila) y subir videos nuevos a `games/<slug>/`, igual que en el alta. El botón
   **Gestionar** de la sección de videos abre directamente esta pestaña.
 
+**Eliminar** (junto a Editar partido) pide confirmación y borra el partido con todos sus videos: primero los archivos
+del bucket (la carpeta `games/<slug>/` completa y cualquier otro video vinculado), después las filas de `videos` y por
+último el partido. Si el bucket falla no se borra nada de la base de datos. El rival se conserva.
+
 ## Cómo editar datos a mano
 
-Editar o cancelar actividades, borrar partidos, los resúmenes y las portadas todavía se hace en **Supabase → Table Editor**
+Cancelar actividades, los resúmenes y las portadas todavía se hace en **Supabase → Table Editor**
 (o con SQL). `supabase/seed.sql` es un ejemplo completo y se puede ejecutar varias veces sin duplicar filas:
 `npx supabase db query --linked -f supabase/seed.sql`.
 
@@ -215,8 +225,11 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 |---|---|---|
 | POST | `/api/admin/verify` | `{ ok: true }` o 401 |
 | POST | `/api/admin/activities` | 201 Activity: crea la actividad y, si se pide, el rival (409 si el nombre ya existe) |
+| POST | `/api/admin/activity-update` | Activity: edita la actividad `id` con los campos del alta |
+| POST | `/api/admin/activity-delete` | `{ ok: true }`: borra la actividad |
 | POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
 | POST | `/api/admin/match-update` | `{ id, slug, opponent }`: edita el partido `id` con los campos del alta; el slug no cambia |
+| POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
 | POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
 | POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
@@ -237,7 +250,7 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 
 | Archivo | Rutas |
 |---|---|
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/matches`, `/match-update`, `/video-update`, `/video-delete` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
 
 Al añadir un endpoint:
