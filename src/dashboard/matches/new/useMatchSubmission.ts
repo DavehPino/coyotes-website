@@ -3,7 +3,7 @@ import { useQueryClient } from '@tanstack/react-query'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import type { MatchCreated } from '@shared/schemas'
 import { refreshMatchData } from '../api'
-import { adminPost, errorMessage, isAbort, isUnauthorized } from './adminApi'
+import { adminPost, errorMessage, isAbort, isUnauthorized } from '../../admin/adminApi'
 import { toMatchInput, type Draft, type VideoDraft } from './draft'
 import { uploadVideo } from './uploadVideo'
 

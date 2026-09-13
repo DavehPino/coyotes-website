@@ -37,7 +37,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
     >
       {shown && (
         <dl className="flex flex-col gap-4">
-          <Field label="Tipo">{ACTIVITY_TYPE_LABELS[shown.activity_type]}</Field>
+          {shown.activity_type !== 'otro' && <Field label="Tipo">{ACTIVITY_TYPE_LABELS[shown.activity_type]}</Field>}
           <Field label="Fecha">{formatDateFull(shown.activity_date)}</Field>
           <Field label="Horario">
             <span className="tabular-nums">{time ?? 'Hora por confirmar'}</span>

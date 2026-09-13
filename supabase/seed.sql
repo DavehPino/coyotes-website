@@ -39,7 +39,7 @@ begin
   select id into v_halcones from public.teams where lower(name) = 'halcones' limit 1;
 
   -- ─── Actividades: semana actual ───────────────────────────────────────────
-  if not exists (select 1 from public.weekly_activities where week_start = v_monday) then
+  if not exists (select 1 from public.weekly_activities where activity_date between v_monday and v_monday + 6) then
     insert into public.weekly_activities
       (title, activity_type, activity_date, start_time, end_time, location, description, opponent_team_id, is_cancelled)
     values
@@ -60,7 +60,7 @@ begin
   end if;
 
   -- ─── Actividades: semana siguiente ────────────────────────────────────────
-  if not exists (select 1 from public.weekly_activities where week_start = v_next) then
+  if not exists (select 1 from public.weekly_activities where activity_date between v_next and v_next + 6) then
     insert into public.weekly_activities
       (title, activity_type, activity_date, start_time, end_time, location, description, opponent_team_id, is_cancelled)
     values

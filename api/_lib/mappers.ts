@@ -37,7 +37,6 @@ export function toActivity(row: ActivityRow, opponent: TeamSummary | null): Acti
     activity_type: oneOf<ActivityType>(ACTIVITY_TYPES, row.activity_type, 'otro'),
     category: oneOf<ActivityCategory>(ACTIVITY_CATEGORIES, row.category, 'general'),
     activity_date: row.activity_date,
-    week_start: row.week_start ?? row.activity_date,
     start_time: row.start_time,
     end_time: row.end_time,
     location: row.location,

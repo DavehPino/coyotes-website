@@ -1,6 +1,6 @@
 // Acceso a datos de equipos rivales.
-import type { NewTeamInput, TeamSummary } from '../../shared/schemas.js'
-import { conflict } from './http.js'
+import type { NewTeamInput, OpponentInput, TeamSummary } from '../../shared/schemas.js'
+import { badRequest, conflict } from './http.js'
 import { toTeamSummary } from './mappers.js'
 import { db } from './supabase.js'
 
@@ -52,4 +52,27 @@ export async function createRivalTeam(input: NewTeamInput): Promise<TeamSummary>
 export async function deleteTeam(id: string): Promise<void> {
   const { error } = await db().from('teams').delete().eq('id', id)
   if (error) throw error
+}
+
+export type ResolvedOpponent = {
+  team: TeamSummary | null
+  /** true si se acaba de crear: quien llama lo borra si luego falla su propio guardado. */
+  created: boolean
+}
+
+/** Traduce el rival del formulario a un equipo: ninguno, uno existente o uno nuevo. */
+export async function resolveOpponent(input: OpponentInput): Promise<ResolvedOpponent> {
+  if (input.kind === 'none') return { team: null, created: false }
+  if (input.kind === 'existing') {
+    const team = await getRivalTeam(input.team_id)
+    if (!team) throw badRequest('El equipo rival elegido no existe')
+    return { team, created: false }
+  }
+  return { team: await createRivalTeam(input.team), created: true }
+}
+
+/** Borra un rival recién creado cuando el guardado que lo usaba falló. Nunca lanza. */
+export async function discardCreatedTeam(resolved: ResolvedOpponent): Promise<void> {
+  if (!resolved.created || !resolved.team) return
+  await deleteTeam(resolved.team.id).catch((err: unknown) => console.error(err))
 }

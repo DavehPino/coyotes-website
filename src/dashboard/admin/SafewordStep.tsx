@@ -1,7 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { ApiError } from '@/lib/api'
-import { Field, FormError, Input } from '../../ui'
-import { LockIcon } from '../../ui/icons'
+import { Field, FormError, Input } from '../ui'
+import { LockIcon } from '../ui/icons'
 import { adminPost, errorMessage } from './adminApi'
 
 type SafewordStepProps = {
@@ -42,7 +42,7 @@ export function SafewordStep({ formId, notice, onVerified, onBusyChange }: Safew
           <LockIcon />
         </span>
         <p className="text-sm text-coyote-ash">
-          Solo el cuerpo técnico puede cargar partidos. Escribe la palabra clave del equipo para continuar.
+          Solo el cuerpo técnico puede cargar datos. Escribe la palabra clave del equipo para continuar.
         </p>
       </div>
       {notice && <FormError>{notice}</FormError>}

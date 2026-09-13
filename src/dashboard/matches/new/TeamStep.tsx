@@ -1,7 +1,8 @@
 import type { FormEvent, ReactNode } from 'react'
 import type { TeamSummary } from '@shared/schemas'
-import { ErrorState, Field, Input, Select, Skeleton, TeamLogo } from '../../ui'
-import { useRivalTeams } from '../api'
+import { NewTeamFields } from '../../admin/NewTeamFields'
+import { useRivalTeams, type NewTeamDraft } from '../../admin/teams'
+import { ErrorState, Field, Select, Skeleton, TeamLogo } from '../../ui'
 import type { Errors, TeamDraft } from './draft'
 
 type TeamStepProps = {
@@ -35,13 +36,6 @@ export function TeamStep({ formId, team, errors, onChange, onSubmit }: TeamStepP
   const selected = list.find((rival) => rival.id === team.teamId) ?? null
   const hasRivals = list.length > 0
   const mode = hasRivals ? team.mode : 'new'
-
-  const preview: TeamSummary = {
-    id: 'preview',
-    name: team.name.trim() || 'Equipo rival',
-    short_name: team.shortName.trim() || null,
-    logo_url: team.logoUrl.trim() || null,
-  }
 
   function handleSubmit(event: FormEvent) {
     event.preventDefault()
@@ -107,54 +101,12 @@ export function TeamStep({ formId, team, errors, onChange, onSubmit }: TeamStepP
           )}
         </>
       ) : (
-        <>
-          <Field label="Nombre" error={errors.name}>
-            <Input
-              data-autofocus
-              value={team.name}
-              maxLength={80}
-              autoComplete="off"
-              placeholder="Las Onas"
-              onChange={(event) => onChange({ name: event.target.value })}
-            />
-          </Field>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-[8rem_minmax(0,1fr)]">
-            <Field label="Abreviatura" optional error={errors.shortName}>
-              <Input
-                value={team.shortName}
-                maxLength={4}
-                autoComplete="off"
-                autoCapitalize="characters"
-                placeholder="ONA"
-                className="uppercase"
-                onChange={(event) => onChange({ shortName: event.target.value })}
-              />
-            </Field>
-            <Field
-              label="URL del logo"
-              optional
-              error={errors.logoUrl}
-              hint="Enlace directo a la imagen. Sin logo se muestran las iniciales."
-            >
-              <Input
-                type="url"
-                inputMode="url"
-                value={team.logoUrl}
-                autoComplete="off"
-                placeholder="https://…"
-                onChange={(event) => onChange({ logoUrl: event.target.value })}
-              />
-            </Field>
-          </div>
-          <div className="flex items-center gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
-            {/* key: si cambia la URL se vuelve a intentar cargar el logo */}
-            <TeamLogo key={preview.logo_url ?? ''} team={preview} size="lg" />
-            <div className="flex min-w-0 flex-col">
-              <span className="text-xs font-medium tracking-wide text-coyote-ash uppercase">Vista previa</span>
-              <span className="truncate font-medium text-coyote-silver">{preview.name}</span>
-            </div>
-          </div>
-        </>
+        <NewTeamFields
+          autoFocus
+          team={team.newTeam}
+          errors={errors}
+          onChange={(patch: Partial<NewTeamDraft>) => onChange({ newTeam: { ...team.newTeam, ...patch } })}
+        />
       )}
     </form>
   )

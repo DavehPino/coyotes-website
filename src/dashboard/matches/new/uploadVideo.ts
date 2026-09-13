@@ -1,7 +1,7 @@
 // Subida multiparte directa al bucket: la API firma una URL por trozo y el navegador los envía
 // en paralelo con XMLHttpRequest (fetch no informa del progreso de subida).
 import type { UploadStart, Video } from '@shared/schemas'
-import { adminPost, isAbort } from './adminApi'
+import { adminPost, isAbort } from '../../admin/adminApi'
 
 const CONCURRENCY = 3
 const MAX_ATTEMPTS = 4

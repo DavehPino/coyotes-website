@@ -1,4 +1,13 @@
-import { cloneElement, isValidElement, useId, type InputHTMLAttributes, type ReactElement, type ReactNode, type SelectHTMLAttributes } from 'react'
+import {
+  cloneElement,
+  isValidElement,
+  useId,
+  type InputHTMLAttributes,
+  type ReactElement,
+  type ReactNode,
+  type SelectHTMLAttributes,
+  type TextareaHTMLAttributes,
+} from 'react'
 
 // 16 px en móvil: iOS no hace zoom al enfocar. Área de pulsación de 44 px.
 const CONTROL = [
@@ -10,6 +19,10 @@ const CONTROL = [
 
 export function Input({ className = '', ...rest }: InputHTMLAttributes<HTMLInputElement>) {
   return <input className={`${CONTROL} ${className}`} {...rest} />
+}
+
+export function Textarea({ className = '', rows = 3, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+  return <textarea rows={rows} className={`${CONTROL} resize-y py-2.5 leading-normal ${className}`} {...rest} />
 }
 
 export function Select({ className = '', ...rest }: SelectHTMLAttributes<HTMLSelectElement>) {

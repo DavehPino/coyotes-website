@@ -1,4 +1,5 @@
-import { lazy, Suspense, useState } from 'react'
+import { lazy, Suspense } from 'react'
+import { useDialogSession } from '../admin/useDialogSession'
 import { Button, EmptyState, ErrorState, PageHeader } from '../ui'
 import { BallIcon, PlusIcon } from '../ui/icons'
 import { useMatches } from './api'
@@ -10,50 +11,13 @@ const NewMatchDialog = lazy(() => import('./new/NewMatchDialog'))
 
 const CAROUSEL_SIZE = 10
 
-/** Alta de partidos: el diálogo se monta al abrirlo por primera vez y conserva el borrador. */
-function useNewMatchDialog() {
-  const [mounted, setMounted] = useState(false)
-  const [open, setOpen] = useState(false)
-  // Cambiar la key vuelve a montar el formulario vacío (tras guardar un partido).
-  const [session, setSession] = useState(0)
-  const [finished, setFinished] = useState(false)
-
-  const openDialog = () => {
-    if (finished) {
-      setSession((n) => n + 1)
-      setFinished(false)
-    }
-    setMounted(true)
-    setOpen(true)
-  }
-
-  const dialog = mounted ? (
-    <Suspense fallback={null}>
-      <NewMatchDialog
-        key={session}
-        open={open}
-        onClose={(done) => {
-          setOpen(false)
-          if (done) setFinished(true)
-        }}
-        onRestart={() => {
-          setSession((n) => n + 1)
-          setFinished(false)
-        }}
-      />
-    </Suspense>
-  ) : null
-
-  return { openDialog, dialog }
-}
-
 /** Partidos pasados: carrusel con los últimos y listado completo por mes. */
 export function MatchesPage() {
   const query = useMatches()
-  const { openDialog, dialog } = useNewMatchDialog()
+  const dialog = useDialogSession()
 
   const addButton = (
-    <Button variant="primary" onClick={openDialog} className="pr-4 pl-3.5">
+    <Button variant="primary" onClick={dialog.openDialog} className="pr-4 pl-3.5">
       <PlusIcon className="size-4" strokeWidth={2} />
       Cargar partido
     </Button>
@@ -94,7 +58,11 @@ export function MatchesPage() {
         </div>
       )}
 
-      {dialog}
+      {dialog.mounted && (
+        <Suspense fallback={null}>
+          <NewMatchDialog key={dialog.session} open={dialog.open} onClose={dialog.close} onRestart={dialog.restart} />
+        </Suspense>
+      )}
     </section>
   )
 }

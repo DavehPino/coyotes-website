@@ -10,13 +10,12 @@ import {
 } from '@shared/domain'
 import type { MatchCreateInput, SetScore, TeamSummary } from '@shared/schemas'
 import { formatBytes } from '@/lib/format'
+import { emptyNewTeam, toNewTeamInput, validateNewTeam, type NewTeamDraft } from '../../admin/teams'
 
 export type TeamDraft = {
   mode: 'existing' | 'new'
   teamId: string
-  name: string
-  shortName: string
-  logoUrl: string
+  newTeam: NewTeamDraft
 }
 
 export type SetDraft = { key: number; us: string; them: string }
@@ -48,7 +47,7 @@ export const newKey = () => ++nextKey
 /** Tres sets vacíos para empezar: lo mínimo de un partido a cinco sets. */
 export function initialDraft(): Draft {
   return {
-    team: { mode: 'new', teamId: '', name: '', shortName: '', logoUrl: '' },
+    team: { mode: 'new', teamId: '', newTeam: emptyNewTeam() },
     match: {
       playedOn: todayIsoDate(),
       startTime: '',
@@ -61,32 +60,11 @@ export function initialDraft(): Draft {
   }
 }
 
-const normalizeName = (name: string) => name.trim().toLocaleLowerCase('es')
-
-function isHttpUrl(value: string): boolean {
-  try {
-    return ['http:', 'https:'].includes(new URL(value).protocol)
-  } catch {
-    return false
-  }
-}
-
 export function validateTeam(team: TeamDraft, rivals: TeamSummary[]): Errors {
-  const errors: Errors = {}
   if (team.mode === 'existing') {
-    if (!rivals.some((rival) => rival.id === team.teamId)) errors.teamId = 'Elige el equipo rival'
-    return errors
+    return rivals.some((rival) => rival.id === team.teamId) ? {} : { teamId: 'Elige el equipo rival' }
   }
-  const name = team.name.trim()
-  if (!name) errors.name = 'Escribe el nombre del equipo'
-  else if (name.length > 80) errors.name = 'Máximo 80 caracteres'
-  else if (rivals.some((rival) => normalizeName(rival.name) === normalizeName(name))) {
-    errors.name = 'Ese equipo ya existe: elígelo en "Equipo existente"'
-  }
-  if (team.shortName.trim().length > 4) errors.shortName = 'Máximo 4 caracteres'
-  const logoUrl = team.logoUrl.trim()
-  if (logoUrl && !isHttpUrl(logoUrl)) errors.logoUrl = 'Tiene que ser un enlace que empiece por https://'
-  return errors
+  return validateNewTeam(team.newTeam, rivals)
 }
 
 /** Filas con los dos marcadores vacíos se ignoran; el resto tiene que estar completo. */
@@ -120,14 +98,7 @@ export function toMatchInput(draft: Draft): MatchCreateInput {
     opponent:
       team.mode === 'existing'
         ? { kind: 'existing', team_id: team.teamId }
-        : {
-            kind: 'new',
-            team: {
-              name: team.name.trim(),
-              short_name: team.shortName.trim() || null,
-              logo_url: team.logoUrl.trim() || null,
-            },
-          },
+        : { kind: 'new', team: toNewTeamInput(team.newTeam) },
     played_on: match.playedOn,
     start_time: match.startTime || null,
     location: match.location.trim() || null,

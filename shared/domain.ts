@@ -28,6 +28,11 @@ export const ACTIVITY_TYPE_LABELS: Record<ActivityType, string> = {
 export const ACTIVITY_CATEGORIES = ["general", "podio"] as const;
 export type ActivityCategory = (typeof ACTIVITY_CATEGORIES)[number];
 
+export const ACTIVITY_CATEGORY_LABELS: Record<ActivityCategory, string> = {
+  general: "General",
+  podio: "Liga Podio",
+};
+
 export const VIDEO_CATEGORIES = [
   "partido",
   "entrenamiento",

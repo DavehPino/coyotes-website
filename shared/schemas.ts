@@ -2,6 +2,7 @@
 // Lecturas públicas para el dashboard; las escrituras (/api/admin/*) exigen la palabra clave.
 import { z } from 'zod'
 import {
+  ACTIVITY_CATEGORIES,
   MATCH_COMPETITIONS,
   MAX_SETS,
   MAX_VIDEO_BYTES,
@@ -28,14 +29,13 @@ export type Team = {
 
 export type TeamSummary = Pick<Team, 'id' | 'name' | 'short_name' | 'logo_url'>
 
-// ─── Weekly activities ───────────────────────────────────────────────────────
+// ─── Activities ──────────────────────────────────────────────────────────────
 export type Activity = {
   id: string
   title: string
   activity_type: ActivityType
   category: ActivityCategory
   activity_date: string // YYYY-MM-DD
-  week_start: string // lunes, YYYY-MM-DD
   start_time: string | null // HH:MM:SS
   end_time: string | null
   location: string | null
@@ -144,16 +144,30 @@ export const newTeamInput = z.object({
 })
 export type NewTeamInput = z.infer<typeof newTeamInput>
 
+const noOpponent = z.object({ kind: z.literal('none') })
+const existingOpponent = z.object({ kind: z.literal('existing'), team_id: z.uuid() })
+const newOpponent = z.object({ kind: z.literal('new'), team: newTeamInput })
+/** Rival: ninguno (solo actividades), uno existente o uno nuevo que se crea al guardar. */
+export type OpponentInput = z.infer<typeof noOpponent | typeof existingOpponent | typeof newOpponent>
+
+/** "HH:MM" en 24 horas. */
+const timeOfDay = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora no válida')
+
+export const activityCreateInput = z.object({
+  title: z.string().trim().min(1, 'Escribe un título').max(120),
+  description: optionalText(2000),
+  activity_date: isoDate,
+  start_time: timeOfDay,
+  category: z.enum(ACTIVITY_CATEGORIES),
+  opponent: z.discriminatedUnion('kind', [noOpponent, existingOpponent, newOpponent]),
+  location: optionalText(120),
+})
+export type ActivityCreateInput = z.infer<typeof activityCreateInput>
+
 export const matchCreateInput = z.object({
-  opponent: z.discriminatedUnion('kind', [
-    z.object({ kind: z.literal('existing'), team_id: z.uuid() }),
-    z.object({ kind: z.literal('new'), team: newTeamInput }),
-  ]),
+  opponent: z.discriminatedUnion('kind', [existingOpponent, newOpponent]),
   played_on: isoDate,
-  start_time: z
-    .string()
-    .regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Hora no válida')
-    .nullable(),
+  start_time: timeOfDay.nullable(),
   location: optionalText(120),
   competition: z.enum(MATCH_COMPETITIONS),
   phase: optionalText(60),

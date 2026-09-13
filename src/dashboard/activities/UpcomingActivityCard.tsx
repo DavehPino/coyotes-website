@@ -62,9 +62,12 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
       </div>
 
       <div className="flex flex-col gap-1">
-        <p className={`text-xs font-medium tracking-wide uppercase ${muted}`}>
-          {ACTIVITY_TYPE_LABELS[activity.activity_type]}
-        </p>
+        {/* Las actividades cargadas desde el dashboard no tienen tipo ('otro'): no se muestra etiqueta. */}
+        {activity.activity_type !== 'otro' && (
+          <p className={`text-xs font-medium tracking-wide uppercase ${muted}`}>
+            {ACTIVITY_TYPE_LABELS[activity.activity_type]}
+          </p>
+        )}
         <h3 className="text-3xl leading-none md:text-4xl">{activity.title}</h3>
       </div>
 

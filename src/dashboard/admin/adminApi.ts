@@ -1,28 +1,31 @@
-// Llamadas de escritura del dashboard. Todas llevan la palabra clave en una cabecera.
+// Llamadas de escritura del dashboard (partidos y actividades). Todas llevan la palabra clave en una cabecera.
 import { ApiError, apiRequest } from '@/lib/api'
 import { ADMIN_SAFEWORD_HEADER } from '@shared/domain'
 
 const STORAGE_KEY = 'coyotes:admin-safeword'
 
-/** La palabra clave se recuerda solo en esta pestaña (sessionStorage) y se borra al cerrarla. */
+/**
+ * La palabra clave se recuerda en este navegador (localStorage), la misma para todas las vistas.
+ * Si el servidor la rechaza se borra y se vuelve a pedir.
+ */
 export const safewordStore = {
   get(): string | null {
     try {
-      return sessionStorage.getItem(STORAGE_KEY)
+      return localStorage.getItem(STORAGE_KEY)
     } catch {
       return null
     }
   },
   set(value: string) {
     try {
-      sessionStorage.setItem(STORAGE_KEY, value)
+      localStorage.setItem(STORAGE_KEY, value)
     } catch {
       // Navegación privada o almacenamiento bloqueado: se pedirá de nuevo al reabrir.
     }
   },
   clear() {
     try {
-      sessionStorage.removeItem(STORAGE_KEY)
+      localStorage.removeItem(STORAGE_KEY)
     } catch {
       // Ídem.
     }

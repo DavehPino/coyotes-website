@@ -2,8 +2,9 @@ import { useCallback, useId, useState, type ReactNode } from 'react'
 import { Link } from 'react-router'
 import { TEAM_NAME } from '@/config'
 import { Button, buttonClasses, Chip, Modal } from '../../ui'
-import { useRivalTeams } from '../api'
-import { safewordStore } from './adminApi'
+import { safewordStore } from '../../admin/adminApi'
+import { SafewordStep } from '../../admin/SafewordStep'
+import { useRivalTeams } from '../../admin/teams'
 import {
   initialDraft,
   validateMatch,
@@ -16,7 +17,6 @@ import {
   type VideoDraft,
 } from './draft'
 import { MatchStep } from './MatchStep'
-import { SafewordStep } from './SafewordStep'
 import { SubmitProgress } from './SubmitProgress'
 import { TeamStep } from './TeamStep'
 import { useMatchSubmission } from './useMatchSubmission'
@@ -68,7 +68,7 @@ export default function NewMatchDialog({ open, onClose, onRestart }: NewMatchDia
   const rivalName =
     (draft.team.mode === 'existing'
       ? rivals.data?.find((rival) => rival.id === draft.team.teamId)?.name
-      : draft.team.name.trim()) || 'Rival'
+      : draft.team.newTeam.name.trim()) || 'Rival'
   // Los partidos cargados desde aquí son siempre como visitante: el rival va primero.
   const matchLabel = `${rivalName} vs ${TEAM_NAME}`
 

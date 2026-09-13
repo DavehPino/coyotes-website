@@ -227,7 +227,6 @@ export type Database = {
           start_time: string | null
           title: string
           updated_at: string
-          week_start: string | null
         }
         Insert: {
           activity_date: string
@@ -243,7 +242,6 @@ export type Database = {
           start_time?: string | null
           title: string
           updated_at?: string
-          week_start?: string | null
         }
         Update: {
           activity_date?: string
@@ -259,7 +257,6 @@ export type Database = {
           start_time?: string | null
           title?: string
           updated_at?: string
-          week_start?: string | null
         }
         Relationships: [
           {

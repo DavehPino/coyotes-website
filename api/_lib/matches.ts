@@ -12,7 +12,7 @@ import type {
 import { badRequest } from './http.js'
 import { compareVideos, outcomeOf, TEAM_SUMMARY_SELECT, toSetScores, toVideo } from './mappers.js'
 import { db, type Tables } from './supabase.js'
-import { createRivalTeam, deleteTeam, getRivalTeam } from './teams.js'
+import { discardCreatedTeam, resolveOpponent } from './teams.js'
 
 type MatchRow = Tables['matches']['Row']
 
@@ -107,16 +107,8 @@ export async function createMatch(input: MatchCreateInput): Promise<MatchCreated
     throw badRequest('La fecha del partido no puede estar en el futuro')
   }
 
-  let opponent: TeamSummary
-  let createdTeamId: string | null = null
-  if (input.opponent.kind === 'existing') {
-    const team = await getRivalTeam(input.opponent.team_id)
-    if (!team) throw badRequest('El equipo rival elegido no existe')
-    opponent = team
-  } else {
-    opponent = await createRivalTeam(input.opponent.team)
-    createdTeamId = opponent.id
-  }
+  const resolved = await resolveOpponent(input.opponent)
+  const opponent = resolved.team as TeamSummary // los partidos siempre tienen rival
 
   const { won, lost } = tallySets(input.set_scores)
   const base = matchSlugBase(input.played_on, opponent.name)
@@ -147,9 +139,7 @@ export async function createMatch(input: MatchCreateInput): Promise<MatchCreated
       return { id: data.id, slug: data.slug, opponent }
     }
   } catch (err) {
-    if (createdTeamId) {
-      await deleteTeam(createdTeamId).catch((cleanupError: unknown) => console.error(cleanupError))
-    }
+    await discardCreatedTeam(resolved)
     throw err
   }
 }

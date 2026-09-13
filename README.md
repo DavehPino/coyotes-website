@@ -5,8 +5,8 @@ Un único deploy con dos apps:
 - **`<dominio>`**: web pública del equipo. Por defecto es una landing mínima (escudo, nombre y eslogan);
   con `VITE_HOME_VARIANT=full` se publica la página completa (Sobre el equipo, Entrenamientos y Contacto).
   Los textos viven en `src/content/public.ts`.
-- **`<dominio>/dashboard`**: dashboard interno con **Actividades** (tablero semanal) y **Partidos** (partidos
-  pasados con sus videos). Por ahora es de solo lectura y no pide login.
+- **`<dominio>/dashboard`**: dashboard interno con **Actividades** (carrusel de próximas actividades) y **Partidos**
+  (partidos pasados con sus videos). Se consulta sin login; cargar datos pide una palabra clave.
 
 Stack:
 
@@ -109,10 +109,21 @@ Con `npm run dev` las llamadas a `/api` no tienen servidor. Para desarrollar el 
 `<dominio>/dashboard` no está enlazado desde la web pública y va marcado como `noindex`, pero **no tiene login**:
 cualquiera que conozca la URL puede ver actividades, partidos y videos. Usuarios y roles están previstos más adelante.
 
-## Cargar un partido desde el dashboard
+## Cargar datos desde el dashboard
 
-En **Partidos → Cargar partido** se pide la palabra clave (`ADMIN_SAFEWORD`, se recuerda mientras la pestaña siga
-abierta) y se abre un formulario en tres pasos:
+Los botones **Cargar actividad** y **Cargar partido** piden la palabra clave (`ADMIN_SAFEWORD`). Se recuerda en el
+navegador para ambas vistas y se vuelve a pedir si el servidor la rechaza.
+
+### Actividad
+
+Un único formulario: título, descripción opcional, fecha y hora (solo futuras), categoría (`General` o `Liga Podio`),
+equipo rival opcional (existente o uno nuevo creado al guardar) y lugar opcional. Se guarda con
+`activity_type = 'otro'` y sin hora de fin. El carrusel las ordena por fecha y hora, con la de Liga Podio más cercana
+al frente.
+
+### Partido
+
+Formulario en tres pasos:
 
 1. **Rival:** uno existente o uno nuevo con nombre, abreviatura y URL del logo opcionales. Se guarda con
    `is_own_team = false` y sin categoría ni ciudad.
@@ -123,11 +134,12 @@ abierta) y se abre un formulario en tres pasos:
    3 en paralelo, reintentos automáticos) en `games/<slug>/`, y quedan vinculados al partido. Máximo 10 GB por video.
    Si una subida falla, el partido ya está guardado y se puede reintentar desde la misma pantalla.
 
-Si el rival es nuevo y el partido no se puede guardar, el rival se borra para no dejar restos.
+En los dos formularios, si el rival es nuevo y la actividad o el partido no se puede guardar, el rival se borra para
+no dejar restos.
 
-## Cómo cargar actividades y datos a mano
+## Cómo editar datos a mano
 
-Las actividades, los resúmenes y las portadas todavía se editan en **Supabase → Table Editor**
+Editar o cancelar actividades, los resúmenes y las portadas todavía se hace en **Supabase → Table Editor**
 (o con SQL). `supabase/seed.sql` es un ejemplo completo y se puede ejecutar varias veces sin duplicar filas:
 `npx supabase db query --linked -f supabase/seed.sql`.
 
@@ -136,8 +148,7 @@ Las actividades, los resúmenes y las portadas todavía se editan en **Supabase 
 2. **Actividades** (`weekly_activities`): una fila por actividad con `activity_date` (día), `start_time`/`end_time`
    (hora local, opcionales), `activity_type` (`entrenamiento`, `partido`, `amistoso`, `torneo`, `fisico`,
    `video_analisis`, `reunion`, `otro`), `location`, `description`, `opponent_team_id` (rival, opcional) e
-   `is_cancelled`. La semana (`week_start`) se calcula sola. El tablero muestra la semana actual y permite navegar
-   con `/dashboard/activities?week=YYYY-MM-DD`.
+   `is_cancelled`. Las canceladas y las que ya empezaron no se muestran.
 3. **Partidos** (`matches`): `slug` único en kebab-case (p.ej. `2026-09-06-vs-onas`; es la URL
    `/dashboard/matches/<slug>` y la carpeta del bucket), `played_on`, `start_time`, `opponent_team_id`, `is_home`,
    `location`, `competition`, `phase`, `sets_won`, `sets_lost` y `set_scores` con los parciales:
@@ -188,6 +199,7 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | Método | Ruta | Respuesta |
 |---|---|---|
 | POST | `/api/admin/verify` | `{ ok: true }` o 401 |
+| POST | `/api/admin/activities` | 201 Activity: crea la actividad y, si se pide, el rival (409 si el nombre ya existe) |
 | POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
 | POST | `/api/admin/uploads/complete` | 201 Video: cierra la subida y registra el video en el partido |
