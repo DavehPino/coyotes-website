@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { useRef, useState, type ReactNode } from 'react'
 import { FLYER_ASSET_NAME_MAX, FLYER_MAX_ASSETS } from '@shared/flyers'
 import { Button, FormError, Input } from '../ui'
 import { CheckIcon, TrashIcon, UploadIcon } from '../ui/icons'
@@ -14,7 +14,7 @@ type ImageLibraryManagerProps = {
   onRemove: (id: string) => void
 }
 
-/** Subir, renombrar y borrar imágenes propias (logos de rivales, auspiciantes). */
+/** Subir, renombrar y borrar imágenes propias (logos de rivales, auspiciantes) en el bucket. */
 export function ImageLibraryManager({ library, onRemove }: ImageLibraryManagerProps) {
   const fileRef = useRef<HTMLInputElement>(null)
   const full = library.images.length >= FLYER_MAX_ASSETS
@@ -39,22 +39,22 @@ export function ImageLibraryManager({ library, onRemove }: ImageLibraryManagerPr
           {library.images.map((image) => (
             <li key={image.id} className="flex items-center gap-2">
               <span className={`flex size-11 shrink-0 items-center justify-center rounded-lg p-1 shadow-border ${CHECKER}`}>
-                <img src={image.src} alt="" className="max-h-full max-w-full object-contain outline-none" />
+                <img src={image.url} alt="" className="max-h-full max-w-full object-contain outline-none" />
               </span>
-              <Input
-                aria-label="Nombre de la imagen"
-                value={image.name}
-                maxLength={FLYER_ASSET_NAME_MAX}
-                placeholder="Nombre (p.ej. Onas Vóley)"
-                onChange={(event) => library.rename(image.id, event.target.value)}
+              <NameInput
+                key={image.name}
+                name={image.name}
+                disabled={library.busy}
+                onCommit={(name) => void library.rename(image.id, name)}
               />
               <Button
                 variant="ghost"
                 size="icon"
+                disabled={library.busy}
                 aria-label={`Borrar ${image.name || 'imagen'}`}
                 onClick={() => {
                   onRemove(image.id)
-                  library.remove(image.id)
+                  void library.remove(image.id)
                 }}
               >
                 <TrashIcon className="size-4" />
@@ -64,12 +64,41 @@ export function ImageLibraryManager({ library, onRemove }: ImageLibraryManagerPr
         </ul>
       )}
 
-      <Button onClick={() => fileRef.current?.click()} disabled={full} className="self-start pr-4 pl-3.5">
+      {library.loading && <p className="text-sm text-coyote-ash">Cargando imágenes…</p>}
+      <Button
+        onClick={() => fileRef.current?.click()}
+        disabled={full || library.busy || library.loading}
+        className="self-start pr-4 pl-3.5"
+      >
         <UploadIcon className="size-4" />
-        {full ? `Máximo ${FLYER_MAX_ASSETS} imágenes` : 'Subir imágenes'}
+        {library.busy ? 'Guardando…' : full ? `Máximo ${FLYER_MAX_ASSETS} imágenes` : 'Subir imágenes'}
       </Button>
+      {library.loadError && <FormError>No se pudieron cargar las imágenes: {library.loadError}</FormError>}
       {library.error && <FormError>{library.error}</FormError>}
     </div>
+  )
+}
+
+/** Nombre editable: se guarda en el bucket al salir del campo o con Enter, no en cada tecla. */
+function NameInput({ name, disabled, onCommit }: { name: string; disabled: boolean; onCommit: (name: string) => void }) {
+  const [value, setValue] = useState(name)
+  const commit = () => {
+    if (value.trim() && value.trim() !== name) onCommit(value)
+    else setValue(name)
+  }
+  return (
+    <Input
+      aria-label="Nombre de la imagen"
+      value={value}
+      maxLength={FLYER_ASSET_NAME_MAX}
+      disabled={disabled}
+      placeholder="Nombre (p.ej. Onas Vóley)"
+      onChange={(event) => setValue(event.target.value)}
+      onBlur={commit}
+      onKeyDown={(event) => {
+        if (event.key === 'Enter') event.currentTarget.blur()
+      }}
+    />
   )
 }
 
@@ -103,7 +132,7 @@ export function ImagePicker({ images, selected, onToggle, noneLabel, onNone, lab
             onClick={() => onToggle(image.id)}
             label={image.name || 'Imagen sin nombre'}
           >
-            <img src={image.src} alt="" className="max-h-full max-w-full object-contain outline-none" />
+            <img src={image.url} alt="" className="max-h-full max-w-full object-contain outline-none" />
           </Tile>
         </li>
       ))}

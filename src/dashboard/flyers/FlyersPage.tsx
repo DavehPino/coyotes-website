@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react'
 import { FLYER_FORMAT_SIZES, FLYER_TEMPLATE_LABELS, type FlyerContent } from '@shared/flyers'
 import { Button, Card, FormError, PageHeader } from '../ui'
 import { BookmarkIcon, UndoIcon } from '../ui/icons'
+import { useFlyersAccess } from './access'
 import { AiPanel } from './AiPanel'
 import { useImageLibrary } from './assetLibrary'
 import { EditorPanel } from './EditorPanel'
@@ -30,11 +31,10 @@ export function FlyersPage() {
   const [past, setPast] = useState<FlyerContent[]>([])
   const [tab, setTab] = useState<Tab>('templates')
   const [photoUrl, setPhotoUrl] = useState<string | null>(null)
-  const library = useImageLibrary()
-  const saved = useSavedFlyers()
-  const { assets, ready } = useFlyerAssets(photoUrl, library.images)
-  // Las miniaturas de Guardados no llevan la foto de fondo (no se guarda).
-  const { assets: savedAssets } = useFlyerAssets(null, library.images)
+  const access = useFlyersAccess()
+  const library = useImageLibrary(access.run)
+  const saved = useSavedFlyers(access.run)
+  const { assets, ready, failedImages } = useFlyerAssets(photoUrl, library.images)
   const canvasRef = useRef<HTMLCanvasElement>(null)
 
   // Último borrador confirmado: la respuesta de la IA puede llegar después de otras ediciones.
@@ -91,13 +91,13 @@ export function FlyersPage() {
               <span className="hidden sm:inline">Deshacer</span>
             </Button>
             <Button
-              onClick={() => saved.save(flyer, 'manual', flyer.title)}
-              disabled={isSaved}
+              onClick={() => void saved.save(flyer, 'manual', flyer.title, assets)}
+              disabled={isSaved || saved.saving || saved.loading || !ready}
               aria-label={isSaved ? 'Guardado' : 'Guardar'}
               className="px-3 sm:pr-4 sm:pl-3.5"
             >
               <BookmarkIcon className="size-4" strokeWidth={2} filled={isSaved} />
-              <span className="hidden sm:inline">{isSaved ? 'Guardado' : 'Guardar'}</span>
+              <span className="hidden sm:inline">{saved.saving ? 'Guardando…' : isSaved ? 'Guardado' : 'Guardar'}</span>
             </Button>
             <ExportActions canvasRef={canvasRef} flyer={flyer} disabled={!ready} />
           </>
@@ -117,6 +117,12 @@ export function FlyersPage() {
           <p className="text-xs text-coyote-ash tabular-nums">
             {FLYER_TEMPLATE_LABELS[flyer.template]} · {size.label} · {size.width}×{size.height} px
           </p>
+          {failedImages > 0 && (
+            <FormError>
+              No se pudieron dibujar {failedImages === 1 ? '1 imagen' : `${failedImages} imágenes`} del bucket. Revisa
+              que el CORS del bucket permita GET desde este dominio (README → Bucket).
+            </FormError>
+          )}
         </Card>
 
         <div className="flex min-w-0 flex-col gap-4">
@@ -124,7 +130,7 @@ export function FlyersPage() {
           {saved.error && tab !== 'saved' && <FormError>{saved.error}</FormError>}
           {tab === 'templates' && <TemplatesPanel flyer={flyer} onApply={replace} />}
           {tab === 'saved' && (
-            <SavedPanel saved={saved} current={flyer} assets={savedAssets} ready={ready} onOpen={replace} />
+            <SavedPanel saved={saved} current={flyer} onOpen={replace} />
           )}
           {tab === 'editor' && (
             <EditorPanel
@@ -145,11 +151,13 @@ export function FlyersPage() {
               onUndo={undo}
               library={library}
               onRemoveImage={removeImage}
-              onSave={(result, prompt) => saved.save(result, 'ia', prompt)}
+              onSave={(result, prompt) => saved.save(result, 'ia', prompt, assets)}
+              run={access.run}
             />
           </div>
         </div>
       </div>
+      {access.dialog}
     </section>
   )
 }

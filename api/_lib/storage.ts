@@ -40,7 +40,7 @@ export async function storage<T>(operation: () => Promise<T>): Promise<T> {
       throw new HttpError(
         503,
         'storage_forbidden',
-        'Las credenciales del bucket no permiten subir ni borrar videos. El token de R2 necesita permiso de lectura y escritura.',
+        'Las credenciales del bucket no permiten subir ni borrar archivos. El token de R2 necesita permiso de lectura y escritura.',
       )
     }
     throw err

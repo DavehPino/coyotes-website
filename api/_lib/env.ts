@@ -34,10 +34,14 @@ export const env = {
   get adminSafeword() {
     return optional('ADMIN_SAFEWORD')
   },
+  /** Palabra clave de la sección Flyers (subir o borrar en el bucket y usar la IA). Sin ella, esas acciones dan 503. */
+  get flyersSafeword() {
+    return optional('FLYERS_SAFEWORD')
+  },
   get cronSecret() {
     return optional('CRON_SECRET')
   },
-  /** Asistente de flyers. Sin clave, /api/admin/flyer-suggest responde 503. */
+  /** Asistente de flyers. Sin clave, /api/flyers/suggest responde 503. */
   get openrouter() {
     return {
       apiKey: optional('OPENROUTER_API_KEY'),

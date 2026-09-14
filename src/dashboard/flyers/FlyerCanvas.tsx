@@ -11,13 +11,14 @@ function loadBaseAssets() {
   return baseAssets
 }
 
-// Cada imagen de la biblioteca se decodifica una vez, aunque la usen varios lienzos.
+// Cada imagen de la biblioteca se decodifica una vez por URL, aunque la usen varios lienzos. Si falla (p.ej. el
+// CORS del bucket no permite GET) no se cachea el fallo: se reintenta cuando cambie la URL firmada.
 const decoded = new Map<string, Promise<HTMLImageElement | null>>()
 function decode(image: FlyerImage) {
-  let pending = decoded.get(image.id)
+  let pending = decoded.get(image.url)
   if (!pending) {
-    pending = loadImage(image.src).catch(() => null)
-    decoded.set(image.id, pending)
+    pending = loadImage(image.url, true).catch(() => null)
+    decoded.set(image.url, pending)
   }
   return pending
 }
@@ -31,11 +32,12 @@ const NO_IMAGES: ReadonlyMap<string, HTMLImageElement> = new Map()
 export function useFlyerAssets(
   photoUrl: string | null,
   library: FlyerImage[] = [],
-): { assets: FlyerAssets; ready: boolean } {
+): { assets: FlyerAssets; ready: boolean; failedImages: number } {
   const [logo, setLogo] = useState<HTMLImageElement | null>(null)
   const [ready, setReady] = useState(false)
   const [photo, setPhoto] = useState<HTMLImageElement | null>(null)
   const [images, setImages] = useState<ReadonlyMap<string, HTMLImageElement>>(NO_IMAGES)
+  const [failedImages, setFailedImages] = useState(0)
 
   useEffect(() => {
     let active = true
@@ -63,7 +65,7 @@ export function useFlyerAssets(
     }
   }, [photoUrl])
 
-  const libraryKey = library.map((image) => image.id).join(',')
+  const libraryKey = library.map((image) => image.url).join(',')
   useEffect(() => {
     let active = true
     void Promise.all(library.map(async (image) => [image.id, await decode(image)] as const)).then((entries) => {
@@ -71,6 +73,7 @@ export function useFlyerAssets(
       const map = new Map<string, HTMLImageElement>()
       for (const [id, element] of entries) if (element) map.set(id, element)
       setImages(map.size > 0 ? map : NO_IMAGES)
+      setFailedImages(entries.length - map.size)
     })
     return () => {
       active = false
@@ -79,7 +82,7 @@ export function useFlyerAssets(
   }, [libraryKey])
 
   const assets = useMemo(() => ({ logo, photo, images }), [logo, photo, images])
-  return { assets, ready }
+  return { assets, ready, failedImages }
 }
 
 type FlyerCanvasProps = {

@@ -1,4 +1,4 @@
-// Generador de flyers: contenido de un flyer y contrato del asistente de IA (POST /api/admin/flyer-suggest).
+// Generador de flyers: contenido de un flyer, contrato del asistente de IA (POST /api/flyers/suggest) y biblioteca.
 // El flyer es solo datos; el dibujo vive en el frontend (src/dashboard/flyers/render.ts).
 import { z } from 'zod'
 
@@ -66,6 +66,7 @@ const text = (field: FlyerTextField) => z.string().max(FLYER_TEXT_LIMITS[field])
  * se le envía el id con el nombre que puso el usuario, nunca la imagen.
  */
 export const FLYER_ASSET_ID = /^asset_[a-z0-9]{6,32}$/
+export const SAVED_FLYER_ID = /^flyer_[a-z0-9]{6,32}$/
 export const FLYER_MAX_LOGOS = 4
 export const FLYER_MAX_ASSETS = 20
 export const FLYER_ASSET_NAME_MAX = 60
@@ -117,3 +118,71 @@ export type FlyerSuggestion = {
   message: string
   model: string
 }
+
+// ─── Biblioteca en el bucket (carpeta assets/) ───────────────────────────────
+// Lectura libre (GET /api/flyers/library); subir, renombrar, borrar y usar la IA exigen FLYERS_SAFEWORD.
+
+/** Flyers guardados como máximo: cada uno es un PNG de 1-3 MB más su JSON editable. */
+export const SAVED_FLYERS_LIMIT = 50
+/** Las imágenes llegan reducidas a 512 px desde el navegador: 2 MB sobra. */
+export const FLYER_IMAGE_MAX_BYTES = 2 * 1024 * 1024
+export const FLYER_PNG_MAX_BYTES = 10 * 1024 * 1024
+export const SAVED_FLYER_LABEL_MAX = 160
+
+export const FLYER_IMAGE_TYPES = ['image/webp', 'image/png'] as const
+export type FlyerImageType = (typeof FLYER_IMAGE_TYPES)[number]
+
+export type FlyerImage = FlyerAssetRef & {
+  /** URL de lectura (pública o firmada). */
+  url: string
+  createdAt: string
+}
+
+export type SavedFlyer = {
+  id: string
+  savedAt: string
+  source: 'ia' | 'manual'
+  /** Pedido a la IA o título del flyer. */
+  label: string
+  flyer: FlyerContent
+  /** PNG exportado. */
+  imageUrl: string
+}
+
+export type FlyerLibrary = { images: FlyerImage[]; flyers: SavedFlyer[] }
+
+export const flyerUploadUrlInput = z.discriminatedUnion('kind', [
+  z.object({ kind: z.literal('image'), contentType: z.enum(FLYER_IMAGE_TYPES) }),
+  z.object({ kind: z.literal('flyer'), contentType: z.literal('image/png') }),
+])
+export type FlyerUploadUrlInput = z.infer<typeof flyerUploadUrlInput>
+
+/** URL firmada para subir un archivo directo al bucket con PUT (y las cabeceras que hay que enviar). */
+export type FlyerUploadUrl = { id: string; url: string; headers: Record<string, string> }
+
+export const flyerImageSaveInput = z.object({
+  id: assetId,
+  contentType: z.enum(FLYER_IMAGE_TYPES),
+  name: z.string().trim().min(1, 'Ponle un nombre').max(FLYER_ASSET_NAME_MAX),
+})
+export type FlyerImageSaveInput = z.infer<typeof flyerImageSaveInput>
+
+export const flyerImageRenameInput = z.object({
+  id: assetId,
+  name: z.string().trim().min(1, 'Ponle un nombre').max(FLYER_ASSET_NAME_MAX),
+})
+export type FlyerImageRenameInput = z.infer<typeof flyerImageRenameInput>
+
+export const flyerImageDeleteInput = z.object({ id: assetId })
+export type FlyerImageDeleteInput = z.infer<typeof flyerImageDeleteInput>
+
+export const savedFlyerSaveInput = z.object({
+  id: z.string().regex(SAVED_FLYER_ID),
+  source: z.enum(['ia', 'manual']),
+  label: z.string().trim().max(SAVED_FLYER_LABEL_MAX),
+  flyer: flyerContentSchema,
+})
+export type SavedFlyerSaveInput = z.infer<typeof savedFlyerSaveInput>
+
+export const savedFlyerDeleteInput = z.object({ id: z.string().regex(SAVED_FLYER_ID) })
+export type SavedFlyerDeleteInput = z.infer<typeof savedFlyerDeleteInput>

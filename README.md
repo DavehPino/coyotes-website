@@ -5,8 +5,9 @@ Un único deploy con dos apps:
 - **`<dominio>`**: web pública del equipo. Por defecto es una landing mínima (escudo, nombre y eslogan);
   con `VITE_HOME_VARIANT=full` se publica la página completa (Sobre el equipo, Entrenamientos y Contacto).
   Los textos viven en `src/content/public.ts`.
-- **`dashboard.<dominio>`**: dashboard interno con **Actividades** (carrusel de próximas actividades) y **Partidos**
-  (partidos pasados con sus videos). Se consulta sin login; cargar datos pide una palabra clave.
+- **`dashboard.<dominio>`**: dashboard interno con **Actividades** (carrusel de próximas actividades), **Partidos**
+  (partidos pasados con sus videos) y **Flyers** (generador de flyers para Instagram con IA). Se consulta sin login;
+  cargar datos pide una palabra clave y la sección Flyers tiene otra propia.
 
 Stack:
 
@@ -43,14 +44,15 @@ npm i -g vercel        # CLI de Vercel para `vercel dev` y deploy
    `S3_SECRET_ACCESS_KEY`. Con solo lectura se ven los videos, pero la subida desde el dashboard responde
    "Las credenciales del bucket no permiten subir videos".
 3. Usa `S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com` y `S3_REGION=auto`.
-4. En Bucket → Settings → **CORS Policy**, añade esta regla. El navegador sube los videos directo al bucket, así que
-   hace falta `PUT` desde los dominios del dashboard y exponer `ETag`:
+4. En Bucket → Settings → **CORS Policy**, añade esta regla. El navegador sube videos, imágenes y flyers directo al
+   bucket (`PUT`, exponiendo `ETag`) y el generador de flyers lee las imágenes para dibujarlas en el lienzo (`GET`;
+   sin él los logos no aparecen y no se puede exportar el PNG):
 
    ```json
    [
      {
        "AllowedOrigins": ["https://dashboard.tudominio.com", "http://dashboard.localhost:5173", "http://dashboard.localhost:3000"],
-       "AllowedMethods": ["PUT"],
+       "AllowedMethods": ["GET", "PUT"],
        "AllowedHeaders": ["*"],
        "ExposeHeaders": ["ETag"],
        "MaxAgeSeconds": 3600
@@ -62,7 +64,8 @@ npm i -g vercel        # CLI de Vercel para `vercel dev` y deploy
 5. Para la reproducción: deja `STORAGE_PUBLIC_BASE_URL` vacío si quieres URLs firmadas temporales (bucket privado),
    o pon ahí el dominio público del bucket.
 6. Define `CRON_SECRET` (cualquier cadena larga): protege el cron de sincronización.
-7. Define `ADMIN_SAFEWORD` (una frase larga): es la palabra clave del botón **Cargar partido**.
+7. Define `ADMIN_SAFEWORD` (una frase larga): es la palabra clave de **Cargar actividad** y **Cargar partido**.
+8. Define `FLYERS_SAFEWORD` (otra frase, distinta): es la palabra clave de la sección **Flyers** (ver abajo).
 
 Para usar **AWS S3**, deja `S3_ENDPOINT` vacío y pon la región real.
 
@@ -183,17 +186,44 @@ compartir archivos.
   `src/dashboard/flyers/templates.ts` (textos y campos) y `render.ts` (diseño y paletas).
 - **Editar:** formato, paleta de marca (Brasa, Dorado, Atardecer, Liga Podio), logo, foto de fondo y textos. La foto
   solo se usa en el navegador: no se sube ni se envía a la IA. El borrador se recuerda en `localStorage`.
-- **Guardados:** los flyers de la IA se guardan solos al generarse y cualquier otro con **Guardar** (hasta 50, en
-  `localStorage`). Abrir uno lo carga en el editor sin modificar la copia guardada.
-- **Logos de otros equipos:** imágenes propias (PNG, JPG, WebP o SVG; hasta 20) que se reducen a 512 px y se guardan
-  en `localStorage`. El logo del rival va junto al escudo en Día de partido y Resultado, y hay una fila de hasta 4
-  logos (auspiciantes, liga) en todas las plantillas. Se eligen en **Editar** o se le dejan a la IA.
-- **Asistente IA:** un pedido en lenguaje natural (con ideas de ejemplo) reescribe el flyer actual. Pide la palabra
-  clave y usa un modelo gratuito de [OpenRouter](https://openrouter.ai). El servidor le pasa las próximas 8
+- **Guardados:** los flyers de la IA se guardan solos al generarse y cualquier otro con **Guardar** (hasta 50).
+  Se guardan en el bucket, así que los ve todo el equipo desde cualquier dispositivo. Abrir uno lo carga en el
+  editor sin modificar la copia guardada; la foto de fondo queda en el PNG pero no en la copia editable.
+- **Logos de otros equipos:** imágenes propias (PNG, JPG, WebP o SVG; hasta 20) que se reducen a 512 px en el
+  navegador y se suben al bucket. El logo del rival va junto al escudo en Día de partido y Resultado, y hay una fila
+  de hasta 4 logos (auspiciantes, liga) en todas las plantillas. Se eligen en **Editar** o se le dejan a la IA.
+- **Asistente IA:** un pedido en lenguaje natural (con ideas de ejemplo) reescribe el flyer actual. Usa un modelo
+  gratuito de [OpenRouter](https://openrouter.ai). El servidor le pasa las próximas 8
   actividades para que pueda usar fechas, horas, lugares y rivales reales. El modelo solo devuelve textos, plantilla,
   paleta, formato y qué imágenes usar; las imágenes no se envían, solo su id y el nombre que les pusiste (nómbralas
   como el equipo). Los campos inválidos o ids desconocidos conservan el valor anterior. **Deshacer** revierte
   plantillas, guardados abiertos y respuestas de la IA.
+
+### Palabra clave de flyers
+
+Ver la sección es libre. Subir, renombrar o borrar imágenes, guardar o borrar flyers y usar la IA piden
+`FLYERS_SAFEWORD`, independiente de `ADMIN_SAFEWORD`: alguien puede tener acceso a los flyers sin poder cargar
+actividades ni partidos, y al revés. Se pide en un diálogo la primera vez que hace falta y se recuerda en el navegador.
+Sin `FLYERS_SAFEWORD` esas acciones responden 503.
+
+### Archivos en el bucket
+
+Todo vive en la carpeta `assets/` del mismo bucket (no hace falta crearla: aparece con el primer archivo). No usa la
+base de datos: cada elemento es su archivo más un JSON. El cron de videos solo registra extensiones de video, así que
+no los toca.
+
+```
+assets/images/<id>.webp|png   imagen reducida
+assets/images/<id>.json       { id, name, contentType, createdAt }
+assets/flyers/<id>.png        flyer exportado (1080 px de ancho)
+assets/flyers/<id>.json       { id, savedAt, source: "ia" | "manual", label, flyer }
+```
+
+Los archivos van directo del navegador al bucket con una URL firmada (10 min); la API comprueba que llegaron y su
+tamaño (2 MB por imagen, 10 MB por flyer) antes de escribir el JSON. Para verlos, la biblioteca devuelve URLs
+públicas (`STORAGE_PUBLIC_BASE_URL`) o firmadas que no cambian durante una hora, para que el navegador las cachee.
+
+### IA
 
 Configuración: crea una clave en OpenRouter → Keys y guárdala en `OPENROUTER_API_KEY`. Sin clave, el asistente
 responde 503 y el resto de la sección funciona igual. `OPENROUTER_MODEL` es opcional: por defecto es
@@ -271,10 +301,24 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
 | POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
 | POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
-| POST | `/api/admin/flyer-suggest` | `{ flyer, message, model }`: el asistente de IA reescribe el flyer (`{ prompt, flyer, today, assets: [{ id, name }] }`); 503 sin `OPENROUTER_API_KEY` |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
 | POST | `/api/admin/uploads/complete` | 201 Video: cierra la subida y registra el video en el partido |
 | POST | `/api/admin/uploads/abort` | Descarta los trozos de una subida cancelada o fallida |
+
+Flyers: `GET /api/flyers/library` es libre; los `POST` requieren la cabecera `x-flyers-safeword` con `FLYERS_SAFEWORD`
+codificada con `encodeURIComponent` (la de admin no sirve aquí, ni al revés).
+
+| Método | Ruta | Respuesta |
+|---|---|---|
+| GET | `/api/flyers/library` | `{ images, flyers }` del bucket con sus URLs de lectura |
+| POST | `/api/flyers/verify` | `{ ok: true }` o 401 |
+| POST | `/api/flyers/suggest` | `{ flyer, message, model }`: la IA reescribe el flyer (`{ prompt, flyer, today, assets: [{ id, name }] }`); 503 sin `OPENROUTER_API_KEY` |
+| POST | `/api/flyers/upload-url` | `{ id, url, headers }`: URL firmada para subir una imagen (`kind: "image"`, WebP o PNG) o el PNG de un flyer (`kind: "flyer"`) |
+| POST | `/api/flyers/image-save` | 201 imagen: registra la imagen subida con `{ id, contentType, name }` (409 si ya hay 20) |
+| POST | `/api/flyers/image-rename` | Imagen con el nuevo `name` |
+| POST | `/api/flyers/image-delete` | `{ ok: true }`: borra la imagen y su JSON |
+| POST | `/api/flyers/flyer-save` | 201 flyer: registra el PNG subido con `{ id, source, label, flyer }` (409 si ya hay 50) |
+| POST | `/api/flyers/flyer-delete` | `{ ok: true }`: borra el PNG y su JSON |
 
 Los contratos viven en `shared/schemas.ts`; el acceso a datos está centralizado en `api/_lib/` para poder añadir
 autenticación más adelante sin rehacer rutas.
@@ -290,8 +334,9 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 
 | Archivo | Rutas |
 |---|---|
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/flyer-suggest` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
+| `api/flyers/[action].ts` | `GET /api/flyers/library`; `POST /api/flyers/verify`, `/suggest`, `/upload-url`, `/image-save`, `/image-rename`, `/image-delete`, `/flyer-save`, `/flyer-delete` |
 
 Al añadir un endpoint:
 

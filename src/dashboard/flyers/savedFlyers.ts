@@ -1,84 +1,71 @@
-// Flyers guardados en localStorage de este navegador. Los de la IA se guardan solos al generarse; el resto con
-// el botón Guardar. Son copias: editar un flyer abierto desde aquí no cambia el guardado.
+// Flyers guardados en el bucket (assets/flyers/): el PNG exportado y su contenido editable. Los de la IA se
+// guardan solos al generarse; el resto con el botón Guardar. Son copias: editar uno abierto no cambia el guardado.
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { flyerContentSchema, type FlyerContent } from '@shared/flyers'
-import { newId } from './assetLibrary'
+import { SAVED_FLYER_LABEL_MAX, type FlyerContent, type FlyerLibrary, type SavedFlyer } from '@shared/flyers'
+import { errorMessage } from '../admin/adminApi'
+import { flyerLibraryKey, flyersPost, uploadToBucket, useFlyerLibrary } from './api'
+import type { RunProtected } from './assetLibrary'
+import { renderFlyerBlob, type FlyerAssets } from './render'
 
-export type SavedFlyer = {
-  id: string
-  savedAt: number
-  source: 'ia' | 'manual'
-  /** Pedido a la IA o título del flyer. */
-  label: string
-  flyer: FlyerContent
-}
+export type { SavedFlyer }
 
-const STORAGE_KEY = 'coyotes:flyers-saved'
-export const SAVED_LIMIT = 50
-
-function read(): SavedFlyer[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const parsed: unknown = raw ? JSON.parse(raw) : []
-    if (!Array.isArray(parsed)) return []
-    return parsed.flatMap((item) => {
-      const flyer = flyerContentSchema.safeParse(item?.flyer)
-      if (!flyer.success || typeof item.id !== 'string') return []
-      return [
-        {
-          id: item.id,
-          savedAt: Number(item.savedAt) || 0,
-          source: item.source === 'ia' ? 'ia' : 'manual',
-          label: typeof item.label === 'string' ? item.label : '',
-          flyer: flyer.data,
-        } satisfies SavedFlyer,
-      ]
-    })
-  } catch {
-    return []
-  }
-}
-
-function write(items: SavedFlyer[]): boolean {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(items))
-    return true
-  } catch {
-    return false
-  }
-}
-
-/** Igualdad por contenido, sin depender del orden de las claves (cambia al leer de localStorage). */
+/** Igualdad por contenido, sin depender del orden de las claves. */
 const fingerprint = (flyer: FlyerContent) => JSON.stringify(flyer, Object.keys(flyer).sort())
 export const sameFlyer = (a: FlyerContent, b: FlyerContent) => fingerprint(a) === fingerprint(b)
 
-export function useSavedFlyers() {
-  const [items, setItems] = useState<SavedFlyer[]>(read)
+export function useSavedFlyers(run: RunProtected) {
+  const queryClient = useQueryClient()
+  const query = useFlyerLibrary()
+  const items = query.data?.flyers ?? []
+  const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const patch = (update: (flyers: SavedFlyer[]) => SavedFlyer[]) =>
+    queryClient.setQueryData<FlyerLibrary>(flyerLibraryKey, (prev) => prev && { ...prev, flyers: update(prev.flyers) })
+
+  const isSaved = (flyer: FlyerContent) => items.some((item) => sameFlyer(item.flyer, flyer))
 
   return {
     items,
+    loading: query.isPending,
+    loadError: query.error ? errorMessage(query.error) : null,
+    saving,
     error,
-    /** Guarda al principio de la lista. Un flyer idéntico ya guardado no se duplica: sube arriba. */
-    save(flyer: FlyerContent, source: SavedFlyer['source'], label: string) {
-      const existing = items.find((item) => sameFlyer(item.flyer, flyer))
-      const entry: SavedFlyer = existing
-        ? { ...existing, savedAt: Date.now(), source: existing.source === 'ia' ? 'ia' : source }
-        : { id: newId('flyer'), savedAt: Date.now(), source, label: label.trim().slice(0, 160), flyer }
-      const next = [entry, ...items.filter((item) => item.id !== entry.id)].slice(0, SAVED_LIMIT)
-      if (write(next)) {
-        setItems(next)
-        setError(null)
-      } else {
-        setError('No se pudo guardar: no queda espacio en este navegador. Borra flyers o imágenes que no uses.')
+    isSaved,
+    /**
+     * Sube el PNG (dibujado con `assets`) y registra el flyer. Si ya hay uno idéntico no hace nada.
+     * Devuelve false si falló o se canceló la palabra clave.
+     */
+    async save(flyer: FlyerContent, source: SavedFlyer['source'], label: string, assets: FlyerAssets): Promise<boolean> {
+      if (isSaved(flyer)) return true
+      setSaving(true)
+      setError(null)
+      try {
+        const saved = await run(async (safeword) => {
+          const png = await renderFlyerBlob(flyer, assets)
+          const id = await uploadToBucket({ kind: 'flyer', contentType: 'image/png' }, png, safeword)
+          const body = { id, source, label: label.trim().slice(0, SAVED_FLYER_LABEL_MAX), flyer }
+          return flyersPost<SavedFlyer>('flyer-save', body, safeword)
+        })
+        if (saved) patch((prev) => [saved, ...prev])
+        return saved !== undefined
+      } catch (err) {
+        setError(`No se pudo guardar el flyer: ${errorMessage(err)}`)
+        return false
+      } finally {
+        setSaving(false)
       }
     },
-    remove(id: string) {
-      const next = items.filter((item) => item.id !== id)
-      write(next)
-      setItems(next)
+    async remove(id: string) {
+      setError(null)
+      try {
+        const done = await run((safeword) => flyersPost('flyer-delete', { id }, safeword))
+        if (done) patch((prev) => prev.filter((item) => item.id !== id))
+      } catch (err) {
+        setError(`No se pudo borrar el flyer: ${errorMessage(err)}`)
+      }
     },
-    isSaved: (flyer: FlyerContent) => items.some((item) => sameFlyer(item.flyer, flyer)),
   }
 }
 

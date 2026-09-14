@@ -1,11 +1,11 @@
 import { useEffect, useId, useRef, useState, type FormEvent } from 'react'
 import { todayIsoDate } from '@shared/dates'
 import { FLYER_PROMPT_MAX, type FlyerContent, type FlyerSuggestion } from '@shared/flyers'
-import { adminPost, errorMessage, isAbort, isUnauthorized, safewordStore } from '../admin/adminApi'
-import { SafewordStep } from '../admin/SafewordStep'
+import { errorMessage, isAbort } from '../admin/adminApi'
 import { Button, Card, Field, FormError, Textarea } from '../ui'
 import { SparklesIcon, UndoIcon } from '../ui/icons'
-import { toAssetRefs, type ImageLibrary } from './assetLibrary'
+import { flyersPost } from './api'
+import { toAssetRefs, type ImageLibrary, type RunProtected } from './assetLibrary'
 import { ImageLibraryManager } from './ImageLibrary'
 
 const EXAMPLE_PROMPTS = [
@@ -25,21 +25,18 @@ type AiPanelProps = {
   onUndo: () => void
   library: ImageLibrary
   onRemoveImage: (id: string) => void
-  /** Guarda el resultado en Guardados para poder volver a él. */
-  onSave: (flyer: FlyerContent, prompt: string) => void
+  /** Guarda el resultado en Guardados para poder volver a él. Devuelve false si no se pudo. */
+  onSave: (flyer: FlyerContent, prompt: string) => Promise<boolean>
+  run: RunProtected
 }
 
-type Reply = { message: string; model: string }
+type Reply = { message: string; model: string; saved: boolean | null }
 
 /** Asistente de IA: reescribe el flyer actual según un pedido en lenguaje natural. */
-export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImage, onSave }: AiPanelProps) {
+export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImage, onSave, run }: AiPanelProps) {
   const formId = useId()
-  const safewordFormId = useId()
   const promptRef = useRef<HTMLTextAreaElement>(null)
   const abortRef = useRef<AbortController | null>(null)
-  const [safeword, setSafeword] = useState<string | null>(() => safewordStore.get())
-  const [notice, setNotice] = useState<string | null>(null)
-  const [verifying, setVerifying] = useState(false)
   const [prompt, setPrompt] = useState('')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -50,55 +47,29 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
   async function handleSubmit(event?: FormEvent) {
     event?.preventDefault()
     const text = prompt.trim()
-    if (!text || loading || !safeword) return
+    if (!text || loading) return
 
     const controller = new AbortController()
     abortRef.current = controller
     setLoading(true)
     setError(null)
     try {
-      const suggestion = await adminPost<FlyerSuggestion>(
-        '/flyer-suggest',
-        { prompt: text, flyer, today: todayIsoDate(), assets: toAssetRefs(library.images) },
-        safeword,
-        controller.signal,
+      const body = { prompt: text, flyer, today: todayIsoDate(), assets: toAssetRefs(library.images) }
+      const suggestion = await run((safeword) =>
+        flyersPost<FlyerSuggestion>('suggest', body, safeword, controller.signal),
       )
+      if (!suggestion) return
       onApply(suggestion.flyer)
-      onSave(suggestion.flyer, text)
-      setReply({ message: suggestion.message, model: suggestion.model })
+      setReply({ message: suggestion.message, model: suggestion.model, saved: null })
       setPrompt('')
+      // Se guarda después de mostrarlo: si el bucket falla, el flyer ya está en pantalla.
+      const saved = await onSave(suggestion.flyer, text)
+      setReply((prev) => prev && { ...prev, saved })
     } catch (err) {
-      if (isAbort(err)) return
-      if (isUnauthorized(err)) {
-        safewordStore.clear()
-        setSafeword(null)
-        setNotice('La palabra clave ya no es válida. Escríbela de nuevo para usar el asistente.')
-      } else {
-        setError(errorMessage(err))
-      }
+      if (!isAbort(err)) setError(errorMessage(err))
     } finally {
       setLoading(false)
     }
-  }
-
-  if (!safeword) {
-    return (
-      <Card className="flex flex-col gap-4 p-4">
-        <SafewordStep
-          formId={safewordFormId}
-          notice={notice}
-          onBusyChange={setVerifying}
-          onVerified={(value) => {
-            safewordStore.set(value)
-            setSafeword(value)
-            setNotice(null)
-          }}
-        />
-        <Button type="submit" form={safewordFormId} variant="primary" disabled={verifying} className="self-end">
-          {verifying ? 'Comprobando…' : 'Continuar'}
-        </Button>
-      </Card>
-    )
   }
 
   return (
@@ -136,7 +107,9 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
             <p className="text-sm text-coyote-silver">{reply.message}</p>
-            <p className="truncate text-xs text-coyote-ash">Guardado en Guardados · {reply.model}</p>
+            <p className="truncate text-xs text-coyote-ash">
+              {reply.saved === null ? 'Guardando…' : reply.saved ? 'Guardado en Guardados' : 'Sin guardar'} · {reply.model}
+            </p>
           </div>
           {canUndo && (
             <Button variant="ghost" size="sm" onClick={onUndo}>

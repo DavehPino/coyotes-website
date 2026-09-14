@@ -9,10 +9,22 @@ type SafewordStepProps = {
   notice: string | null
   onVerified: (safeword: string) => void
   onBusyChange: (busy: boolean) => void
+  /** Comprobación contra la API; por defecto, la palabra clave de carga. */
+  verify?: (safeword: string) => Promise<unknown>
+  description?: string
 }
 
+const verifyAdmin = (safeword: string) => adminPost('/verify', {}, safeword)
+
 /** Pide la palabra clave y la valida contra la API antes de mostrar el formulario. */
-export function SafewordStep({ formId, notice, onVerified, onBusyChange }: SafewordStepProps) {
+export function SafewordStep({
+  formId,
+  notice,
+  onVerified,
+  onBusyChange,
+  verify = verifyAdmin,
+  description = 'Solo el cuerpo técnico puede cargar datos. Escribe la palabra clave del equipo para continuar.',
+}: SafewordStepProps) {
   const [value, setValue] = useState('')
   const [error, setError] = useState<string | null>(null)
 
@@ -26,7 +38,7 @@ export function SafewordStep({ formId, notice, onVerified, onBusyChange }: Safew
     setError(null)
     onBusyChange(true)
     try {
-      await adminPost('/verify', {}, safeword)
+      await verify(safeword)
       onVerified(safeword)
     } catch (err) {
       setError(err instanceof ApiError && err.status === 401 ? 'Palabra clave incorrecta' : errorMessage(err))
@@ -41,9 +53,7 @@ export function SafewordStep({ formId, notice, onVerified, onBusyChange }: Safew
         <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-ember text-coyote-gold">
           <LockIcon />
         </span>
-        <p className="text-sm text-coyote-ash">
-          Solo el cuerpo técnico puede cargar datos. Escribe la palabra clave del equipo para continuar.
-        </p>
+        <p className="text-sm text-coyote-ash">{description}</p>
       </div>
       {notice && <FormError>{notice}</FormError>}
       <Field label="Palabra clave" error={error}>

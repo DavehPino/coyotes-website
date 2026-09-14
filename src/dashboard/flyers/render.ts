@@ -75,10 +75,15 @@ export async function loadFlyerFonts(): Promise<void> {
   )
 }
 
-export function loadImage(src: string): Promise<HTMLImageElement> {
+/**
+ * `crossOrigin`: las imágenes del bucket se piden con CORS; sin eso el lienzo queda "contaminado" y no se puede
+ * exportar el PNG. El bucket tiene que permitir GET desde el dominio del dashboard.
+ */
+export function loadImage(src: string, crossOrigin = false): Promise<HTMLImageElement> {
   return new Promise((resolve, reject) => {
     const image = new Image()
     image.decoding = 'async'
+    if (crossOrigin) image.crossOrigin = 'anonymous'
     image.onload = () => resolve(image)
     image.onerror = () => reject(new Error('No se pudo cargar la imagen'))
     image.src = src
@@ -746,6 +751,13 @@ export function renderFlyer(canvas: HTMLCanvasElement, flyer: FlyerContent, asse
     block.draw(cursor)
     cursor += block.height + spacing
   }
+}
+
+/** PNG del flyer en tamaño real, sin pasar por la vista previa (p.ej. para guardar el resultado de la IA). */
+export function renderFlyerBlob(flyer: FlyerContent, assets: FlyerAssets): Promise<Blob> {
+  const canvas = document.createElement('canvas')
+  renderFlyer(canvas, flyer, assets)
+  return canvasToBlob(canvas)
 }
 
 export function canvasToBlob(canvas: HTMLCanvasElement): Promise<Blob> {

@@ -1,46 +1,26 @@
-// Biblioteca de imágenes del generador (logos de rivales, auspiciantes...). Se guarda en localStorage de este
-// navegador, reducida para que quepan varias: nunca se sube al servidor ni se envía a la IA (solo su id y nombre).
+// Imágenes del generador (logos de rivales, auspiciantes...) guardadas en el bucket, en assets/images/. Se reducen
+// en el navegador antes de subirlas; a la IA solo le llega su id y el nombre, nunca la imagen.
+import { useQueryClient } from '@tanstack/react-query'
 import { useState } from 'react'
-import { FLYER_ASSET_NAME_MAX, FLYER_MAX_ASSETS, type FlyerAssetRef } from '@shared/flyers'
+import {
+  FLYER_ASSET_NAME_MAX,
+  FLYER_IMAGE_TYPES,
+  FLYER_MAX_ASSETS,
+  type FlyerAssetRef,
+  type FlyerImage,
+  type FlyerImageType,
+  type FlyerLibrary,
+} from '@shared/flyers'
+import { errorMessage } from '../admin/adminApi'
+import { flyerLibraryKey, flyersPost, uploadToBucket, useFlyerLibrary } from './api'
 
-export type FlyerImage = FlyerAssetRef & {
-  /** data URL de la imagen ya reducida. */
-  src: string
-  createdAt: number
-}
+export type { FlyerImage }
 
-const STORAGE_KEY = 'coyotes:flyer-assets'
-/** Lado mayor tras reducir: sobra para un logo en un flyer de 1080 px y ocupa poco en localStorage. */
+/** Ejecuta una acción protegida (ver access.tsx). */
+export type RunProtected = <T>(action: (safeword: string) => Promise<T>) => Promise<T | undefined>
+
+/** Lado mayor tras reducir: sobra para un logo en un flyer de 1080 px. */
 const MAX_SIDE = 512
-
-function read(): FlyerImage[] {
-  try {
-    const raw = localStorage.getItem(STORAGE_KEY)
-    const parsed: unknown = raw ? JSON.parse(raw) : []
-    if (!Array.isArray(parsed)) return []
-    return parsed.filter(
-      (item): item is FlyerImage =>
-        typeof item?.id === 'string' && typeof item.name === 'string' && typeof item.src === 'string',
-    )
-  } catch {
-    return []
-  }
-}
-
-/** Devuelve false si el navegador no tiene espacio (o bloquea el almacenamiento). */
-function write(images: FlyerImage[]): boolean {
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(images))
-    return true
-  } catch {
-    return false
-  }
-}
-
-/** "asset_k3f9x0q2ma": 10 caracteres [a-z0-9] aleatorios. */
-export function newId(prefix: string): string {
-  return `${prefix}_${Array.from(crypto.getRandomValues(new Uint8Array(10)), (n) => (n % 36).toString(36)).join('')}`
-}
 
 /** "logo-onas_voley.png" → "Logo onas voley" */
 function nameFromFile(fileName: string): string {
@@ -49,46 +29,64 @@ function nameFromFile(fileName: string): string {
   return (name || 'Imagen').slice(0, FLYER_ASSET_NAME_MAX)
 }
 
-/** Reduce la imagen a MAX_SIDE conservando la transparencia (WebP; PNG donde el navegador no lo codifica). */
-async function shrink(file: File): Promise<string> {
+const toBlob = (canvas: HTMLCanvasElement, type: string) =>
+  new Promise<Blob | null>((resolve) => canvas.toBlob(resolve, type, 0.9))
+
+/** Reduce la imagen a MAX_SIDE conservando la transparencia (WebP; PNG donde el navegador no codifica WebP). */
+async function shrink(file: File): Promise<{ blob: Blob; type: FlyerImageType }> {
   const url = URL.createObjectURL(file)
   try {
     const image = new Image()
     image.src = url
     await image.decode()
-    const scale = Math.min(1, MAX_SIDE / Math.max(image.naturalWidth || MAX_SIDE, image.naturalHeight || MAX_SIDE))
+    const width = image.naturalWidth || MAX_SIDE
+    const height = image.naturalHeight || MAX_SIDE
+    const scale = Math.min(1, MAX_SIDE / Math.max(width, height))
     const canvas = document.createElement('canvas')
-    canvas.width = Math.max(1, Math.round((image.naturalWidth || MAX_SIDE) * scale))
-    canvas.height = Math.max(1, Math.round((image.naturalHeight || MAX_SIDE) * scale))
+    canvas.width = Math.max(1, Math.round(width * scale))
+    canvas.height = Math.max(1, Math.round(height * scale))
     canvas.getContext('2d')?.drawImage(image, 0, 0, canvas.width, canvas.height)
-    return canvas.toDataURL('image/webp', 0.9)
+    for (const type of FLYER_IMAGE_TYPES) {
+      const blob = await toBlob(canvas, type)
+      if (blob?.type === type) return { blob, type }
+    }
   } catch {
-    throw new Error(`No se pudo leer "${file.name}". Prueba con un PNG, JPG o WebP.`)
+    // Formato que el navegador no decodifica: mensaje abajo.
   } finally {
     URL.revokeObjectURL(url)
   }
+  throw new Error(`No se pudo leer "${file.name}". Prueba con un PNG, JPG o WebP.`)
 }
 
-const FULL_MESSAGE = 'No queda espacio en este navegador. Borra imágenes o flyers guardados que no uses.'
-
-export function useImageLibrary() {
-  const [images, setImages] = useState<FlyerImage[]>(read)
+export function useImageLibrary(run: RunProtected) {
+  const queryClient = useQueryClient()
+  const query = useFlyerLibrary()
+  const images = query.data?.images ?? []
+  const [busy, setBusy] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
-  function commit(next: FlyerImage[]): boolean {
-    if (!write(next)) {
-      setError(FULL_MESSAGE)
-      return false
-    }
-    setImages(next)
+  const patch = (update: (images: FlyerImage[]) => FlyerImage[]) =>
+    queryClient.setQueryData<FlyerLibrary>(flyerLibraryKey, (prev) => prev && { ...prev, images: update(prev.images) })
+
+  async function guarded(action: (safeword: string) => Promise<void>) {
+    setBusy(true)
     setError(null)
-    return true
+    try {
+      await run(action)
+    } catch (err) {
+      setError(errorMessage(err))
+    } finally {
+      setBusy(false)
+    }
   }
 
   return {
     images,
+    loading: query.isPending,
+    loadError: query.error ? errorMessage(query.error) : null,
+    busy,
     error,
-    async add(files: FileList | File[]) {
+    add(files: FileList | File[]) {
       const list = Array.from(files).filter((file) => file.type.startsWith('image/'))
       const room = FLYER_MAX_ASSETS - images.length
       if (list.length === 0) return
@@ -96,34 +94,40 @@ export function useImageLibrary() {
         setError(`Máximo ${FLYER_MAX_ASSETS} imágenes. Borra alguna para subir otra.`)
         return
       }
-      const added: FlyerImage[] = []
-      try {
+      return guarded(async (safeword) => {
         for (const file of list.slice(0, room)) {
-          added.push({ id: newId('asset'), name: nameFromFile(file.name), src: await shrink(file), createdAt: Date.now() })
+          const { blob, type } = await shrink(file)
+          const id = await uploadToBucket({ kind: 'image', contentType: type }, blob, safeword)
+          const image = await flyersPost<FlyerImage>(
+            'image-save',
+            { id, contentType: type, name: nameFromFile(file.name) },
+            safeword,
+          )
+          patch((prev) => [...prev, image])
         }
-      } catch (err) {
-        setError(err instanceof Error ? err.message : FULL_MESSAGE)
-        if (added.length === 0) return
-      }
-      if (commit([...images, ...added]) && list.length > room) {
-        setError(`Solo se agregaron ${room}: el máximo es ${FLYER_MAX_ASSETS} imágenes.`)
-      }
+        if (list.length > room) setError(`Solo se agregaron ${room}: el máximo es ${FLYER_MAX_ASSETS} imágenes.`)
+      })
     },
     rename(id: string, name: string) {
-      const clean = name.slice(0, FLYER_ASSET_NAME_MAX)
-      commit(images.map((image) => (image.id === id ? { ...image, name: clean } : image)))
+      const clean = name.trim().slice(0, FLYER_ASSET_NAME_MAX)
+      if (!clean || images.find((image) => image.id === id)?.name === clean) return
+      return guarded(async (safeword) => {
+        const image = await flyersPost<FlyerImage>('image-rename', { id, name: clean }, safeword)
+        patch((prev) => prev.map((item) => (item.id === id ? image : item)))
+      })
     },
     remove(id: string) {
-      commit(images.filter((image) => image.id !== id))
+      return guarded(async (safeword) => {
+        await flyersPost('image-delete', { id }, safeword)
+        patch((prev) => prev.filter((item) => item.id !== id))
+      })
     },
   }
 }
 
 export type ImageLibrary = ReturnType<typeof useImageLibrary>
 
-/** Lo que viaja a la IA: id y nombre (los nombres vacíos no ayudan a elegir). */
+/** Lo que viaja a la IA: id y nombre. */
 export function toAssetRefs(images: FlyerImage[]): FlyerAssetRef[] {
-  return images
-    .map((image) => ({ id: image.id, name: image.name.trim() }))
-    .filter((image) => image.name.length > 0)
+  return images.map((image) => ({ id: image.id, name: image.name }))
 }

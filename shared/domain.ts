@@ -85,3 +85,6 @@ export const MAX_VIDEO_BYTES = 10 * 1024 ** 3;
 
 /** Cabecera con la palabra clave de carga, codificada con encodeURIComponent (admite tildes y ñ). */
 export const ADMIN_SAFEWORD_HEADER = "x-admin-safeword";
+
+/** Cabecera con la palabra clave de la sección Flyers (FLYERS_SAFEWORD), distinta de la de carga. */
+export const FLYERS_SAFEWORD_HEADER = "x-flyers-safeword";

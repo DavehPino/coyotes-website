@@ -114,8 +114,8 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
 
       <Group label="Logos de otros equipos">
         <p className="text-xs text-coyote-ash">
-          Sube PNG con fondo transparente y ponles el nombre del equipo: así la IA sabe cuál usar. Se guardan en este
-          navegador.
+          Sube PNG con fondo transparente y ponles el nombre del equipo: así la IA sabe cuál usar. Se guardan en el
+          bucket y las ve todo el equipo.
         </p>
         {library.images.length > 0 && (
           <>
