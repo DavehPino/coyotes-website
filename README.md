@@ -172,6 +172,34 @@ con la palabra clave):
 del bucket (la carpeta `games/<slug>/` completa y cualquier otro video vinculado), después las filas de `videos` y por
 último el partido. Si el bucket falla no se borra nada de la base de datos. El rival se conserva.
 
+## Flyers para Instagram
+
+La sección **Flyers** (`dashboard.<dominio>/flyers`) genera PNG listos para publicar en tres formatos: post 4:5
+(1080×1350), cuadrado (1080×1080) e historia (1080×1920). El flyer se dibuja en un `<canvas>` en el navegador, así
+que la vista previa es exactamente la imagen que se descarga. **Compartir** aparece en los móviles que admiten
+compartir archivos.
+
+- **Plantillas:** Día de partido, Entrenamiento, Resultado y Anuncio, con textos de ejemplo. Viven en
+  `src/dashboard/flyers/templates.ts` (textos y campos) y `render.ts` (diseño y paletas).
+- **Editar:** formato, paleta de marca (Brasa, Dorado, Atardecer, Liga Podio), logo, foto de fondo y textos. La foto
+  solo se usa en el navegador: no se sube ni se envía a la IA. El borrador se recuerda en `localStorage`.
+- **Guardados:** los flyers de la IA se guardan solos al generarse y cualquier otro con **Guardar** (hasta 50, en
+  `localStorage`). Abrir uno lo carga en el editor sin modificar la copia guardada.
+- **Logos de otros equipos:** imágenes propias (PNG, JPG, WebP o SVG; hasta 20) que se reducen a 512 px y se guardan
+  en `localStorage`. El logo del rival va junto al escudo en Día de partido y Resultado, y hay una fila de hasta 4
+  logos (auspiciantes, liga) en todas las plantillas. Se eligen en **Editar** o se le dejan a la IA.
+- **Asistente IA:** un pedido en lenguaje natural (con ideas de ejemplo) reescribe el flyer actual. Pide la palabra
+  clave y usa un modelo gratuito de [OpenRouter](https://openrouter.ai). El servidor le pasa las próximas 8
+  actividades para que pueda usar fechas, horas, lugares y rivales reales. El modelo solo devuelve textos, plantilla,
+  paleta, formato y qué imágenes usar; las imágenes no se envían, solo su id y el nombre que les pusiste (nómbralas
+  como el equipo). Los campos inválidos o ids desconocidos conservan el valor anterior. **Deshacer** revierte
+  plantillas, guardados abiertos y respuestas de la IA.
+
+Configuración: crea una clave en OpenRouter → Keys y guárdala en `OPENROUTER_API_KEY`. Sin clave, el asistente
+responde 503 y el resto de la sección funciona igual. `OPENROUTER_MODEL` es opcional: por defecto es
+`openrouter/free`, que enruta a algún modelo gratuito disponible, así que no se rompe si retiran uno concreto. Los
+modelos gratuitos tienen límite de peticiones por minuto y por día; al superarlo se muestra un aviso para reintentar.
+
 ## Cómo editar datos a mano
 
 Cancelar actividades, los resúmenes y las portadas todavía se hace en **Supabase → Table Editor**
@@ -243,6 +271,7 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
 | POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
 | POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
+| POST | `/api/admin/flyer-suggest` | `{ flyer, message, model }`: el asistente de IA reescribe el flyer (`{ prompt, flyer, today, assets: [{ id, name }] }`); 503 sin `OPENROUTER_API_KEY` |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
 | POST | `/api/admin/uploads/complete` | 201 Video: cierra la subida y registra el video en el partido |
 | POST | `/api/admin/uploads/abort` | Descarta los trozos de una subida cancelada o fallida |
@@ -261,7 +290,7 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 
 | Archivo | Rutas |
 |---|---|
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/flyer-suggest` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
 
 Al añadir un endpoint:

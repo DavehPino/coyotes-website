@@ -37,4 +37,12 @@ export const env = {
   get cronSecret() {
     return optional('CRON_SECRET')
   },
+  /** Asistente de flyers. Sin clave, /api/admin/flyer-suggest responde 503. */
+  get openrouter() {
+    return {
+      apiKey: optional('OPENROUTER_API_KEY'),
+      // `openrouter/free` enruta a un modelo gratuito disponible: sobrevive a que retiren uno concreto.
+      model: optional('OPENROUTER_MODEL') ?? 'openrouter/free',
+    }
+  },
 }

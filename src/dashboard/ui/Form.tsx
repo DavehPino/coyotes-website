@@ -2,11 +2,11 @@ import {
   cloneElement,
   isValidElement,
   useId,
+  type ComponentProps,
   type InputHTMLAttributes,
   type ReactElement,
   type ReactNode,
   type SelectHTMLAttributes,
-  type TextareaHTMLAttributes,
 } from 'react'
 
 // 16 px en móvil: iOS no hace zoom al enfocar. Área de pulsación de 44 px.
@@ -21,7 +21,7 @@ export function Input({ className = '', ...rest }: InputHTMLAttributes<HTMLInput
   return <input className={`${CONTROL} ${className}`} {...rest} />
 }
 
-export function Textarea({ className = '', rows = 3, ...rest }: TextareaHTMLAttributes<HTMLTextAreaElement>) {
+export function Textarea({ className = '', rows = 3, ...rest }: ComponentProps<'textarea'>) {
   return <textarea rows={rows} className={`${CONTROL} resize-y py-2.5 leading-normal ${className}`} {...rest} />
 }
 

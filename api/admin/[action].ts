@@ -10,8 +10,10 @@ import {
   videoDeleteInput,
   videoUpdateInput,
 } from '../../shared/schemas.js'
+import { flyerSuggestInput } from '../../shared/flyers.js'
 import { createActivity, deleteActivity, updateActivity } from '../_lib/activities.js'
 import { requireAdmin } from '../_lib/admin.js'
+import { suggestFlyer } from '../_lib/flyers.js'
 import { handle, noStore, parseBody, pathParam, routeFor, type Handler } from '../_lib/http.js'
 import { createMatch, deleteMatch, updateMatch } from '../_lib/matches.js'
 import { deleteVideo, updateVideo } from '../_lib/videos.js'
@@ -54,6 +56,9 @@ const actions: Record<string, Handler> = {
     await deleteVideo(await parseBody(request, videoDeleteInput))
     return noStore({ ok: true })
   },
+
+  // POST /api/admin/flyer-suggest → FlyerSuggestion. El asistente de IA reescribe el flyer según el pedido.
+  'flyer-suggest': async (request) => noStore(await suggestFlyer(await parseBody(request, flyerSuggestInput))),
 }
 
 export const POST = handle(async (request) => {

@@ -1,11 +1,12 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { LOGO_SRC, TEAM_NAME } from '@/config'
-import { BallIcon, CalendarIcon, type IconProps } from './ui/icons'
+import { BallIcon, CalendarIcon, ImageIcon, type IconProps } from './ui/icons'
 
 const SECTIONS: { to: string; label: string; icon: (props: IconProps) => React.JSX.Element }[] = [
   { to: '/activities', label: 'Actividades', icon: CalendarIcon },
   { to: '/matches', label: 'Partidos', icon: BallIcon },
+  { to: '/flyers', label: 'Flyers', icon: ImageIcon },
 ]
 
 function useDashboardMeta() {
