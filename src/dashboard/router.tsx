@@ -1,11 +1,9 @@
 import { createBrowserRouter, Navigate } from 'react-router'
-import { DASHBOARD_PATH } from '@/config'
 import { DashboardLayout } from './DashboardLayout'
 import { NotFoundPage } from './NotFoundPage'
 
-// Todas las rutas y enlaces del dashboard son relativos a /dashboard (basename).
-export const router = createBrowserRouter(
-  [
+// El dashboard vive en la raíz de su subdominio (dashboard.<dominio>).
+export const router = createBrowserRouter([
   {
     path: '/',
     element: <DashboardLayout />,
@@ -27,6 +25,4 @@ export const router = createBrowserRouter(
       { path: '*', element: <NotFoundPage /> },
     ],
   },
-  ],
-  { basename: DASHBOARD_PATH },
-)
+])

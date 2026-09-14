@@ -3,10 +3,20 @@
   "framework": "vite",
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "redirects": [
+    {
+      "source": "/dashboard/:path*",
+      "has": [{ "type": "host", "value": "(?:www\\.)?(?<domain>[^:]+)" }],
+      "missing": [{ "type": "host", "value": "dashboard\\..*|.*\\.vercel\\.app|localhost(?::\\d+)?" }],
+      "destination": "https://dashboard.:domain/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [{ "source": "/((?!api/|@)[^.]*)", "destination": "/index.html" }],
   "headers": [
     {
-      "source": "/dashboard(.*)",
+      "source": "/(.*)",
+      "has": [{ "type": "host", "value": "dashboard\\..*" }],
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     },
     {

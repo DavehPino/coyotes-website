@@ -11,7 +11,7 @@ const queryClient = new QueryClient({
   },
 })
 
-// Cada app va en su propio chunk: la web pública no descarga código del dashboard (/dashboard).
+// Cada app va en su propio chunk: la web pública no descarga código del dashboard (dashboard.<dominio>).
 const { router } =
   resolveAppTarget() === 'dashboard' ? await import('./dashboard/router') : await import('./public/router')
 

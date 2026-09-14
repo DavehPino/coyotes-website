@@ -5,7 +5,7 @@ Un único deploy con dos apps:
 - **`<dominio>`**: web pública del equipo. Por defecto es una landing mínima (escudo, nombre y eslogan);
   con `VITE_HOME_VARIANT=full` se publica la página completa (Sobre el equipo, Entrenamientos y Contacto).
   Los textos viven en `src/content/public.ts`.
-- **`<dominio>/dashboard`**: dashboard interno con **Actividades** (carrusel de próximas actividades) y **Partidos**
+- **`dashboard.<dominio>`**: dashboard interno con **Actividades** (carrusel de próximas actividades) y **Partidos**
   (partidos pasados con sus videos). Se consulta sin login; cargar datos pide una palabra clave.
 
 Stack:
@@ -49,7 +49,7 @@ npm i -g vercel        # CLI de Vercel para `vercel dev` y deploy
    ```json
    [
      {
-       "AllowedOrigins": ["https://tudominio.com", "https://coyotes.vercel.app", "http://localhost:5173"],
+       "AllowedOrigins": ["https://dashboard.tudominio.com", "http://dashboard.localhost:5173", "http://dashboard.localhost:3000"],
        "AllowedMethods": ["PUT"],
        "AllowedHeaders": ["*"],
        "ExposeHeaders": ["ETag"],
@@ -76,9 +76,20 @@ Carga las mismas variables en Vercel → Settings → Environment Variables.
 
 ### 5. Dominio en Vercel
 
-Un solo proyecto y un solo dominio: la web pública en la raíz y el dashboard en `/dashboard`.
-La app decide qué montar según la ruta (`src/config.ts`), así que funciona igual en `coyotes.vercel.app/dashboard`
-que en `tudominio.com/dashboard`, también en las URLs de preview.
+Un solo proyecto con dos dominios: la web pública en `tudominio.com` y el dashboard en `dashboard.tudominio.com`.
+La app decide qué montar según el host (`src/config.ts`): si el primer label es `dashboard`, monta el dashboard.
+
+1. Vercel → Project → Settings → **Domains**: añade `tudominio.com` (y `www.tudominio.com` redirigiendo a él) y
+   `dashboard.tudominio.com`. Los tres apuntan al entorno **Production** del mismo proyecto.
+2. En el proveedor DNS crea los registros que indica Vercel: `A @ → 76.76.21.21` para el dominio raíz y
+   `CNAME www` / `CNAME dashboard → cname.vercel-dns.com` (o usa los nameservers de Vercel y se crean solos).
+3. Define `VITE_SITE_URL=https://tudominio.com` para que Open Graph use el dominio público y vuelve a desplegar.
+
+Los enlaces antiguos `tudominio.com/dashboard/<ruta>` redirigen (308) a `dashboard.tudominio.com/<ruta>` desde
+`vercel.json`. No se aplica en `*.vercel.app` ni en `localhost`, donde ese subdominio no existe.
+
+Las URLs `*.vercel.app` (producción y previews) no admiten subdominios y muestran la web pública. Para revisar el
+dashboard en una preview, define `VITE_APP_TARGET=dashboard` solo en el entorno **Preview**.
 
 ### 6. Desarrollo
 
@@ -90,7 +101,7 @@ npm run dev:full     # frontend + /api con vercel dev (requiere `vercel link`)
 | App | `npm run dev` | `npm run dev:full` |
 |---|---|---|
 | Web pública | <http://localhost:5173> | <http://localhost:3000> |
-| Dashboard | <http://localhost:5173/dashboard> | <http://localhost:3000/dashboard> |
+| Dashboard | <http://dashboard.localhost:5173> | <http://dashboard.localhost:3000> |
 
 ### Scripts
 
@@ -107,7 +118,7 @@ Con `npm run dev` las llamadas a `/api` no tienen servidor. Para desarrollar el 
 
 ## Acceso al dashboard
 
-`<dominio>/dashboard` no está enlazado desde la web pública y va marcado como `noindex`, pero **no tiene login**:
+`dashboard.<dominio>` no está enlazado desde la web pública y va marcado como `noindex`, pero **no tiene login**:
 cualquiera que conozca la URL puede ver actividades, partidos y videos. Usuarios y roles están previstos más adelante.
 
 ## Cargar datos desde el dashboard
@@ -146,7 +157,7 @@ siendo posterior a la de inicio. Eliminar borra la fila (los partidos o videos v
 
 ### Editar un partido
 
-En el detalle de un partido (`/dashboard/matches/<slug>`), **Editar partido** abre un diálogo con dos pestañas (también
+En el detalle de un partido (`dashboard.<dominio>/matches/<slug>`), **Editar partido** abre un diálogo con dos pestañas (también
 con la palabra clave):
 
 - **Datos del partido:** rival (existente o uno nuevo), fecha, hora, competición, fase, lugar y parciales. El slug
@@ -174,7 +185,7 @@ Cancelar actividades, los resúmenes y las portadas todavía se hace en **Supaba
    `video_analisis`, `reunion`, `otro`), `location`, `description`, `opponent_team_id` (rival, opcional) e
    `is_cancelled`. Las canceladas y las que ya empezaron no se muestran.
 3. **Partidos** (`matches`): `slug` único en kebab-case (p.ej. `2026-09-06-vs-onas`; es la URL
-   `/dashboard/matches/<slug>` y la carpeta del bucket), `played_on`, `start_time`, `opponent_team_id`, `is_home`,
+   `dashboard.<dominio>/matches/<slug>` y la carpeta del bucket), `played_on`, `start_time`, `opponent_team_id`, `is_home`,
    `location`, `competition`, `phase`, `sets_won`, `sets_lost` y `set_scores` con los parciales:
    `[{"us":25,"them":20},{"us":22,"them":25}]`. `summary` admite saltos de línea y `cover_image_url` es la portada
    del carrusel (sin ella se muestran los escudos). Solo aparecen los partidos con `played_on <= hoy`.
