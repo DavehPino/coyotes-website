@@ -20,3 +20,6 @@ Thumbs.db
 .idea
 
 .vercel
+
+# Claude Code (skills y configuración local)
+.claude/
