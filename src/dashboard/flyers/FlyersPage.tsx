@@ -112,7 +112,7 @@ export function FlyersPage() {
             assets={assets}
             ready={ready}
             label={`Vista previa del flyer: ${flyer.title || FLYER_TEMPLATE_LABELS[flyer.template]}`}
-            className="block h-auto max-h-[55dvh] w-auto max-w-full rounded-lg shadow-border lg:max-h-[calc(100dvh-14rem)]"
+            className="block h-auto max-h-[55svh] w-auto max-w-full rounded-lg shadow-border lg:max-h-[calc(100svh-14rem)]"
           />
           <p className="text-xs text-coyote-ash tabular-nums">
             {FLYER_TEMPLATE_LABELS[flyer.template]} · {size.label} · {size.width}×{size.height} px
