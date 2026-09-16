@@ -43,9 +43,12 @@ export type Database = {
       }
       courtrack_leagues: {
         Row: {
+          archive_reason: string | null
+          archived_at: string | null
           cliente_name: string | null
           competition_id: string
           created_at: string
+          fixture: Json | null
           id: string
           id_cliente: number
           is_active: boolean
@@ -53,14 +56,20 @@ export type Database = {
           liga_id: number
           liga_name: string
           org_id: string
+          season_label: string
+          snapshot_at: string | null
+          standings: Json | null
           team_logo_url: string | null
           team_name: string
           updated_at: string
         }
         Insert: {
+          archive_reason?: string | null
+          archived_at?: string | null
           cliente_name?: string | null
           competition_id: string
           created_at?: string
+          fixture?: Json | null
           id?: string
           id_cliente: number
           is_active?: boolean
@@ -68,14 +77,20 @@ export type Database = {
           liga_id: number
           liga_name: string
           org_id: string
+          season_label: string
+          snapshot_at?: string | null
+          standings?: Json | null
           team_logo_url?: string | null
           team_name: string
           updated_at?: string
         }
         Update: {
+          archive_reason?: string | null
+          archived_at?: string | null
           cliente_name?: string | null
           competition_id?: string
           created_at?: string
+          fixture?: Json | null
           id?: string
           id_cliente?: number
           is_active?: boolean
@@ -83,6 +98,9 @@ export type Database = {
           liga_id?: number
           liga_name?: string
           org_id?: string
+          season_label?: string
+          snapshot_at?: string | null
+          standings?: Json | null
           team_logo_url?: string | null
           team_name?: string
           updated_at?: string
@@ -135,7 +153,6 @@ export type Database = {
       matches: {
         Row: {
           activity_id: string | null
-          competition: string | null
           competition_id: string | null
           courtrack_id: string | null
           courtrack_league_id: string | null
@@ -157,7 +174,6 @@ export type Database = {
         }
         Insert: {
           activity_id?: string | null
-          competition?: string | null
           competition_id?: string | null
           courtrack_id?: string | null
           courtrack_league_id?: string | null
@@ -179,7 +195,6 @@ export type Database = {
         }
         Update: {
           activity_id?: string | null
-          competition?: string | null
           competition_id?: string | null
           courtrack_id?: string | null
           courtrack_league_id?: string | null

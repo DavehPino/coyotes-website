@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useDialogSession } from '../admin/useDialogSession'
-import { Button, EmptyState, ErrorState, PageHeader } from '../ui'
+import { Button, EmptyState, ErrorState, Field, PageHeader, Select } from '../ui'
 import { BallIcon, PlusIcon, RefreshIcon, TrophyIcon } from '../ui/icons'
 import { useMatches } from './api'
 import { CompetitionFilter } from './CompetitionFilter'
@@ -15,15 +15,17 @@ const SyncCourtrackDialog = lazy(() => import('./sync/SyncCourtrackDialog'))
 const ManageLeaguesDialog = lazy(() => import('./leagues/ManageLeaguesDialog'))
 
 const CAROUSEL_SIZE = 10
-/** Parámetro de la URL con la competición elegida: el filtro sobrevive a recargar y se puede compartir. */
+/** Parámetros de la URL con la competición y la temporada elegidas: el filtro sobrevive a recargar y se puede compartir. */
 const FILTER_PARAM = 'liga'
+const SEASON_PARAM = 'temporada'
 
 /** Partidos pasados: filtro por liga, carrusel con los últimos y listado completo por mes. */
 export function MatchesPage() {
   const [params, setParams] = useSearchParams()
   const competitionId = params.get(FILTER_PARAM)
+  const seasonId = params.get(SEASON_PARAM)
   const competitions = useCompetitions()
-  const query = useMatches(competitionId)
+  const query = useMatches(competitionId, seasonId)
   const dialog = useDialogSession()
   const syncDialog = useDialogSession()
   const leaguesDialog = useDialogSession()
@@ -31,9 +33,20 @@ export function MatchesPage() {
 
   const filterOptions = (competitions.data ?? []).filter((item) => item.match_count > 0)
   const selected = competitions.data?.find((item) => item.id === competitionId) ?? null
+  // Temporadas de CourtTrack de la competición elegida (solo si hay más de una con partidos, o alguna archivada).
+  const seasons = (selected?.seasons ?? []).filter((season) => season.match_count > 0)
+  const showSeasons = seasons.length > 1 || seasons.some((season) => season.archived)
+  const selectedSeason = seasons.find((season) => season.id === seasonId) ?? null
 
   function setFilter(id: string | null) {
     setParams(id ? { [FILTER_PARAM]: id } : {}, { replace: true })
+  }
+
+  function setSeason(id: string | null) {
+    setParams(
+      competitionId ? (id ? { [FILTER_PARAM]: competitionId, [SEASON_PARAM]: id } : { [FILTER_PARAM]: competitionId }) : {},
+      { replace: true },
+    )
   }
 
   /** Desde el gestor de ligas: cierra ese diálogo y abre el de sync ya con la liga elegida. */
@@ -75,9 +88,24 @@ export function MatchesPage() {
     <section>
       <PageHeader title="Partidos" description="Resultados y videos de los partidos jugados." actions={actions} />
 
-      {filterOptions.length > 1 && (
-        <div className="mb-5">
-          <CompetitionFilter competitions={filterOptions} value={competitionId} onChange={setFilter} />
+      {(filterOptions.length > 1 || showSeasons) && (
+        <div className="mb-5 flex flex-col gap-3">
+          {filterOptions.length > 1 && (
+            <CompetitionFilter competitions={filterOptions} value={competitionId} onChange={setFilter} />
+          )}
+          {showSeasons && (
+            <Field label="Temporada" className="max-w-xs">
+              <Select value={seasonId ?? ''} onChange={(event) => setSeason(event.target.value || null)}>
+                <option value="">Todas las temporadas</option>
+                {seasons.map((season) => (
+                  <option key={season.id} value={season.id}>
+                    {season.label}
+                    {season.archived ? ' · finalizada' : ''}
+                  </option>
+                ))}
+              </Select>
+            </Field>
+          )}
         </div>
       )}
 
@@ -116,7 +144,7 @@ export function MatchesPage() {
         <div className="flex flex-col gap-8">
           <div>
             <h2 className="mb-3 text-3xl leading-none text-balance text-coyote-silver">
-              Últimos partidos{selected ? ` · ${selected.name}` : ''}
+              Últimos partidos{selected ? ` · ${selectedSeason?.label ?? selected.name}` : ''}
             </h2>
             <MatchCarousel matches={query.data.slice(0, CAROUSEL_SIZE)} label="Últimos partidos" />
           </div>

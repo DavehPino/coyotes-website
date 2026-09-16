@@ -5,8 +5,10 @@ import type {
   ApiErrorBody,
   CourtrackCatalogInput,
   CourtrackCliente,
+  CourtrackDiscoveredLiga,
   CourtrackEquipo,
   CourtrackLiga,
+  CourtrackSyncAllResult,
   CourtrackSyncResult,
   CourtrackSyncStatus,
 } from '../../shared/schemas.js'
@@ -66,12 +68,12 @@ async function callSyncService<T>({ method, path, query, body }: Call): Promise<
 export const getCourtrackSyncStatus = () =>
   callSyncService<CourtrackSyncStatus>({ method: 'GET', path: '/api/sync', query: { org_id: env.orgId } })
 
-/** Ejecuta la sincronización de una liga (o la simula con `dry_run`). */
-export const runCourtrackSync = (leagueId: string, dryRun: boolean) =>
-  callSyncService<CourtrackSyncResult>({
+/** Sincroniza una temporada (`leagueId`) o todas las ligas activas (`null`), o lo simula con `dry_run`. */
+export const runCourtrackSync = (leagueId: string | null, dryRun: boolean) =>
+  callSyncService<CourtrackSyncResult | CourtrackSyncAllResult>({
     method: 'POST',
     path: '/api/sync',
-    body: { org_id: env.orgId, league_id: leagueId, dry_run: dryRun },
+    body: { org_id: env.orgId, ...(leagueId ? { league_id: leagueId } : {}), dry_run: dryRun },
   })
 
 /** Catálogo de CourtTrack para el asistente "Agregar liga". */
@@ -79,7 +81,8 @@ export function getCourtrackCatalog(input: CourtrackCatalogInput) {
   const query: Record<string, string> = {}
   if ('id_cliente' in input) query.id_cliente = String(input.id_cliente)
   if ('liga_id' in input) query.liga_id = String(input.liga_id)
-  return callSyncService<CourtrackCliente[] | CourtrackLiga[] | CourtrackEquipo[]>({
+  if ('team' in input) query.team = input.team
+  return callSyncService<CourtrackCliente[] | CourtrackLiga[] | CourtrackEquipo[] | CourtrackDiscoveredLiga[]>({
     method: 'GET',
     path: `/api/courtrack/${input.resource}`,
     query,

@@ -38,8 +38,16 @@ export type Competition = {
   kind: CompetitionKind
 }
 
-/** Listado para filtros y formularios: con el número de partidos jugados. */
-export type CompetitionListItem = Competition & { match_count: number }
+/** Temporada de CourtTrack que alimenta una competición (fila de courtrack_leagues). */
+export type CompetitionSeason = {
+  id: string
+  label: string
+  archived: boolean
+  match_count: number
+}
+
+/** Listado para filtros y formularios: con el número de partidos jugados y sus temporadas. */
+export type CompetitionListItem = Competition & { match_count: number; seasons: CompetitionSeason[] }
 
 // ─── Activities ──────────────────────────────────────────────────────────────
 export type Activity = {
@@ -122,6 +130,14 @@ export type CourtrackEquipo = {
   matches: number
 }
 
+/** Liga de una asociación en la que juega el equipo buscado (descubrimiento). */
+export type CourtrackDiscoveredLiga = {
+  liga: CourtrackLiga
+  team: CourtrackEquipo
+  total_matches: number
+  played_matches: number
+}
+
 export type CourtrackSyncQuota = {
   limit: number
   used: number
@@ -160,10 +176,35 @@ export type CourtrackSyncSummary = {
   rivals_created: string[]
 }
 
-export type CourtrackSyncResult = CourtrackSyncSummary & {
+/** CourtTrack reinició o eliminó la liga: la temporada se archivó (y, si sigue existiendo, se abrió otra). */
+export type CourtrackSeasonEvent = {
+  kind: 'reset' | 'removed'
+  archived_season: string
+  new_season?: string
+  new_league_id?: string | null
+}
+
+export type CourtrackSyncLeagueResult = CourtrackSyncSummary & {
   dry_run: boolean
-  league: { id: string; courtrack_id: number; name: string; competition: { id: string; name: string } }
+  league: {
+    id: string
+    courtrack_id: number
+    name: string
+    season_label: string
+    competition: { id: string; name: string }
+  }
+  season_event?: CourtrackSeasonEvent
   matches: CourtrackSyncMatch[]
+}
+
+/** Sync de una temporada. */
+export type CourtrackSyncResult = CourtrackSyncLeagueResult & { quota: CourtrackSyncQuota }
+
+/** Sync de todas las ligas activas (un solo cupo). */
+export type CourtrackSyncAllResult = {
+  dry_run: boolean
+  leagues: CourtrackSyncLeagueResult[]
+  totals: CourtrackSyncSummary
   quota: CourtrackSyncQuota
 }
 
@@ -174,10 +215,12 @@ export type CourtrackSyncLogEntry = {
   started_at: string
   finished_at: string | null
   summary: CourtrackSyncSummary | null
+  /** En un sync de todas las ligas: resumen por liga. */
+  leagues?: Record<string, CourtrackSyncSummary>
   error: string | null
 }
 
-/** Liga de CourtTrack que sigue la organización (tabla courtrack_leagues). */
+/** Temporada de una liga de CourtTrack que sigue la organización (fila de courtrack_leagues). */
 export type CourtrackLeague = {
   id: string
   competition: Competition
@@ -185,10 +228,27 @@ export type CourtrackLeague = {
   cliente_name: string | null
   liga_id: number
   liga_name: string
+  /** Nombre de la temporada tal como la publicaba CourtTrack (se congela al archivar). */
+  season_label: string
   team_name: string
   team_logo_url: string | null
   is_active: boolean
   last_synced_at: string | null
+  archived_at: string | null
+  archive_reason: 'reset' | 'removed' | 'manual' | null
+  /** Hay instantánea de clasificación y fixture guardada. */
+  snapshot_at: string | null
+}
+
+/** Instantánea de CourtTrack guardada en la temporada (tal cual la devuelve CourtTrack). */
+export type CourtrackLeagueSnapshot = {
+  id: string
+  season_label: string
+  snapshot_at: string | null
+  /** getPosiciones por etapa: `{ titulo, division, descripcion_etapa, posiciones: [[pos, equipo, pts, pj, pg, pp, ...]] }`. */
+  standings: unknown[] | null
+  /** findPartidos completo de la liga. */
+  fixture: unknown[] | null
 }
 
 /** La misma liga tal como la devuelve el servicio, con su último sync. */
@@ -205,8 +265,8 @@ export type CourtrackSyncStatus = {
 }
 
 export const courtrackSyncInput = z.object({
-  /** Liga a sincronizar (courtrack_leagues.id). */
-  league_id: z.uuid(),
+  /** Temporada a sincronizar (courtrack_leagues.id). Sin ella, todas las ligas activas con un solo cupo. */
+  league_id: z.uuid().optional(),
   /** true: calcula qué haría sin escribir nada ni gastar cupo. */
   dry_run: z.boolean().default(false),
 })
@@ -217,6 +277,7 @@ export const courtrackCatalogInput = z.discriminatedUnion('resource', [
   z.object({ resource: z.literal('clientes') }),
   z.object({ resource: z.literal('ligas'), id_cliente: z.number().int().positive() }),
   z.object({ resource: z.literal('equipos'), id_cliente: z.number().int().positive(), liga_id: z.number().int().positive() }),
+  z.object({ resource: z.literal('descubrir'), id_cliente: z.number().int().positive(), team: z.string().trim().min(1).max(120) }),
 ])
 export type CourtrackCatalogInput = z.infer<typeof courtrackCatalogInput>
 
@@ -241,11 +302,16 @@ export const leagueUpdateInput = z.object({
   id: z.uuid(),
   is_active: z.boolean().optional(),
   team_name: z.string().trim().min(1).max(120).optional(),
+  /** true: cierra la temporada a mano (conserva partidos e instantánea). */
+  archive: z.literal(true).optional(),
 })
 export type LeagueUpdateInput = z.infer<typeof leagueUpdateInput>
 
 export const leagueDeleteInput = z.object({ id: z.uuid() })
 export type LeagueDeleteInput = z.infer<typeof leagueDeleteInput>
+
+export const leagueSnapshotInput = z.object({ id: z.uuid() })
+export type LeagueSnapshotInput = z.infer<typeof leagueSnapshotInput>
 
 /** Vincula un nombre de CourtTrack a un rival ya cargado (desde la vista previa del sync). */
 export const teamLinkCreateInput = z.object({
@@ -290,6 +356,8 @@ export const matchListQuery = z.object({
   limit: z.coerce.number().int().min(1).max(100).default(50),
   // Solo partidos de esta competición (filtro por liga).
   competition_id: z.uuid().optional(),
+  // Solo partidos de esta temporada de CourtTrack (courtrack_leagues.id).
+  courtrack_league_id: z.uuid().optional(),
 })
 
 // ─── Escritura desde el dashboard (/api/admin/*) ─────────────────────────────

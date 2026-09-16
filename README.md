@@ -177,12 +177,14 @@ con la palabra clave):
 del bucket (la carpeta `games/<slug>/` completa y cualquier otro video vinculado), después las filas de `videos` y por
 último el partido. Si el bucket falla no se borra nada de la base de datos. El rival se conserva.
 
-### Competiciones y filtro por liga
+### Competiciones, temporadas y filtro por liga
 
-Cada partido pertenece a una **competición** de la organización (tabla `competitions`: ligas, amistosos, torneos).
-En Partidos, una fila de chips filtra el carrusel y la lista por competición; el filtro va en la URL (`?liga=<id>`),
-así que sobrevive a recargar y se puede compartir. Las competiciones se crean al configurar una liga de CourtTrack
-(abajo) o vienen de la migración inicial (`Liga Podio`, `Amistoso`).
+Cada partido pertenece a una **competición** de la organización (tabla `competitions`: ligas, amistosos, torneos) y,
+si vino de CourtTrack, a una **temporada** (fila de `courtrack_leagues`). En Partidos, una fila de chips filtra el
+carrusel y la lista por competición y, cuando la competición tiene varias temporadas (o alguna finalizada), un
+selector filtra por temporada. El filtro va en la URL (`?liga=<id>&temporada=<id>`), así que sobrevive a recargar y
+se puede compartir. Las competiciones se crean al configurar una liga de CourtTrack (abajo) o vienen de la migración
+inicial (`Liga Podio`, `Amistoso`).
 
 ### Ligas de CourtTrack
 
@@ -190,29 +192,42 @@ El botón **Ligas** de Partidos (con la palabra clave) gestiona las ligas de la 
 (tabla `courtrack_leagues`; el microservicio [`courtrack-service`](../courtrack-service), repo y deploy aparte con la
 misma base de datos, las lee al sincronizar):
 
-- **Lista:** competición, liga y asociación de CourtTrack, cómo aparece el equipo, activa/pausada y último sync.
-  **Sincronizar** abre el diálogo de sync con esa liga; **Pausar** la saca del selector sin borrar nada; **Quitar**
-  elimina la configuración pero conserva los partidos importados (con su `courtrack_id`, así que volver a añadirla
-  los reconoce) y la competición.
-- **Agregar liga:** asistente en cuatro pasos con el catálogo de CourtTrack: asociación (p.ej. PODIO) → liga →
-  tu equipo tal como aparece en esa liga (lista derivada de los partidos; se preselecciona si coincide con el nombre
-  del equipo) → competición: una nueva con el nombre de la liga (una por temporada, filtrable por separado) o
-  añadirla a una existente (junta temporadas bajo el mismo nombre). Al guardar ofrece la vista previa.
+- **Lista:** cada temporada en curso con su competición, liga y asociación de CourtTrack, cómo aparece el equipo,
+  activa/pausada y último sync. **Sincronizar** abre el diálogo de sync con esa liga; **Pausar** la saca del sync sin
+  borrar nada; **Clasificación** muestra la tabla de posiciones guardada en el último sync; **Cerrar temporada** la
+  archiva a mano; **Quitar** elimina la configuración (y su clasificación guardada) pero conserva los partidos
+  importados (con su `courtrack_id`, así que volver a añadirla los reconoce) y la competición.
+- **Temporadas finalizadas:** sección plegada con las temporadas archivadas, su motivo (CourtTrack reinició la liga,
+  la liga ya no existe o cierre manual) y su clasificación final.
+- **Agregar liga:** asistente con el catálogo de CourtTrack. Tras elegir la asociación (p.ej. PODIO), **busca tu
+  equipo en todas sus ligas** y propone las que encuentre (marcadas las que aún no sigues); cada una se guarda como
+  una competición nueva con su nombre. También se puede **elegir a mano**: liga → tu equipo tal como aparece en esa
+  liga (se preselecciona si coincide con el nombre del equipo) → competición nueva o existente. Al guardar ofrece la
+  vista previa.
+
+### Temporadas e histórico
+
+CourtTrack reinicia las ligas al terminar (PODIO siempre). Para no perder nada, cada sync guarda una **instantánea**
+de la clasificación y del fixture de la liga, y cuando detecta el reseteo (ninguno de los partidos guardados sigue
+publicado) **archiva la temporada** con esa instantánea congelada y **abre la siguiente** bajo la misma competición.
+Los partidos siguen colgados de su temporada, así que el filtro por temporada y la clasificación final siguen
+disponibles. Si la liga desaparece de CourtTrack, la temporada se archiva igual.
 
 ### Sincronizar con CourtTrack
 
-El botón **Sincronizar** de Partidos importa los resultados de **una liga por vez**. El diálogo muestra la liga (con
-selector si hay varias activas), su último sync y el cupo restante (**`SYNC_DAILY_LIMIT` sincronizaciones por 24 h**
-sumando todas las ligas), y ofrece:
+El botón **Sincronizar** de Partidos importa los resultados de **todas las ligas activas con un solo cupo** (o de una
+sola, elegida en el selector o desde Ligas). El diálogo muestra qué se va a sincronizar, el último sync y el cupo
+restante (**`SYNC_DAILY_LIMIT` sincronizaciones por 24 h**), y ofrece:
 
-- **Vista previa:** qué crearía, actualizaría u omitiría, y qué rivales nuevos daría de alta. No escribe ni gasta cupo.
-  Si un rival "a crear" ya existe con otro nombre, la propia fila permite **vincularlo** a un rival cargado
-  (`courtrack_team_links`) y la vista previa se repite.
+- **Vista previa:** qué crearía, actualizaría u omitiría, qué rivales nuevos daría de alta y si alguna temporada se
+  cerraría. No escribe ni gasta cupo. Si un rival "a crear" ya existe con otro nombre, la propia fila permite
+  **vincularlo** a un rival cargado (`courtrack_team_links`) y la vista previa se repite.
 - **Sincronizar:** crea los partidos jugados con parciales, rival, fase y cancha; actualiza los ya importados y
   **vincula** los cargados a mano el mismo día contra el mismo rival y de la misma competición en vez de duplicarlos
   (`matches.courtrack_id`). CourtTrack es la fuente de verdad: también pisa el nombre y el logo del rival (la
   abreviatura se conserva). El slug, el resumen, la portada y los videos no se tocan; si se editan datos de resultado a
-  mano, la siguiente sincronización vuelve a poner los de CourtTrack.
+  mano, la siguiente sincronización vuelve a poner los de CourtTrack. El resultado se muestra por liga, con los
+  totales cuando son varias.
 
 Requiere `COURTRACK_SYNC_URL` y `COURTRACK_SYNC_SECRET` (sin ellos Ligas y Sincronizar responden 503) y `ORG_ID`
 (por defecto `coyotes`).
@@ -324,9 +339,9 @@ Editor).
 | Método | Ruta | Respuesta |
 |---|---|---|
 | GET | `/api/lookups/teams` | Rivales por nombre (sin caché) |
-| GET | `/api/lookups/competitions` | Competiciones con su número de partidos (sin caché) |
+| GET | `/api/lookups/competitions` | Competiciones con su número de partidos y sus temporadas de CourtTrack (sin caché) |
 | GET | `/api/activities?from=YYYY-MM-DD&limit=30` | Próximas actividades no canceladas, de la más cercana a la más lejana, con el rival embebido |
-| GET | `/api/matches?until=YYYY-MM-DD&limit=50&competition_id=` | Partidos jugados hasta la fecha, del más reciente al más antiguo; opcionalmente de una competición |
+| GET | `/api/matches?until=YYYY-MM-DD&limit=50&competition_id=&courtrack_league_id=` | Partidos jugados hasta la fecha, del más reciente al más antiguo; opcionalmente de una competición y de una temporada |
 | GET | `/api/matches/:slug` | Detalle con parciales y videos ordenados (404 si no existe) |
 | GET | `/api/videos/:id/playback` | URL de reproducción (pública o firmada temporal) |
 | GET | `/api/cron/sync-videos` | Sincroniza el bucket; requiere `Authorization: Bearer <CRON_SECRET>` |
@@ -342,13 +357,14 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
 | POST | `/api/admin/match-update` | `{ id, slug, opponent }`: edita el partido `id` con los campos del alta; el slug no cambia |
 | POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
-| POST | `/api/admin/courtrack-status` | `CourtrackSyncStatus`: cupo, ligas configuradas con su último sync y últimas ejecuciones (proxy a courtrack-service; 503 sin configurar) |
-| POST | `/api/admin/courtrack-sync` | `CourtrackSyncResult`: importa los partidos de una liga desde CourtTrack (`{ league_id, dry_run? }`); 429 `quota_exceeded` si se agotó el cupo |
-| POST | `/api/admin/courtrack-catalog` | Catálogo de CourtTrack: `{ resource: 'clientes' }`, `{ resource: 'ligas', id_cliente }` o `{ resource: 'equipos', id_cliente, liga_id }` |
-| POST | `/api/admin/leagues` | `CourtrackLeague[]`: ligas configuradas |
-| POST | `/api/admin/league-create` | 201 `CourtrackLeague`: alta de una liga (`{ id_cliente, cliente_name, liga_id, team_name, competition }`; 409 si ya estaba) |
-| POST | `/api/admin/league-update` | `CourtrackLeague`: pausa/activa (`is_active`) o cambia `team_name` |
-| POST | `/api/admin/league-delete` | `{ ok: true }`: quita la liga; partidos y competición se conservan |
+| POST | `/api/admin/courtrack-status` | `CourtrackSyncStatus`: cupo, temporadas configuradas (abiertas y finalizadas) con su último sync y últimas ejecuciones (proxy a courtrack-service; 503 sin configurar) |
+| POST | `/api/admin/courtrack-sync` | `{ league_id?, dry_run? }`: con `league_id`, `CourtrackSyncResult` de esa temporada; sin él, `CourtrackSyncAllResult` de todas las ligas activas (un cupo). 429 `quota_exceeded` si se agotó el cupo |
+| POST | `/api/admin/courtrack-catalog` | Catálogo de CourtTrack: `{ resource: 'clientes' }`, `{ resource: 'ligas', id_cliente }`, `{ resource: 'equipos', id_cliente, liga_id }` o `{ resource: 'descubrir', id_cliente, team }` (ligas donde juega el equipo) |
+| POST | `/api/admin/leagues` | `CourtrackLeague[]`: temporadas configuradas |
+| POST | `/api/admin/league-create` | 201 `CourtrackLeague`: alta de una liga (`{ id_cliente, cliente_name, liga_id, team_name, competition }`; 409 si ya tiene temporada abierta) |
+| POST | `/api/admin/league-update` | `CourtrackLeague`: pausa/activa (`is_active`), cambia `team_name` o cierra la temporada (`archive: true`) |
+| POST | `/api/admin/league-delete` | `{ ok: true }`: quita la temporada; partidos y competición se conservan |
+| POST | `/api/admin/league-snapshot` | `CourtrackLeagueSnapshot`: clasificación y fixture guardados en el último sync de la temporada |
 | POST | `/api/admin/team-link-create` | `{ ok: true }`: vincula un nombre de CourtTrack a un rival (`{ courtrack_name, team_id }`) |
 | POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
 | POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
@@ -386,7 +402,7 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 | Archivo | Rutas |
 |---|---|
 | `api/lookups/[resource].ts` | `GET /api/lookups/teams`, `/competitions` |
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/courtrack-status`, `/courtrack-sync`, `/courtrack-catalog`, `/leagues`, `/league-create`, `/league-update`, `/league-delete`, `/team-link-create` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/courtrack-status`, `/courtrack-sync`, `/courtrack-catalog`, `/leagues`, `/league-create`, `/league-update`, `/league-delete`, `/league-snapshot`, `/team-link-create` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
 | `api/flyers/[action].ts` | `GET /api/flyers/library`; `POST /api/flyers/verify`, `/suggest`, `/upload-url`, `/image-save`, `/image-rename`, `/image-delete`, `/flyer-save`, `/flyer-delete` |
 

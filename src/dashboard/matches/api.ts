@@ -9,22 +9,25 @@ export const matchesKeys = {
   all: ['matches'] as const,
   /** Prefijo de todos los listados (sin filtro y por competición). */
   lists: () => ['matches', 'list'] as const,
-  list: (competitionId?: string | null) => ['matches', 'list', competitionId ?? 'all'] as const,
+  list: (competitionId?: string | null, leagueId?: string | null) =>
+    ['matches', 'list', competitionId ?? 'all', leagueId ?? 'all'] as const,
   detail: (slug: string) => ['matches', 'detail', slug] as const,
   playback: (videoId: string) => ['videos', videoId, 'playback'] as const,
 }
 
-const matchListPath = (competitionId?: string | null) =>
-  `/matches?limit=100${competitionId ? `&competition_id=${encodeURIComponent(competitionId)}` : ''}`
+const matchListPath = (competitionId?: string | null, leagueId?: string | null) =>
+  `/matches?limit=100${competitionId ? `&competition_id=${encodeURIComponent(competitionId)}` : ''}${
+    leagueId ? `&courtrack_league_id=${encodeURIComponent(leagueId)}` : ''
+  }`
 const matchDetailPath = (slug: string) => `/matches/${encodeURIComponent(slug)}`
 
 const isNotFound = (error: unknown) => error instanceof ApiError && error.status === 404
 
-/** Partidos jugados, opcionalmente solo de una competición (filtro por liga). */
-export function matchListOptions(competitionId?: string | null) {
+/** Partidos jugados, opcionalmente solo de una competición y de una temporada (filtro por liga). */
+export function matchListOptions(competitionId?: string | null, leagueId?: string | null) {
   return queryOptions({
-    queryKey: matchesKeys.list(competitionId),
-    queryFn: ({ signal }) => apiGet<MatchSummary[]>(matchListPath(competitionId), signal),
+    queryKey: matchesKeys.list(competitionId, leagueId),
+    queryFn: ({ signal }) => apiGet<MatchSummary[]>(matchListPath(competitionId, leagueId), signal),
     staleTime: 60_000,
   })
 }
@@ -66,7 +69,7 @@ export async function refreshMatchData(queryClient: QueryClient, slug?: string):
   if (slug && detail) queryClient.setQueryData(matchesKeys.detail(slug), detail)
   void queryClient.invalidateQueries({
     queryKey: matchesKeys.lists(),
-    predicate: (query) => query.queryKey[2] !== 'all',
+    predicate: (query) => query.queryKey[2] !== 'all' || query.queryKey[3] !== 'all',
   })
   void queryClient.invalidateQueries({ queryKey: rivalsKey })
   void queryClient.invalidateQueries({ queryKey: competitionsKey })
@@ -77,7 +80,8 @@ export function patchMatchDetail(queryClient: QueryClient, slug: string, update:
   queryClient.setQueryData<MatchDetail>(matchesKeys.detail(slug), (match) => match && update(match))
 }
 
-export const useMatches = (competitionId?: string | null) => useQuery(matchListOptions(competitionId))
+export const useMatches = (competitionId?: string | null, leagueId?: string | null) =>
+  useQuery(matchListOptions(competitionId, leagueId))
 export const useMatch = (slug: string) => useQuery(matchDetailOptions(slug))
 export const useVideoPlayback = (videoId: string) => useQuery(playbackOptions(videoId))
 export { isNotFound }

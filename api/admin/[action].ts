@@ -8,6 +8,7 @@ import {
   courtrackSyncInput,
   leagueCreateInput,
   leagueDeleteInput,
+  leagueSnapshotInput,
   leagueUpdateInput,
   matchCreateInput,
   matchDeleteInput,
@@ -20,7 +21,7 @@ import { createActivity, deleteActivity, updateActivity } from '../_lib/activiti
 import { requireAdmin } from '../_lib/admin.js'
 import { getCourtrackCatalog, getCourtrackSyncStatus, runCourtrackSync } from '../_lib/courtrackSync.js'
 import { handle, noStore, parseBody, pathParam, routeFor, type Handler } from '../_lib/http.js'
-import { createLeague, deleteLeague, listLeagues, updateLeague } from '../_lib/leagues.js'
+import { createLeague, deleteLeague, getLeagueSnapshot, listLeagues, updateLeague } from '../_lib/leagues.js'
 import { createMatch, deleteMatch, updateMatch } from '../_lib/matches.js'
 import { createTeamLink } from '../_lib/teamLinks.js'
 import { deleteVideo, updateVideo } from '../_lib/videos.js'
@@ -67,12 +68,16 @@ const actions: Record<string, Handler> = {
   // POST /api/admin/courtrack-status → CourtrackSyncStatus. Cupo, ligas configuradas y últimas sincronizaciones (vía courtrack-service).
   'courtrack-status': async () => noStore(await getCourtrackSyncStatus()),
 
-  // POST /api/admin/courtrack-sync { league_id, dry_run? } → CourtrackSyncResult. Importa los partidos de esa liga desde
-  // CourtTrack; 429 `quota_exceeded` si se agotó el cupo diario. Con dry_run solo muestra qué haría.
+  // POST /api/admin/courtrack-sync { league_id?, dry_run? } → con league_id, CourtrackSyncResult de esa temporada; sin él,
+  // CourtrackSyncAllResult de todas las ligas activas (un solo cupo). 429 `quota_exceeded` si se agotó el cupo diario.
   'courtrack-sync': async (request) => {
     const input = await parseBody(request, courtrackSyncInput)
-    return noStore(await runCourtrackSync(input.league_id, input.dry_run))
+    return noStore(await runCourtrackSync(input.league_id ?? null, input.dry_run))
   },
+
+  // POST /api/admin/league-snapshot { id } → CourtrackLeagueSnapshot. Clasificación y fixture guardados en el último sync.
+  'league-snapshot': async (request) =>
+    noStore(await getLeagueSnapshot((await parseBody(request, leagueSnapshotInput)).id)),
 
   // POST /api/admin/courtrack-catalog { resource, id_cliente?, liga_id? } → asociaciones, ligas o equipos de CourtTrack.
   'courtrack-catalog': async (request) =>
@@ -84,7 +89,7 @@ const actions: Record<string, Handler> = {
   // POST /api/admin/league-create → 201 CourtrackLeague. Da de alta una liga (409 si ya estaba).
   'league-create': async (request) => noStore(await createLeague(await parseBody(request, leagueCreateInput)), 201),
 
-  // POST /api/admin/league-update → CourtrackLeague. Pausa/activa la liga o cambia el equipo propio.
+  // POST /api/admin/league-update → CourtrackLeague. Pausa/activa la liga, cambia el equipo propio o archiva la temporada.
   'league-update': async (request) => noStore(await updateLeague(await parseBody(request, leagueUpdateInput))),
 
   // POST /api/admin/league-delete → { ok: true }. Quita la liga; los partidos y la competición se conservan.

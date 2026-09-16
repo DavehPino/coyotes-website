@@ -48,10 +48,19 @@ function toMatchSummary(row: MatchRowData, opponent: TeamSummary, competition: C
   }
 }
 
-/** Partidos jugados hasta `until` (incluido), del más reciente al más antiguo; opcionalmente de una competición. */
-export async function listMatchesUntil(until: string, limit: number, competitionId?: string): Promise<MatchSummary[]> {
+/**
+ * Partidos jugados hasta `until` (incluido), del más reciente al más antiguo; opcionalmente de una competición y de
+ * una temporada de CourtTrack.
+ */
+export async function listMatchesUntil(
+  until: string,
+  limit: number,
+  competitionId?: string,
+  leagueId?: string,
+): Promise<MatchSummary[]> {
   let query = db().from('matches').select(MATCH_SUMMARY_SELECT).lte('played_on', until)
   if (competitionId) query = query.eq('competition_id', competitionId)
+  if (leagueId) query = query.eq('courtrack_league_id', leagueId)
   const { data, error } = await query
     .order('played_on', { ascending: false })
     .order('start_time', { ascending: false, nullsFirst: false })
