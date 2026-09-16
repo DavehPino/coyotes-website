@@ -3,7 +3,7 @@ import type { Player } from '@shared/schemas'
 import { canShareFiles, downloadFile, fileSlug, shareFile } from '@/lib/shareImage'
 import { errorMessage } from '../../admin/adminApi'
 import { Button } from '../../ui'
-import { DownloadIcon, ShareIcon } from '../../ui/icons'
+import { DownloadIcon, ShareNodesIcon } from '../../ui/icons'
 import { indexPlayers, usableSlots, type LineupLike } from '../board/rules'
 
 // El dibujo (y el de los flyers, del que reutiliza fuentes) se descarga aparte, sin retrasar la página.
@@ -34,7 +34,7 @@ export function ShareLineupButton({ lineup, players, variant, disabled = false }
   const [canShare] = useState(prefersShare)
   const empty = usableSlots(lineup.slots, indexPlayers(players)).length === 0
   const label = canShare ? 'Compartir' : 'Descargar'
-  const Icon = canShare ? ShareIcon : DownloadIcon
+  const Icon = canShare ? ShareNodesIcon : DownloadIcon
 
   // Fuentes y escudo listos antes del toque: la hoja de compartir no espera mucho.
   useEffect(() => {
