@@ -234,6 +234,29 @@ restante (**`SYNC_DAILY_LIMIT` sincronizaciones por 24 h**), y ofrece:
 Requiere `COURTRACK_SYNC_URL` y `COURTRACK_SYNC_SECRET` (sin ellos Ligas y Sincronizar responden 503) y `ORG_ID`
 (por defecto `coyotes`).
 
+## Alineación
+
+La sección **Alineación** (`dashboard.<dominio>/lineup`) guarda el plantel y las formaciones en Supabase
+(`players`, `lineups`, `lineup_players`), así que todo el equipo ve lo mismo desde cualquier móvil. Crear, editar o
+borrar pide la palabra clave de carga (`ADMIN_SAFEWORD`); ver y compartir, no.
+
+- **Plantel:** **Cargar jugador** pide nombre, número opcional (único entre activos), posición principal y una
+  secundaria opcional distinta. Cada posición tiene su color y su abreviatura (Armador ARM, Punta PUN, Central CEN,
+  Opuesto OPU, Líbero LÍB, Comodín COM; tokens `--color-pos-*` en `src/index.css`). Tocar un jugador lo edita, lo marca
+  inactivo (sale del banco) o lo borra, lo que también lo quita de las formaciones.
+- **Cancha:** **Armar en cancha** (o tocar una formación) abre la media cancha a pantalla completa. Los jugadores se
+  arrastran del banco a la cancha, dentro de ella y de vuelta al banco, con el dedo o con el ratón. Sin arrastrar:
+  tocar una ficha la selecciona y tocar la cancha la ubica. Con teclado: Enter selecciona, Enter otra vez la pone en
+  la primera zona libre, las flechas la mueven (Mayús para pasos largos), Supr la devuelve al banco y Esc la
+  deselecciona. Entran 6 titulares y 1 líbero (quien tiene líbero como posición principal). Las posiciones son
+  libres; las zonas 1–6 son solo una guía.
+- **Formaciones:** una nueva pide nombre (único) al guardar; una existente se guarda directo. El selector de la barra
+  superior cambia de formación y el menú permite renombrar, **Guardar como nueva** (variantes sin tocar la original),
+  vaciar la cancha y borrar. Si hay cambios sin guardar, se confirma antes de cerrar o cambiar.
+- **Compartir:** genera un PNG de 1080×1350 con la cancha, los titulares, el líbero y una leyenda de colores
+  (`src/dashboard/lineup/share/renderLineup.ts`). En móviles abre la hoja nativa de compartir; en escritorio lo
+  descarga. Exporta lo que hay en cancha aunque no esté guardado, y también está en cada fila de la lista.
+
 ## Flyers para Instagram
 
 La sección **Flyers** (`dashboard.<dominio>/flyers`) genera PNG listos para publicar en tres formatos: post 4:5
@@ -342,6 +365,8 @@ Editor).
 |---|---|---|
 | GET | `/api/lookups/teams` | Rivales por nombre (sin caché) |
 | GET | `/api/lookups/competitions` | Competiciones con su número de partidos y sus temporadas de CourtTrack (sin caché) |
+| GET | `/api/lookups/players` | Plantel: activos primero, por número y nombre (sin caché) |
+| GET | `/api/lookups/lineups` | Formaciones con sus jugadores en cancha (`slots` con `x`/`y` de 0 a 1), la editada más recientemente primero (sin caché) |
 | GET | `/api/activities?from=YYYY-MM-DD&limit=30` | Próximas actividades no canceladas, de la más cercana a la más lejana, con el rival embebido |
 | GET | `/api/matches?until=YYYY-MM-DD&limit=50&competition_id=&courtrack_league_id=` | Partidos jugados hasta la fecha, del más reciente al más antiguo; opcionalmente de una competición y de una temporada |
 | GET | `/api/matches/:slug` | Detalle con parciales y videos ordenados (404 si no existe) |
@@ -368,6 +393,11 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/league-delete` | `{ ok: true }`: quita la temporada; partidos y competición se conservan |
 | POST | `/api/admin/league-snapshot` | `CourtrackLeagueSnapshot`: clasificación y fixture guardados en el último sync de la temporada |
 | POST | `/api/admin/team-link-create` | `{ ok: true }`: vincula un nombre de CourtTrack a un rival (`{ courtrack_name, team_id }`) |
+| POST | `/api/admin/player-create` | 201 Player: `{ name, jersey_number?, primary_position, secondary_position? }` (409 si el número ya lo usa un activo) |
+| POST | `/api/admin/player-update` | Player: los campos del alta más `id` e `is_active` |
+| POST | `/api/admin/player-delete` | `{ ok: true }`: borra el jugador y lo quita de todas las formaciones |
+| POST | `/api/admin/lineup-save` | Lineup: sin `id` crea la formación; con `id` reemplaza nombre, notas y todos sus `slots` (máx. 7: 6 titulares y 1 líbero, jugadores activos; 409 si el nombre ya existe) |
+| POST | `/api/admin/lineup-delete` | `{ ok: true }`: borra la formación |
 | POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
 | POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
@@ -403,8 +433,8 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 
 | Archivo | Rutas |
 |---|---|
-| `api/lookups/[resource].ts` | `GET /api/lookups/teams`, `/competitions` |
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/courtrack-status`, `/courtrack-sync`, `/courtrack-catalog`, `/leagues`, `/league-create`, `/league-update`, `/league-delete`, `/league-snapshot`, `/team-link-create` |
+| `api/lookups/[resource].ts` | `GET /api/lookups/teams`, `/competitions`, `/players`, `/lineups` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/courtrack-status`, `/courtrack-sync`, `/courtrack-catalog`, `/leagues`, `/league-create`, `/league-update`, `/league-delete`, `/league-snapshot`, `/team-link-create`, `/player-create`, `/player-update`, `/player-delete`, `/lineup-save`, `/lineup-delete` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
 | `api/flyers/[action].ts` | `GET /api/flyers/library`; `POST /api/flyers/verify`, `/suggest`, `/upload-url`, `/image-save`, `/image-rename`, `/image-delete`, `/flyer-save`, `/flyer-delete` |
 

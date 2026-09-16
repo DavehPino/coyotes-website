@@ -95,3 +95,63 @@ export const ADMIN_SAFEWORD_HEADER = "x-admin-safeword";
 
 /** Cabecera con la palabra clave de la sección Flyers (FLYERS_SAFEWORD), distinta de la de carga. */
 export const FLYERS_SAFEWORD_HEADER = "x-flyers-safeword";
+
+/** Posición de un jugador (tabla players). Debe coincidir con los CHECK `players_*_position_check`. */
+export const PLAYER_POSITIONS = [
+  "armador",
+  "punta",
+  "central",
+  "opuesto",
+  "libero",
+  "comodin",
+] as const;
+export type PlayerPosition = (typeof PLAYER_POSITIONS)[number];
+
+export const PLAYER_POSITION_LABELS: Record<PlayerPosition, string> = {
+  armador: "Armador",
+  punta: "Punta",
+  central: "Central",
+  opuesto: "Opuesto",
+  libero: "Líbero",
+  comodin: "Comodín",
+};
+
+/** Abreviatura de 3 letras: el color nunca es la única pista. */
+export const PLAYER_POSITION_SHORT: Record<PlayerPosition, string> = {
+  armador: "ARM",
+  punta: "PUN",
+  central: "CEN",
+  opuesto: "OPU",
+  libero: "LÍB",
+  comodin: "COM",
+};
+
+/** Posición que ocupa la plaza de líbero en cancha (si es la principal del jugador). */
+export const LIBERO_POSITION: PlayerPosition = "libero";
+
+/** Jugadores en cancha: 6 titulares + 1 líbero. */
+export const LINEUP_MAX_STARTERS = 6;
+export const LINEUP_MAX_LIBEROS = 1;
+export const LINEUP_MAX_SLOTS = LINEUP_MAX_STARTERS + LINEUP_MAX_LIBEROS;
+
+export const PLAYER_NAME_MAX = 60;
+export const LINEUP_NAME_MAX = 40;
+export const LINEUP_NOTES_MAX = 500;
+
+/** Plaza que ocupa un jugador en cancha según su posición principal. */
+export type LineupRole = "starter" | "libero";
+
+export function lineupRoleOf(primaryPosition: PlayerPosition): LineupRole {
+  return primaryPosition === LIBERO_POSITION ? "libero" : "starter";
+}
+
+/**
+ * Por qué no cabe un jugador más en cancha, o null si cabe. Lo usan la cancha (al soltar una ficha)
+ * y el backend (al guardar), para que ambos apliquen la misma regla.
+ */
+export function lineupLimitMessage(role: LineupRole, onCourt: readonly PlayerPosition[]): string | null {
+  const taken = onCourt.filter((position) => lineupRoleOf(position) === role).length;
+  if (role === "libero" && taken >= LINEUP_MAX_LIBEROS) return "Ya hay un líbero en cancha";
+  if (role === "starter" && taken >= LINEUP_MAX_STARTERS) return `Ya hay ${LINEUP_MAX_STARTERS} titulares`;
+  return null;
+}

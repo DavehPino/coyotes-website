@@ -1,5 +1,15 @@
 @import 'tailwindcss';
 
+/* Pantalla ancha u horizontal (móvil girado): la cancha de Alineación pone el banco al lado. */
+@custom-variant wide {
+  @media (min-width: 48rem) {
+    @slot;
+  }
+  @media (orientation: landscape) {
+    @slot;
+  }
+}
+
 /*
  * Paleta Coyotes — extraída del logo (assets/coyotes-logo.png).
  * Uso: bg-coyote-black, text-coyote-gold, border-coyote-orange, etc.
@@ -32,6 +42,25 @@
   --shadow-gold-strong: 0 0 0 2px var(--color-coyote-gold);
 
   --ease-soft: cubic-bezier(0.2, 0, 0, 1);
+}
+
+/*
+ * Alineación: un color por posición (shared/domain.ts PLAYER_POSITIONS) y la cancha.
+ * `static`: siempre se emiten como variables, porque el SVG y el PNG de la cancha las leen en tiempo de ejecución.
+ * Azul, rojo y violeta van un tono más oscuros que el original para que el texto blanco llegue a AA (≥ 4.5:1);
+ * las fichas llevan un borde claro que las separa de la cancha.
+ */
+@theme static {
+  --color-pos-armador: #2563eb; /* azul · texto blanco 5.2:1 */
+  --color-pos-punta: #22c55e; /* verde · texto negro 8.7:1 */
+  --color-pos-central: #dc2626; /* rojo · texto blanco 4.8:1 */
+  --color-pos-opuesto: #9333ea; /* violeta · texto blanco 5.4:1 */
+  --color-pos-libero: #facc15; /* amarillo, como su camiseta distinta · texto negro 12.9:1 */
+  --color-pos-comodin: #2dd4bf; /* turquesa · texto negro 10.6:1 */
+
+  --color-court: #4a2c17; /* suelo de la cancha: cálido oscuro */
+  --color-court-free: #1f130b; /* zona libre alrededor */
+  --color-court-line: #f4ede4; /* líneas */
 }
 
 @layer base {
@@ -111,4 +140,18 @@
 
 @utility animate-rise {
   animation: coyote-rise 320ms var(--ease-soft) both;
+}
+
+/* Alineación: la ficha se asienta al soltarla (corto y solo con transform). */
+@keyframes token-drop {
+  from {
+    transform: scale(1.15);
+  }
+  to {
+    transform: scale(1);
+  }
+}
+
+@utility animate-token-drop {
+  animation: token-drop 150ms ease-out;
 }

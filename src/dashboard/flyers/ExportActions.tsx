@@ -1,5 +1,6 @@
 import { useState, type RefObject } from 'react'
 import type { FlyerContent } from '@shared/flyers'
+import { canShareFiles, downloadFile, fileSlug, shareFile } from '@/lib/shareImage'
 import { errorMessage } from '../admin/adminApi'
 import { Button } from '../ui'
 import { DownloadIcon, ShareIcon } from '../ui/icons'
@@ -12,22 +13,13 @@ type ExportActionsProps = {
 }
 
 function fileName(flyer: FlyerContent): string {
-  const slug = (flyer.title || flyer.template)
-    .normalize('NFD')
-    .replace(/[̀-ͯ]/g, '')
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
-  return `coyotes-${slug || 'flyer'}.png`
+  return `coyotes-${fileSlug(flyer.title || flyer.template) || 'flyer'}.png`
 }
 
 /** Descarga el PNG y, en móviles que lo admiten, lo comparte directo (p.ej. a Instagram). */
 export function ExportActions({ canvasRef, flyer, disabled }: ExportActionsProps) {
   const [busy, setBusy] = useState(false)
-  const canShareFiles =
-    typeof navigator !== 'undefined' &&
-    typeof navigator.canShare === 'function' &&
-    navigator.canShare({ files: [new File([''], 'flyer.png', { type: 'image/png' })] })
+  const canShare = canShareFiles()
 
   async function toFile(): Promise<File | null> {
     const canvas = canvasRef.current
@@ -40,13 +32,7 @@ export function ExportActions({ canvasRef, flyer, disabled }: ExportActionsProps
     setBusy(true)
     try {
       const file = await toFile()
-      if (!file) return
-      const url = URL.createObjectURL(file)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = file.name
-      link.click()
-      setTimeout(() => URL.revokeObjectURL(url), 1000)
+      if (file) downloadFile(file)
     } catch (err) {
       window.alert(errorMessage(err))
     } finally {
@@ -58,10 +44,10 @@ export function ExportActions({ canvasRef, flyer, disabled }: ExportActionsProps
     setBusy(true)
     try {
       const file = await toFile()
-      if (file) await navigator.share({ files: [file] })
+      // Cerrar la hoja de compartir no es un error (shareFile devuelve false).
+      if (file) await shareFile(file)
     } catch (err) {
-      // Cerrar la hoja de compartir no es un error.
-      if (!(err instanceof DOMException && err.name === 'AbortError')) window.alert(errorMessage(err))
+      window.alert(errorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -69,7 +55,7 @@ export function ExportActions({ canvasRef, flyer, disabled }: ExportActionsProps
 
   return (
     <>
-      {canShareFiles && (
+      {canShare && (
         <Button onClick={share} disabled={disabled || busy} className="pr-4 pl-3.5">
           <ShareIcon className="size-4" strokeWidth={2} />
           Compartir

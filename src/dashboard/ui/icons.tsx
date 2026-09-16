@@ -260,3 +260,51 @@ export function BookmarkIcon(props: IconProps) {
     </svg>
   )
 }
+
+/** Alineación: media cancha vista desde arriba, con la red y la línea de ataque. */
+export function CourtIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <rect x="4" y="3" width="16" height="18" rx="1.5" fill={props.filled ? 'currentColor' : 'none'} fillOpacity={0.2} />
+      <path d="M2.5 3h19M4 9h16" />
+      <circle cx="9" cy="14.5" r="1.25" fill="currentColor" stroke="none" />
+      <circle cx="15" cy="14.5" r="1.25" fill="currentColor" stroke="none" />
+      {props.filled && <rect x="4" y="3" width="16" height="6" rx="1.5" fill="currentColor" stroke="none" />}
+    </svg>
+  )
+}
+
+export function MoreIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="12" cy="5.5" r="1.25" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.25" fill="currentColor" />
+      <circle cx="12" cy="18.5" r="1.25" fill="currentColor" />
+    </svg>
+  )
+}
+
+export function SaveIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M5 4h11l3 3v12a1 1 0 0 1-1 1H6a1 1 0 0 1-1-1V4zM8 4v5h7V4M8 20v-6h8v6" />
+    </svg>
+  )
+}
+
+export function ChevronDownIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M6 9l6 6 6-6" />
+    </svg>
+  )
+}
+
+export function UsersIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <circle cx="9" cy="8" r="3.5" />
+      <path d="M2.5 20a6.5 6.5 0 0 1 13 0M15.5 4.8a3.5 3.5 0 0 1 0 6.4M18 14.2a6.5 6.5 0 0 1 3.5 5.8" />
+    </svg>
+  )
+}

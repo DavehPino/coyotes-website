@@ -16,6 +16,7 @@ declare
   v_pumas     uuid;
   v_halcones  uuid;
   v_match     uuid;
+  v_lineup    uuid;
 begin
   -- ─── Equipos ──────────────────────────────────────────────────────────────
   insert into public.teams (name, short_name, is_own_team, category, city)
@@ -126,5 +127,40 @@ begin
       -- Enlace que no es de YouTube: el dashboard muestra el botón "Abrir video"
       ('Set 1 (Drive)', 'Grabación desde la grada.', 'external',
        'https://drive.google.com/file/d/EJEMPLO/view', 'partido', '2026-09-06', 'ready', v_match, 1, 0);
+  end if;
+
+  -- ─── Plantel y una formación de ejemplo (Alineación) ─────────────────────
+  if not exists (select 1 from public.players) then
+    insert into public.players (name, jersey_number, primary_position, secondary_position, is_active)
+    values
+      ('Juan Pérez',     7,  'armador', 'comodin', true),
+      ('Ana Gómez',      10, 'punta',   null,      true),
+      ('Lucas Díaz',     4,  'central', null,      true),
+      ('Sofía Ramos',    12, 'central', 'opuesto', true),
+      ('Martín López',   9,  'opuesto', 'punta',   true),
+      ('Valentina Ruiz', 3,  'punta',   'libero',  true),
+      ('Diego Sosa',     1,  'libero',  null,      true),
+      ('Camila Torres',  5,  'armador', null,      true),
+      ('Nicolás Vega',   8,  'comodin', 'central', true),
+      ('Paula Méndez',   null, 'punta', null,      false);
+  end if;
+
+  if not exists (select 1 from public.lineups where lower(trim(name)) = 'titular') then
+    insert into public.lineups (name, notes) values ('Titular', 'Formación base de ejemplo.')
+    returning id into v_lineup;
+
+    -- Coordenadas normalizadas sobre la media cancha (y = 0 es la red).
+    insert into public.lineup_players (lineup_id, player_id, x, y)
+    select v_lineup, p.id, pos.x, pos.y
+    from (values
+      (10, 0.167, 0.250),  -- zona 4
+      (4,  0.500, 0.250),  -- zona 3
+      (7,  0.833, 0.250),  -- zona 2
+      (12, 0.167, 0.700),  -- zona 5
+      (3,  0.500, 0.750),  -- zona 6
+      (9,  0.833, 0.700),  -- zona 1
+      (1,  0.300, 0.880)   -- líbero
+    ) as pos (jersey, x, y)
+    join public.players p on p.jersey_number = pos.jersey and p.is_active;
   end if;
 end $$;

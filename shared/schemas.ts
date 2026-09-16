@@ -4,12 +4,18 @@ import { z } from 'zod'
 import {
   ACTIVITY_CATEGORIES,
   COMPETITION_KINDS,
+  LINEUP_MAX_SLOTS,
+  LINEUP_NAME_MAX,
+  LINEUP_NOTES_MAX,
   MAX_SETS,
   MAX_VIDEO_BYTES,
+  PLAYER_NAME_MAX,
+  PLAYER_POSITIONS,
   type ActivityCategory,
   type ActivityType,
   type CompetitionKind,
   type MatchOutcome,
+  type PlayerPosition,
   type VideoCategory,
   type VideoSource,
   type VideoStatus,
@@ -489,6 +495,73 @@ export type UploadCompleteInput = z.infer<typeof uploadCompleteInput>
 
 export const uploadAbortInput = z.object(uploadRef)
 export type UploadAbortInput = z.infer<typeof uploadAbortInput>
+
+// ─── Plantel y formaciones (Alineación) ─────────────────────────────────────
+export type Player = {
+  id: string
+  name: string
+  jersey_number: number | null
+  primary_position: PlayerPosition
+  secondary_position: PlayerPosition | null
+  is_active: boolean
+}
+
+/** Jugador en cancha: coordenadas normalizadas (0..1) sobre la media cancha, con la red en y = 0. */
+export type LineupSlot = { player_id: string; x: number; y: number }
+
+export type Lineup = {
+  id: string
+  name: string
+  notes: string | null
+  slots: LineupSlot[]
+  updated_at: string
+}
+
+const positionsDiffer = (input: { primary_position: PlayerPosition; secondary_position: PlayerPosition | null }) =>
+  input.primary_position !== input.secondary_position
+
+const positionsDifferIssue = {
+  message: 'La posición secundaria tiene que ser distinta de la principal',
+  path: ['secondary_position'],
+}
+
+const playerFields = {
+  name: z.string().trim().min(1, 'Escribe el nombre del jugador').max(PLAYER_NAME_MAX),
+  jersey_number: z.number().int().min(0).max(99).nullish().transform((value) => value ?? null),
+  primary_position: z.enum(PLAYER_POSITIONS, 'Elige la posición principal'),
+  secondary_position: z.enum(PLAYER_POSITIONS).nullish().transform((value) => value ?? null),
+}
+
+export const playerCreateInput = z.object(playerFields).refine(positionsDiffer, positionsDifferIssue)
+export type PlayerCreateInput = z.infer<typeof playerCreateInput>
+
+export const playerUpdateInput = z
+  .object({ ...playerFields, id: z.uuid(), is_active: z.boolean() })
+  .refine(positionsDiffer, positionsDifferIssue)
+export type PlayerUpdateInput = z.infer<typeof playerUpdateInput>
+
+export const playerDeleteInput = z.object({ id: z.uuid() })
+export type PlayerDeleteInput = z.infer<typeof playerDeleteInput>
+
+const coordinate = z.number().min(0).max(1)
+
+/** Sin `id` crea la formación; con `id` reemplaza su nombre, notas y jugadores. */
+export const lineupSaveInput = z.object({
+  id: z.uuid().optional(),
+  name: z.string().trim().min(1, 'Escribe un nombre para la formación').max(LINEUP_NAME_MAX),
+  notes: optionalText(LINEUP_NOTES_MAX),
+  slots: z
+    .array(z.object({ player_id: z.uuid(), x: coordinate, y: coordinate }))
+    .max(LINEUP_MAX_SLOTS, `Como máximo ${LINEUP_MAX_SLOTS} jugadores en cancha`)
+    .refine(
+      (slots) => new Set(slots.map((slot) => slot.player_id)).size === slots.length,
+      'Un jugador no puede estar dos veces en cancha',
+    ),
+})
+export type LineupSaveInput = z.infer<typeof lineupSaveInput>
+
+export const lineupDeleteInput = z.object({ id: z.uuid() })
+export type LineupDeleteInput = z.infer<typeof lineupDeleteInput>
 
 // ─── Errores ─────────────────────────────────────────────────────────────────
 export type ApiErrorBody = {

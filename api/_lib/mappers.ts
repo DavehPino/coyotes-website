@@ -4,6 +4,7 @@ import {
   ACTIVITY_CATEGORIES,
   ACTIVITY_TYPES,
   COMPETITION_KINDS,
+  PLAYER_POSITIONS,
   VIDEO_CATEGORIES,
   VIDEO_SOURCES,
   VIDEO_STATUSES,
@@ -11,6 +12,7 @@ import {
   type ActivityType,
   type CompetitionKind,
   type MatchOutcome,
+  type PlayerPosition,
   type VideoCategory,
   type VideoSource,
   type VideoStatus,
@@ -19,6 +21,9 @@ import {
   setScoreSchema,
   type Activity,
   type Competition,
+  type Lineup,
+  type LineupSlot,
+  type Player,
   type SetScore,
   type TeamSummary,
   type Video,
@@ -27,6 +32,9 @@ import type { Tables } from './supabase.js'
 
 type ActivityRow = Tables['weekly_activities']['Row']
 type VideoRow = Tables['videos']['Row']
+type PlayerRow = Tables['players']['Row']
+type LineupRow = Tables['lineups']['Row']
+type LineupPlayerRow = Tables['lineup_players']['Row']
 
 export const TEAM_SUMMARY_SELECT = 'id,name,short_name,logo_url'
 
@@ -106,4 +114,37 @@ export function compareVideos(a: Video, b: Video): number {
   if (setA !== setB) return setA - setB
   if (a.sort_order !== b.sort_order) return a.sort_order - b.sort_order
   return a.title.localeCompare(b.title, 'es')
+}
+
+export const PLAYER_SELECT = 'id,name,jersey_number,primary_position,secondary_position,is_active'
+
+export function toPlayer(
+  row: Pick<PlayerRow, 'id' | 'name' | 'jersey_number' | 'primary_position' | 'secondary_position' | 'is_active'>,
+): Player {
+  const primary = oneOf<PlayerPosition>(PLAYER_POSITIONS, row.primary_position, 'comodin')
+  const secondary = PLAYER_POSITIONS.find((position) => position === row.secondary_position) ?? null
+  return {
+    id: row.id,
+    name: row.name,
+    jersey_number: row.jersey_number,
+    primary_position: primary,
+    secondary_position: secondary === primary ? null : secondary,
+    is_active: row.is_active,
+  }
+}
+
+export const LINEUP_SELECT = 'id,name,notes,updated_at,lineup_players(player_id,x,y)'
+
+/** `numeric` puede llegar como texto según el cliente: se normaliza a número. */
+export function toLineup(
+  row: Pick<LineupRow, 'id' | 'name' | 'notes' | 'updated_at'> & {
+    lineup_players: Pick<LineupPlayerRow, 'player_id' | 'x' | 'y'>[]
+  },
+): Lineup {
+  const slots: LineupSlot[] = row.lineup_players.map((slot) => ({
+    player_id: slot.player_id,
+    x: Number(slot.x),
+    y: Number(slot.y),
+  }))
+  return { id: row.id, name: row.name, notes: row.notes, slots, updated_at: row.updated_at }
 }

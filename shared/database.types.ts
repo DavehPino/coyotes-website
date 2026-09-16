@@ -150,6 +150,66 @@ export type Database = {
           },
         ]
       }
+      lineup_players: {
+        Row: {
+          lineup_id: string
+          player_id: string
+          x: number
+          y: number
+        }
+        Insert: {
+          lineup_id: string
+          player_id: string
+          x: number
+          y: number
+        }
+        Update: {
+          lineup_id?: string
+          player_id?: string
+          x?: number
+          y?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lineup_players_lineup_id_fkey"
+            columns: ["lineup_id"]
+            isOneToOne: false
+            referencedRelation: "lineups"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "lineup_players_player_id_fkey"
+            columns: ["player_id"]
+            isOneToOne: false
+            referencedRelation: "players"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      lineups: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          notes: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          notes?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
       matches: {
         Row: {
           activity_id: string | null
@@ -244,6 +304,39 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      players: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          jersey_number: number | null
+          name: string
+          primary_position: string
+          secondary_position: string | null
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          jersey_number?: number | null
+          name: string
+          primary_position: string
+          secondary_position?: string | null
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          jersey_number?: number | null
+          name?: string
+          primary_position?: string
+          secondary_position?: string | null
+          updated_at?: string
+        }
+        Relationships: []
       }
       sync_log: {
         Row: {

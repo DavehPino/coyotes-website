@@ -1,12 +1,13 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { LOGO_SRC, TEAM_NAME } from '@/config'
-import { BallIcon, CalendarIcon, HomeIcon, ImageIcon, type IconProps } from './ui/icons'
+import { BallIcon, CalendarIcon, CourtIcon, HomeIcon, ImageIcon, type IconProps } from './ui/icons'
 
 const SECTIONS: { to: string; label: string; icon: (props: IconProps) => React.JSX.Element; end?: boolean }[] = [
   { to: '/', label: 'Inicio', icon: HomeIcon, end: true },
   { to: '/activities', label: 'Actividades', icon: CalendarIcon },
   { to: '/matches', label: 'Partidos', icon: BallIcon },
+  { to: '/lineup', label: 'Alineación', icon: CourtIcon },
   { to: '/flyers', label: 'Flyers', icon: ImageIcon },
 ]
 
@@ -46,7 +47,7 @@ export function DashboardLayout() {
               end={end}
               className={({ isActive }) =>
                 [
-                  'relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-4 py-2 text-xs font-medium',
+                  'relative flex min-h-14 min-w-0 flex-1 flex-col items-center justify-center gap-1 px-1 py-2 text-xs font-medium',
                   'transition-[color,background-color] duration-150 ease-out',
                   'md:min-h-11 md:flex-none md:flex-row md:justify-start md:gap-3 md:rounded-lg md:px-3 md:text-base',
                   isActive

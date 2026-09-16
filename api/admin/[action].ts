@@ -10,9 +10,14 @@ import {
   leagueDeleteInput,
   leagueSnapshotInput,
   leagueUpdateInput,
+  lineupDeleteInput,
+  lineupSaveInput,
   matchCreateInput,
   matchDeleteInput,
   matchUpdateInput,
+  playerCreateInput,
+  playerDeleteInput,
+  playerUpdateInput,
   teamLinkCreateInput,
   videoDeleteInput,
   videoUpdateInput,
@@ -22,7 +27,9 @@ import { requireAdmin } from '../_lib/admin.js'
 import { getCourtrackCatalog, getCourtrackSyncStatus, runCourtrackSync } from '../_lib/courtrackSync.js'
 import { handle, noStore, parseBody, pathParam, routeFor, type Handler } from '../_lib/http.js'
 import { createLeague, deleteLeague, getLeagueSnapshot, listLeagues, updateLeague } from '../_lib/leagues.js'
+import { deleteLineup, saveLineup } from '../_lib/lineups.js'
 import { createMatch, deleteMatch, updateMatch } from '../_lib/matches.js'
+import { createPlayer, deletePlayer, updatePlayer } from '../_lib/players.js'
 import { createTeamLink } from '../_lib/teamLinks.js'
 import { deleteVideo, updateVideo } from '../_lib/videos.js'
 
@@ -100,6 +107,27 @@ const actions: Record<string, Handler> = {
 
   // POST /api/admin/team-link-create → { ok: true }. Vincula un nombre de CourtTrack a un rival existente.
   'team-link-create': async (request) => noStore(await createTeamLink(await parseBody(request, teamLinkCreateInput))),
+
+  // POST /api/admin/player-create → 201 Player. Alta en el plantel (409 si el número ya lo usa un activo).
+  'player-create': async (request) => noStore(await createPlayer(await parseBody(request, playerCreateInput)), 201),
+
+  // POST /api/admin/player-update → Player. Edita el jugador, incluido si está activo.
+  'player-update': async (request) => noStore(await updatePlayer(await parseBody(request, playerUpdateInput))),
+
+  // POST /api/admin/player-delete → { ok: true }. Borra el jugador y lo quita de todas las formaciones.
+  'player-delete': async (request) => {
+    await deletePlayer(await parseBody(request, playerDeleteInput))
+    return noStore({ ok: true })
+  },
+
+  // POST /api/admin/lineup-save → Lineup. Sin id crea la formación; con id la reemplaza (409 si el nombre existe).
+  'lineup-save': async (request) => noStore(await saveLineup(await parseBody(request, lineupSaveInput))),
+
+  // POST /api/admin/lineup-delete → { ok: true }. Borra la formación.
+  'lineup-delete': async (request) => {
+    await deleteLineup(await parseBody(request, lineupDeleteInput))
+    return noStore({ ok: true })
+  },
 }
 
 export const POST = handle(async (request) => {
