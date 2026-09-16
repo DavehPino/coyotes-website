@@ -8,10 +8,11 @@ import { todayIsoDate } from '@shared/dates'
 import type { FlyerContent, FlyerImage } from '@shared/flyers'
 import { upcomingActivitiesOptions } from '../activities/api'
 import { matchDetailOptions } from '../matches/api'
+import { captionFromActivity, captionFromMatch } from './caption'
 import { PREFILL_PARAM } from './flyerLinks'
 import { flyerFromActivity, flyerFromMatch, type FlyerBase } from './presets'
 
-type Composed = { flyer: FlyerContent; notice: string }
+type Composed = { flyer: FlyerContent; notice: string; caption: string }
 
 async function compose(
   from: string,
@@ -27,13 +28,21 @@ async function compose(
   if (kind === 'match') {
     // Normalmente ya está en caché porque se llega desde el detalle del partido: se resuelve al instante.
     const match = await queryClient.fetchQuery(matchDetailOptions(value))
-    return { flyer: flyerFromMatch(match, base, images), notice: 'Cargado desde el partido' }
+    return {
+      flyer: flyerFromMatch(match, base, images),
+      notice: 'Cargado desde el partido',
+      caption: captionFromMatch(match),
+    }
   }
   if (kind === 'activity') {
     const activities = await queryClient.fetchQuery(upcomingActivitiesOptions(todayIsoDate()))
     const activity = activities.find((item) => item.id === value)
     if (!activity) throw new Error('Esa actividad ya no está entre las próximas.')
-    return { flyer: flyerFromActivity(activity, base, images), notice: 'Cargado desde la actividad' }
+    return {
+      flyer: flyerFromActivity(activity, base, images),
+      notice: 'Cargado desde la actividad',
+      caption: captionFromActivity(activity),
+    }
   }
   throw new Error('El enlace no es válido.')
 }
@@ -43,7 +52,7 @@ type PrefillOptions = {
   images: FlyerImage[]
   /** La biblioteca ya respondió (bien o mal): sin ella no se puede resolver el logo del rival. */
   libraryReady: boolean
-  apply: (flyer: FlyerContent, notice: string) => void
+  apply: (flyer: FlyerContent, notice: string, caption: string) => void
 }
 
 /**
@@ -65,8 +74,8 @@ export function usePrefill(options: PrefillOptions): { error: string | null; dis
     done.current = true
     void (async () => {
       try {
-        const { flyer, notice } = await compose(from, queryClient, latest.current.base, latest.current.images)
-        latest.current.apply(flyer, notice)
+        const composed = await compose(from, queryClient, latest.current.base, latest.current.images)
+        latest.current.apply(composed.flyer, composed.notice, composed.caption)
       } catch (err) {
         setError(`No se pudo cargar el flyer. ${errorMessage(err)}`)
       } finally {

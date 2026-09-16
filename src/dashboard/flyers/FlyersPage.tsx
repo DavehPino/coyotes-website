@@ -7,10 +7,12 @@ import { AiPanel } from './AiPanel'
 import { useImageLibrary } from './assetLibrary'
 import { EditorPanel } from './EditorPanel'
 import { ExportActions } from './ExportActions'
+import { captionFromFlyer } from './caption'
+import { CaptionPanel } from './CaptionPanel'
 import { FlyerCanvas, useFlyerAssets } from './FlyerCanvas'
 import { usePrefill } from './prefill'
 import { SavedPanel } from './SavedPanel'
-import { useSavedFlyers } from './savedFlyers'
+import { sameFlyer, useSavedFlyers } from './savedFlyers'
 import { draftStore } from './templates'
 import { TemplatesPanel } from './TemplatesPanel'
 
@@ -38,16 +40,25 @@ export function FlyersPage() {
   const { assets, ready, failedImages } = useFlyerAssets(photoUrl, library.images)
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const [notice, setNotice] = useState<string | null>(null)
+  const [caption, setCaption] = useState('')
+  // Flyer al que corresponde el pie de foto: si el actual ya no es ese, el texto quedó viejo.
+  const captionOf = useRef<FlyerContent | null>(null)
+
+  function writeCaption(text: string, source: FlyerContent) {
+    setCaption(text)
+    captionOf.current = source
+  }
 
   // ?from=match:<slug> o ?from=activity:<id>: el flyer llega armado desde un partido o una actividad.
   const prefill = usePrefill({
     base: { format: flyer.format, showLogo: flyer.showLogo },
     images: library.images,
     libraryReady: !library.loading,
-    apply: (next, message) => {
+    apply: (next, message, text) => {
       replace(next)
       setTab('editor')
       setNotice(message)
+      writeCaption(text, next)
     },
   })
 
@@ -86,6 +97,7 @@ export function FlyersPage() {
 
   const size = FLYER_FORMAT_SIZES[flyer.format]
   const isSaved = saved.isSaved(flyer)
+  const captionStale = caption !== '' && captionOf.current !== null && !sameFlyer(flyer, captionOf.current)
 
   return (
     <section>
@@ -113,7 +125,7 @@ export function FlyersPage() {
               <BookmarkIcon className="size-4" strokeWidth={2} filled={isSaved} />
               <span className="hidden sm:inline">{saved.saving ? 'Guardando…' : isSaved ? 'Guardado' : 'Guardar'}</span>
             </Button>
-            <ExportActions canvasRef={canvasRef} flyer={flyer} disabled={!ready} />
+            <ExportActions canvasRef={canvasRef} flyer={flyer} caption={caption} disabled={!ready} />
           </>
         }
       />
@@ -158,6 +170,12 @@ export function FlyersPage() {
             </div>
           )}
           {prefill.error && <FormError>{prefill.error}</FormError>}
+          <CaptionPanel
+            value={caption}
+            onChange={(text) => writeCaption(text, flyer)}
+            stale={captionStale}
+            onRegenerate={() => writeCaption(captionFromFlyer(flyer), flyer)}
+          />
           {saved.error && tab !== 'saved' && <FormError>{saved.error}</FormError>}
           {tab === 'templates' && <TemplatesPanel flyer={flyer} onApply={replace} />}
           {tab === 'saved' && (
