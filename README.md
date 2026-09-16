@@ -176,6 +176,23 @@ con la palabra clave):
 del bucket (la carpeta `games/<slug>/` completa y cualquier otro video vinculado), después las filas de `videos` y por
 último el partido. Si el bucket falla no se borra nada de la base de datos. El rival se conserva.
 
+### Sincronizar con CourtTrack
+
+El botón **Sincronizar** de Partidos (con la palabra clave) importa los resultados de **Liga Podio** desde la app
+CourtTrack a través del microservicio [`courtrack-service`](../courtrack-service) (repo y deploy aparte, misma base de
+datos). El diálogo muestra el cupo restante (**3 sincronizaciones por 24 h**) y las últimas ejecuciones, y ofrece:
+
+- **Vista previa:** qué crearía, actualizaría u omitiría, y qué rivales nuevos daría de alta. No escribe ni gasta cupo.
+  Conviene revisarla antes de la primera sincronización para detectar rivales que ya existen con otro nombre (se
+  unen con `COURTRACK_TEAM_ALIASES` en el microservicio).
+- **Sincronizar:** crea los partidos jugados con parciales, rival, fase y cancha; actualiza los ya importados y
+  **vincula** los cargados a mano el mismo día contra el mismo rival en vez de duplicarlos (`matches.courtrack_id`).
+  El slug, el resumen, la portada y los videos no se tocan. Los partidos importados aparecen como local o visitante
+  según CourtTrack; si se editan a mano, la siguiente sincronización vuelve a poner los datos de CourtTrack.
+
+Requiere `COURTRACK_SYNC_URL` y `COURTRACK_SYNC_SECRET` (sin ellos el botón responde 503) y las migraciones
+`20260916000000_matches_courtrack_id.sql` y `20260916000100_sync_log.sql` (después, `npm run db:types`).
+
 ## Flyers para Instagram
 
 La sección **Flyers** (`dashboard.<dominio>/flyers`) genera PNG listos para publicar en tres formatos: post 4:5
@@ -300,6 +317,8 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
 | POST | `/api/admin/match-update` | `{ id, slug, opponent }`: edita el partido `id` con los campos del alta; el slug no cambia |
 | POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
+| POST | `/api/admin/courtrack-status` | `CourtrackSyncStatus`: cupo restante y últimas sincronizaciones (proxy a courtrack-service; 503 sin configurar) |
+| POST | `/api/admin/courtrack-sync` | `CourtrackSyncResult`: importa los partidos de Liga Podio desde CourtTrack (`{ dry_run?: boolean }`); 429 `quota_exceeded` si se agotó el cupo |
 | POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
 | POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
@@ -335,7 +354,7 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 
 | Archivo | Rutas |
 |---|---|
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/courtrack-status`, `/courtrack-sync` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
 | `api/flyers/[action].ts` | `GET /api/flyers/library`; `POST /api/flyers/verify`, `/suggest`, `/upload-url`, `/image-save`, `/image-rename`, `/image-delete`, `/flyer-save`, `/flyer-delete` |
 

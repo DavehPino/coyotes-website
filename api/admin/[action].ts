@@ -4,6 +4,7 @@ import {
   activityCreateInput,
   activityDeleteInput,
   activityUpdateInput,
+  courtrackSyncInput,
   matchCreateInput,
   matchDeleteInput,
   matchUpdateInput,
@@ -12,6 +13,7 @@ import {
 } from '../../shared/schemas.js'
 import { createActivity, deleteActivity, updateActivity } from '../_lib/activities.js'
 import { requireAdmin } from '../_lib/admin.js'
+import { getCourtrackSyncStatus, runCourtrackSync } from '../_lib/courtrackSync.js'
 import { handle, noStore, parseBody, pathParam, routeFor, type Handler } from '../_lib/http.js'
 import { createMatch, deleteMatch, updateMatch } from '../_lib/matches.js'
 import { deleteVideo, updateVideo } from '../_lib/videos.js'
@@ -53,6 +55,16 @@ const actions: Record<string, Handler> = {
   'video-delete': async (request) => {
     await deleteVideo(await parseBody(request, videoDeleteInput))
     return noStore({ ok: true })
+  },
+
+  // POST /api/admin/courtrack-status → CourtrackSyncStatus. Cupo restante y últimas sincronizaciones (vía courtrack-service).
+  'courtrack-status': async () => noStore(await getCourtrackSyncStatus()),
+
+  // POST /api/admin/courtrack-sync { dry_run? } → CourtrackSyncResult. Importa los partidos de Liga Podio desde CourtTrack;
+  // 429 `quota_exceeded` si se agotó el cupo diario. Con dry_run solo muestra qué haría.
+  'courtrack-sync': async (request) => {
+    const input = await parseBody(request, courtrackSyncInput)
+    return noStore(await runCourtrackSync(input.dry_run))
   },
 }
 

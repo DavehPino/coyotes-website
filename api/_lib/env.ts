@@ -41,6 +41,13 @@ export const env = {
   get cronSecret() {
     return optional('CRON_SECRET')
   },
+  /** Microservicio courtrack-service (repo aparte). Sin URL o token, /api/admin/courtrack-* responde 503. */
+  get courtrackSync() {
+    return {
+      url: optional('COURTRACK_SYNC_URL')?.replace(/\/+$/, ''),
+      secret: optional('COURTRACK_SYNC_SECRET'),
+    }
+  },
   /** Asistente de flyers. Sin clave, /api/flyers/suggest responde 503. */
   get openrouter() {
     return {

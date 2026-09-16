@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           activity_id: string | null
           competition: string | null
+          courtrack_id: string | null
           cover_image_url: string | null
           created_at: string
           id: string
@@ -37,6 +38,7 @@ export type Database = {
         Insert: {
           activity_id?: string | null
           competition?: string | null
+          courtrack_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           id?: string
@@ -56,6 +58,7 @@ export type Database = {
         Update: {
           activity_id?: string | null
           competition?: string | null
+          courtrack_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           id?: string
@@ -88,6 +91,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      sync_log: {
+        Row: {
+          dry_run: boolean
+          error: string | null
+          finished_at: string | null
+          id: string
+          org_id: string
+          result: Json | null
+          source: string
+          started_at: string
+          status: string
+        }
+        Insert: {
+          dry_run?: boolean
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          org_id: string
+          result?: Json | null
+          source?: string
+          started_at?: string
+          status?: string
+        }
+        Update: {
+          dry_run?: boolean
+          error?: string | null
+          finished_at?: string | null
+          id?: string
+          org_id?: string
+          result?: Json | null
+          source?: string
+          started_at?: string
+          status?: string
+        }
+        Relationships: []
       }
       teams: {
         Row: {

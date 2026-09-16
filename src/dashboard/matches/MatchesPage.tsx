@@ -1,13 +1,14 @@
 import { lazy, Suspense } from 'react'
 import { useDialogSession } from '../admin/useDialogSession'
 import { Button, EmptyState, ErrorState, PageHeader } from '../ui'
-import { BallIcon, PlusIcon } from '../ui/icons'
+import { BallIcon, PlusIcon, RefreshIcon } from '../ui/icons'
 import { useMatches } from './api'
 import { MatchCarousel, MatchCarouselSkeleton } from './MatchCarousel'
 import { MatchList, MatchListSkeleton } from './MatchList'
 
-// El formulario de alta solo se descarga la primera vez que se abre.
+// Los diálogos solo se descargan la primera vez que se abren.
 const NewMatchDialog = lazy(() => import('./new/NewMatchDialog'))
+const SyncCourtrackDialog = lazy(() => import('./sync/SyncCourtrackDialog'))
 
 const CAROUSEL_SIZE = 10
 
@@ -15,17 +16,24 @@ const CAROUSEL_SIZE = 10
 export function MatchesPage() {
   const query = useMatches()
   const dialog = useDialogSession()
+  const syncDialog = useDialogSession()
 
-  const addButton = (
-    <Button variant="primary" onClick={dialog.openDialog} className="pr-4 pl-3.5">
-      <PlusIcon className="size-4" strokeWidth={2} />
-      Cargar partido
-    </Button>
+  const actions = (
+    <>
+      <Button onClick={syncDialog.openDialog} className="pr-4 pl-3.5">
+        <RefreshIcon className="size-4" strokeWidth={2} />
+        Sincronizar
+      </Button>
+      <Button variant="primary" onClick={dialog.openDialog} className="pr-4 pl-3.5">
+        <PlusIcon className="size-4" strokeWidth={2} />
+        Cargar partido
+      </Button>
+    </>
   )
 
   return (
     <section>
-      <PageHeader title="Partidos" description="Resultados y videos de los partidos jugados." actions={addButton} />
+      <PageHeader title="Partidos" description="Resultados y videos de los partidos jugados." actions={actions} />
 
       {query.isPending ? (
         <div className="flex flex-col gap-8">
@@ -61,6 +69,11 @@ export function MatchesPage() {
       {dialog.mounted && (
         <Suspense fallback={null}>
           <NewMatchDialog key={dialog.session} open={dialog.open} onClose={dialog.close} onRestart={dialog.restart} />
+        </Suspense>
+      )}
+      {syncDialog.mounted && (
+        <Suspense fallback={null}>
+          <SyncCourtrackDialog key={syncDialog.session} open={syncDialog.open} onClose={syncDialog.close} />
         </Suspense>
       )}
     </section>

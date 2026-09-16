@@ -81,6 +81,75 @@ export type SyncResult = {
   missing_in_bucket: number
 }
 
+// ─── Sincronización con CourtTrack ───────────────────────────────────────────
+// Copia de los contratos de courtrack-service (api/_lib/types.ts), que el dashboard consume vía /api/admin/courtrack-*.
+
+export type CourtrackSyncQuota = {
+  limit: number
+  used: number
+  remaining: number
+  /** Cuándo se libera el cupo más antiguo de la ventana de 24 h. Null si no se usó ninguno. */
+  resets_at: string | null
+}
+
+export type CourtrackSyncAction = 'created' | 'updated' | 'adopted' | 'unchanged' | 'skipped'
+
+export type CourtrackSyncMatch = {
+  courtrack_id: string
+  played_on: string
+  start_time: string | null
+  /** Equipos en el orden de CourtTrack (home = equipo "a"). */
+  home: string
+  away: string
+  home_sets: number | null
+  away_sets: number | null
+  status: string
+  action: CourtrackSyncAction
+  reason?: string
+  slug?: string
+  /** `renamed_from`: nombre que tenía el rival en el dashboard antes de que CourtTrack lo pisara. */
+  opponent?: { name: string; created: boolean; renamed_from?: string }
+}
+
+export type CourtrackSyncSummary = {
+  scanned: number
+  own: number
+  created: number
+  updated: number
+  adopted: number
+  unchanged: number
+  skipped: number
+  rivals_created: string[]
+}
+
+export type CourtrackSyncResult = CourtrackSyncSummary & {
+  dry_run: boolean
+  league: { id: number; name: string }
+  matches: CourtrackSyncMatch[]
+  quota: CourtrackSyncQuota
+}
+
+export type CourtrackSyncLogEntry = {
+  id: string
+  status: 'running' | 'success' | 'error' | 'rejected'
+  started_at: string
+  finished_at: string | null
+  summary: CourtrackSyncSummary | null
+  error: string | null
+}
+
+export type CourtrackSyncStatus = {
+  org_id: string
+  quota: CourtrackSyncQuota
+  last_syncs: CourtrackSyncLogEntry[]
+}
+
+export const courtrackSyncInput = z.object({
+  /** true: calcula qué haría sin escribir nada ni gastar cupo. */
+  dry_run: z.boolean().default(false),
+})
+export type CourtrackSyncInput = z.infer<typeof courtrackSyncInput>
+
 // ─── Matches ─────────────────────────────────────────────────────────────────
 export const setScoreSchema = z.object({
   us: z.number().int().min(0).max(99),

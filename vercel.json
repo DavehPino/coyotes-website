@@ -25,6 +25,7 @@
     }
   ],
   "functions": {
+    "api/admin/[action].ts": { "maxDuration": 60 },
     "api/flyers/[action].ts": { "maxDuration": 60 },
     "api/cron/sync-videos.ts": { "maxDuration": 60 }
   },
