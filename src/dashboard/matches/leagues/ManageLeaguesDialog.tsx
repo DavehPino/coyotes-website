@@ -1,15 +1,12 @@
 import { useCallback, useEffect, useId, useState, type ReactNode } from 'react'
 import { useQueryClient } from '@tanstack/react-query'
 import { TEAM_NAME } from '@/config'
-import { COMPETITION_KINDS, COMPETITION_KIND_LABELS, type CompetitionKind } from '@shared/domain'
 import { slugify } from '@shared/matches'
 import type {
   CourtrackCliente,
   CourtrackDiscoveredLiga,
-  CourtrackEquipo,
   CourtrackLeague,
   CourtrackLeagueSnapshot,
-  CourtrackLiga,
   CourtrackSyncLeague,
   CourtrackSyncStatus,
   LeagueCreateInput,
@@ -17,21 +14,18 @@ import type {
 import { formatDateShort } from '@/lib/dates'
 import { adminPost, errorMessage, isAbort, isUnauthorized, safewordStore } from '../../admin/adminApi'
 import { SafewordStep } from '../../admin/SafewordStep'
-import { Button, Chip, Field, FormError, Input, Modal, Select, Skeleton } from '../../ui'
+import { Button, Chip, Field, FormError, Input, Modal, Skeleton } from '../../ui'
 import { CheckIcon, ChevronRightIcon, PlusIcon, RefreshIcon, TrophyIcon } from '../../ui/icons'
-import { competitionsKey, useCompetitions } from '../competitions'
+import { competitionsKey } from '../competitions'
 import { courtrackKeys, useCourtrackStatus, useLeagueSnapshot } from '../sync/queries'
 import { Callout, formatInstant, lastSyncLabel } from '../sync/SyncCourtrackDialog'
 
-type WizardStep = 'cliente' | 'descubrir' | 'liga' | 'equipo' | 'competition'
+type WizardStep = 'cliente' | 'descubrir'
 type Step = 'safeword' | 'list' | WizardStep | 'confirm-delete' | 'standings'
 
 const WIZARD_TITLES: Record<WizardStep, string> = {
   cliente: 'Asociación',
   descubrir: 'Tus ligas',
-  liga: 'Liga',
-  equipo: 'Tu equipo',
-  competition: 'Competición',
 }
 
 const ARCHIVE_REASONS: Record<NonNullable<CourtrackLeague['archive_reason']>, string> = {
@@ -47,23 +41,9 @@ type ManageLeaguesDialogProps = {
   onSyncLeague: (leagueId: string) => void
 }
 
-type Wizard = {
-  cliente: CourtrackCliente | null
-  liga: CourtrackLiga | null
-  equipo: CourtrackEquipo | null
-  competitionChoice: 'new' | string
-  newName: string
-  newKind: CompetitionKind
-}
+type Wizard = { cliente: CourtrackCliente | null }
 
-const emptyWizard = (): Wizard => ({
-  cliente: null,
-  liga: null,
-  equipo: null,
-  competitionChoice: 'new',
-  newName: '',
-  newKind: 'league',
-})
+const emptyWizard = (): Wizard => ({ cliente: null })
 
 const normalize = (text: string) => slugify(text)
 
@@ -279,13 +259,12 @@ function StandingsView({ snapshot, teamName }: { snapshot: CourtrackLeagueSnapsh
 
 /**
  * Ligas de CourtTrack que sigue el equipo: temporadas en curso y finalizadas (las cierra el sync solo) con su
- * clasificación, quitar, y el asistente "Agregar liga" (asociación → descubrir tus ligas, o elegir liga → equipo →
- * competición). Estado y clasificación vienen cacheados de `sync/queries.ts`.
+ * clasificación, quitar, y el asistente "Agregar liga": asociación → ligas de esa asociación donde aparece el equipo
+ * (solo se pueden añadir esas: no hay alta a mano). Estado y clasificación vienen cacheados de `sync/queries.ts`.
  */
 export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: ManageLeaguesDialogProps) {
   const formId = useId()
   const queryClient = useQueryClient()
-  const competitions = useCompetitions()
   const [safeword, setSafeword] = useState<string | null>(() => safewordStore.get())
   const [step, setStep] = useState<Step>(() => (safeword ? 'list' : 'safeword'))
   const [notice, setNotice] = useState<string | null>(null)
@@ -300,8 +279,6 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
   // Asistente
   const [wizard, setWizard] = useState<Wizard>(emptyWizard)
   const [clientes, setClientes] = useState<CourtrackCliente[] | null>(null)
-  const [ligas, setLigas] = useState<CourtrackLiga[] | null>(null)
-  const [equipos, setEquipos] = useState<CourtrackEquipo[] | null>(null)
   const [catalogError, setCatalogError] = useState<string | null>(null)
   const [search, setSearch] = useState('')
   const [wizardError, setWizardError] = useState<string | null>(null)
@@ -334,38 +311,19 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
 
   const configuredLigaIds = new Set((status?.leagues ?? []).filter((league) => !league.archived_at).map((league) => league.liga_id))
 
-  /** Catálogo del paso actual del asistente (se pide al entrar en él). */
-  const loadCatalog = useCallback(
-    async (target: WizardStep, current: Wizard, word: string, signal?: AbortSignal) => {
+  /** Asociaciones de CourtTrack (se piden una vez por sesión del diálogo). */
+  const loadClientes = useCallback(
+    async (word: string, signal?: AbortSignal) => {
       setCatalogError(null)
       try {
-        if (target === 'cliente' && !clientes) {
-          setClientes(await adminPost<CourtrackCliente[]>('/courtrack-catalog', { resource: 'clientes' }, word, signal))
-        } else if (target === 'liga' && current.cliente) {
-          setLigas(null)
-          setLigas(
-            await adminPost<CourtrackLiga[]>('/courtrack-catalog', { resource: 'ligas', id_cliente: current.cliente.id }, word, signal),
-          )
-        } else if (target === 'equipo' && current.cliente && current.liga) {
-          setEquipos(null)
-          const list = await adminPost<CourtrackEquipo[]>(
-            '/courtrack-catalog',
-            { resource: 'equipos', id_cliente: current.cliente.id, liga_id: current.liga.id },
-            word,
-            signal,
-          )
-          setEquipos(list)
-          // Preselecciona el equipo propio si aparece con el mismo nombre.
-          const own = list.find((team) => normalize(team.name) === normalize(TEAM_NAME))
-          if (own) setWizard((prev) => (prev.equipo ? prev : { ...prev, equipo: own }))
-        }
+        setClientes(await adminPost<CourtrackCliente[]>('/courtrack-catalog', { resource: 'clientes' }, word, signal))
       } catch (err) {
         if (isAbort(err)) return
         if (isUnauthorized(err)) return handleUnauthorized()
         setCatalogError(errorMessage(err))
       }
     },
-    [clientes, handleUnauthorized],
+    [handleUnauthorized],
   )
 
   async function discover(cliente: CourtrackCliente, team: string) {
@@ -397,9 +355,9 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
     setStep(target)
     if (target === 'descubrir') {
       if (next.cliente) void discover(next.cliente, teamQuery)
-      return
+    } else if (!clientes) {
+      void loadClientes(safeword)
     }
-    void loadCatalog(target, next, safeword)
   }
 
   function startWizard() {
@@ -446,40 +404,6 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
         void queryClient.invalidateQueries({ queryKey: competitionsKey })
         void invalidateStatus()
       }
-      setWizardError(errorMessage(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function saveLeague() {
-    const { cliente, liga, equipo } = wizard
-    if (!cliente || !liga || !equipo) return
-    const competition: LeagueCreateInput['competition'] =
-      wizard.competitionChoice === 'new'
-        ? { kind: 'new', name: wizard.newName.trim(), competition_kind: wizard.newKind }
-        : { kind: 'existing', id: wizard.competitionChoice }
-    if (competition.kind === 'new' && !competition.name) {
-      setWizardError('Escribe el nombre de la competición')
-      return
-    }
-    setBusy(true)
-    setWizardError(null)
-    try {
-      const created = await createLeague({
-        id_cliente: cliente.id,
-        cliente_name: cliente.nombre,
-        liga_id: liga.id,
-        team_name: equipo.name,
-        competition,
-      })
-      setChanged(true)
-      setJustAdded([created])
-      void queryClient.invalidateQueries({ queryKey: competitionsKey })
-      void invalidateStatus()
-      setStep('list')
-    } catch (err) {
-      if (isUnauthorized(err)) return handleUnauthorized()
       setWizardError(errorMessage(err))
     } finally {
       setBusy(false)
@@ -586,42 +510,8 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
           <Button variant="ghost" onClick={() => goToWizard('cliente')} disabled={busy}>
             Atrás
           </Button>
-          <Button variant="ghost" onClick={() => goToWizard('liga')} disabled={busy}>
-            Elegir a mano
-          </Button>
           <Button variant="primary" onClick={() => void saveDiscovered()} disabled={busy || discovering || pickedCount === 0}>
             {busy ? 'Guardando…' : pickedCount === 1 ? 'Agregar 1 liga' : `Agregar ${pickedCount} ligas`}
-          </Button>
-        </>
-      )
-      break
-    case 'liga':
-      footer = (
-        <Button variant="ghost" onClick={() => goToWizard('descubrir')}>
-          Atrás
-        </Button>
-      )
-      break
-    case 'equipo':
-      footer = (
-        <>
-          <Button variant="ghost" onClick={() => goToWizard('liga')}>
-            Atrás
-          </Button>
-          <Button variant="primary" disabled={!wizard.equipo} onClick={() => goToWizard('competition')}>
-            Siguiente
-          </Button>
-        </>
-      )
-      break
-    case 'competition':
-      footer = (
-        <>
-          <Button variant="ghost" onClick={() => goToWizard('equipo')} disabled={busy}>
-            Atrás
-          </Button>
-          <Button type="submit" form={formId} variant="primary" disabled={busy || competitions.isPending}>
-            {busy ? 'Guardando…' : 'Guardar liga'}
           </Button>
         </>
       )
@@ -780,9 +670,9 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
           keyOf={(item) => item.id}
           matches={(item, needle) => normalize(`${item.nombre} ${item.titulo ?? ''}`).includes(needle)}
           selectedKey={wizard.cliente?.id}
-          onPick={(cliente) => goToWizard('descubrir', { ...wizard, cliente, liga: null, equipo: null })}
+          onPick={(cliente) => goToWizard('descubrir', { cliente })}
           emptyLabel="Ninguna asociación coincide con la búsqueda."
-          onRetry={() => safeword && void loadCatalog('cliente', wizard, safeword)}
+          onRetry={() => safeword && void loadClientes(safeword)}
           render={(item) => (
             <>
               <Logo src={item.logo} fallback={<TrophyIcon className="size-5" />} />
@@ -819,8 +709,8 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
             </Callout>
           ) : discovered.length === 0 ? (
             <Callout tone="ash" icon={<TrophyIcon className="size-5" />}>
-              No aparece ningún equipo llamado "{teamQuery.trim()}" en las ligas de {wizard.cliente.nombre}. Revisa el
-              nombre o elige la liga a mano.
+              No aparece ningún equipo llamado "{teamQuery.trim()}" en las ligas de {wizard.cliente.nombre}. Escribe el
+              nombre tal como figura en CourtTrack (sin importar mayúsculas ni acentos) y vuelve a buscar.
             </Callout>
           ) : (
             <ul className="flex flex-col gap-1.5">
@@ -866,127 +756,12 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
           )}
           {discovered && discovered.length > 0 && (
             <p className="text-xs text-pretty text-coyote-ash">
-              Cada liga se guarda como una competición nueva con su nombre. Para colgarla de una competición existente,
-              elige la liga a mano.
+              Cada liga se guarda como una competición con su nombre; las temporadas siguientes de la misma liga se
+              cuelgan de ella solas.
             </p>
           )}
           {wizardError && <FormError>{wizardError}</FormError>}
         </div>
-      )}
-
-      {step === 'liga' && (
-        <PickList
-          items={ligas}
-          error={catalogError}
-          search={search}
-          onSearch={setSearch}
-          searchPlaceholder={`Buscar liga en ${wizard.cliente?.nombre ?? 'la asociación'}`}
-          keyOf={(item) => item.id}
-          matches={(item, needle) => normalize(`${item.nombre} ${item.descripcion ?? ''}`).includes(needle)}
-          selectedKey={wizard.liga?.id}
-          onPick={(liga) => goToWizard('equipo', { ...wizard, liga, equipo: null, newName: liga.nombre })}
-          emptyLabel="Ninguna liga coincide con la búsqueda."
-          onRetry={() => safeword && void loadCatalog('liga', wizard, safeword)}
-          render={(item) => (
-            <span className="flex min-w-0 flex-1 flex-col">
-              <span className="text-sm font-medium text-pretty text-coyote-silver">{item.nombre}</span>
-              <span className="truncate text-xs text-coyote-ash">
-                {item.etapas.length === 1 ? '1 etapa' : `${item.etapas.length} etapas`}
-                {item.descripcion ? ` · ${item.descripcion}` : ''}
-                {configuredLigaIds.has(item.id) ? ' · ya configurada' : ''}
-              </span>
-            </span>
-          )}
-        />
-      )}
-
-      {step === 'equipo' && (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-pretty text-coyote-ash">
-            Elige cómo aparece tu equipo en esta liga. Solo se importarán sus partidos.
-          </p>
-          <PickList
-            items={equipos}
-            error={catalogError}
-            search={search}
-            onSearch={setSearch}
-            searchPlaceholder="Buscar equipo"
-            keyOf={(item) => item.name}
-            matches={(item, needle) => normalize(item.name).includes(needle)}
-            selectedKey={wizard.equipo?.name}
-            onPick={(equipo) => setWizard((prev) => ({ ...prev, equipo }))}
-            emptyLabel="Ningún equipo coincide con la búsqueda."
-            onRetry={() => safeword && void loadCatalog('equipo', wizard, safeword)}
-            render={(item) => (
-              <>
-                <Logo src={item.logo} fallback={<span className="text-xs font-semibold">{item.display_name.slice(0, 3).toUpperCase()}</span>} />
-                <span className="flex min-w-0 flex-1 flex-col">
-                  <span className="truncate text-sm font-medium text-coyote-silver">{item.display_name}</span>
-                  <span className="truncate text-xs text-coyote-ash tabular-nums">
-                    {item.matches === 1 ? '1 partido' : `${item.matches} partidos`} en la liga
-                  </span>
-                </span>
-              </>
-            )}
-          />
-        </div>
-      )}
-
-      {step === 'competition' && (
-        <form
-          id={formId}
-          noValidate
-          className="flex flex-col gap-4"
-          onSubmit={(event) => {
-            event.preventDefault()
-            void saveLeague()
-          }}
-        >
-          <p className="text-sm text-pretty text-coyote-ash">
-            Los partidos de <span className="text-coyote-silver">{wizard.liga?.nombre}</span> se guardarán bajo esta
-            competición, que es la que verás en los filtros y en el formulario de partido. Las temporadas siguientes
-            de la misma liga se cuelgan de ella automáticamente.
-          </p>
-          <Field label="Competición">
-            <Select
-              data-autofocus
-              value={wizard.competitionChoice}
-              disabled={competitions.isPending}
-              onChange={(event) => setWizard((prev) => ({ ...prev, competitionChoice: event.target.value }))}
-            >
-              <option value="new">Nueva competición</option>
-              {competitions.data?.map((item) => (
-                <option key={item.id} value={item.id}>
-                  Añadir a: {item.name}
-                </option>
-              ))}
-            </Select>
-          </Field>
-          {wizard.competitionChoice === 'new' && (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_auto]">
-              <Field label="Nombre" error={wizardError && !wizard.newName.trim() ? wizardError : null}>
-                <Input
-                  value={wizard.newName}
-                  maxLength={80}
-                  onChange={(event) => setWizard((prev) => ({ ...prev, newName: event.target.value }))}
-                />
-              </Field>
-              <Field label="Tipo">
-                <Select
-                  value={wizard.newKind}
-                  onChange={(event) => setWizard((prev) => ({ ...prev, newKind: event.target.value as CompetitionKind }))}
-                >
-                  {COMPETITION_KINDS.map((kind) => (
-                    <option key={kind} value={kind}>
-                      {COMPETITION_KIND_LABELS[kind]}
-                    </option>
-                  ))}
-                </Select>
-              </Field>
-            </div>
-          )}
-          {wizardError && (wizard.newName.trim() || wizard.competitionChoice !== 'new') && <FormError>{wizardError}</FormError>}
-        </form>
       )}
 
       {step === 'confirm-delete' && target && (

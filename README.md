@@ -201,9 +201,9 @@ misma base de datos, las lee al sincronizar):
 - **Temporadas finalizadas:** sección plegada con las temporadas que el sync archivó, su motivo (CourtTrack reinició la
   liga o la liga ya no existe) y su clasificación final.
 - **Agregar liga:** asistente con el catálogo de CourtTrack. Tras elegir la asociación (p.ej. PODIO), **busca tu
-  equipo en todas sus ligas** y propone las que encuentre (marcadas las que aún no sigues); cada una se guarda como
-  una competición nueva con su nombre. También se puede **elegir a mano**: liga → tu equipo tal como aparece en esa
-  liga (se preselecciona si coincide con el nombre del equipo) → competición nueva o existente. Al guardar ofrece la
+  equipo en todas sus ligas** (recorre el fixture de cada una y compara el nombre sin mayúsculas ni acentos) y
+  propone solo las ligas donde aparece, marcadas las que aún no sigues; cada una se guarda como una competición con
+  su nombre. No hay alta a mano: el backend rechaza cualquier liga en la que el equipo no juegue. Al guardar ofrece la
   vista previa.
 
 ### Temporadas e histórico
