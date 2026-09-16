@@ -208,6 +208,7 @@ export function FlyersPage() {
               onPhotoChange={setPhotoUrl}
               library={library}
               onRemoveImage={removeImage}
+              onReplace={replace}
             />
           )}
           {/* Se mantiene montado para no perder el pedido ni la última respuesta al cambiar de pestaña. */}

@@ -1,7 +1,17 @@
 // Flyers precargados con datos reales: un partido o una actividad ya cargados se convierten en el borrador
 // del generador. Solo transforma datos; el dibujo sigue en render.ts.
-import { formatFlyerDate, shortTime } from '@/lib/dates'
-import { FLYER_TEXT_LIMITS, type FlyerContent, type FlyerImage, type FlyerTextField } from '@shared/flyers'
+import { formatDayMonth, formatFlyerDate, shortTime } from '@/lib/dates'
+import { addDays, todayIsoDate } from '@shared/dates'
+import {
+  FLYER_AGENDA_LIMITS,
+  FLYER_MAX_AGENDA_ITEMS,
+  FLYER_TEXT_LIMITS,
+  type FlyerAgendaField,
+  type FlyerAgendaItem,
+  type FlyerContent,
+  type FlyerImage,
+  type FlyerTextField,
+} from '@shared/flyers'
 import { slugify } from '@shared/matches'
 import type { Activity, MatchDetail, TeamSummary } from '@shared/schemas'
 import { matchTitle, scoreParts, setScoreParts } from '../matches/matchLabels'
@@ -54,6 +64,7 @@ export function flyerFromMatch(match: MatchDetail, base: FlyerBase, images: Flye
     cta: 'Gracias por el aguante',
     opponentLogo: opponentAssetFor(match.opponent, images),
     logos: [],
+    agenda: [],
   }
 }
 
@@ -77,5 +88,50 @@ export function flyerFromActivity(activity: Activity, base: FlyerBase, images: F
     cta: rival ? '¡Vení a alentar a la manada!' : 'La manada no falta',
     opponentLogo: opponentAssetFor(rival, images),
     logos: [],
+    agenda: [],
+  }
+}
+
+/** Cuántas actividades entran sin que el auto-ajuste las achique demasiado. */
+const AGENDA_ROWS: Record<FlyerContent['format'], number> = { post: 5, square: 4, story: FLYER_MAX_AGENDA_ITEMS }
+
+const clampAgenda = (field: FlyerAgendaField, value: string) => value.trim().slice(0, FLYER_AGENDA_LIMITS[field])
+
+function agendaRow(activity: Activity): FlyerAgendaItem {
+  const time = shortTime(activity.start_time)
+  return {
+    when: clampAgenda('when', [formatFlyerDate(activity.activity_date), time].filter(Boolean).join(' · ')),
+    what: clampAgenda('what', activity.opponent ? `vs ${activity.opponent.name}` : activity.title),
+    where: clampAgenda('where', activity.location ?? ''),
+    highlight: activity.category === 'podio',
+  }
+}
+
+/** La semana o el mes del equipo en una sola imagen, a partir de las próximas actividades. */
+export function flyerFromAgenda(activities: Activity[], base: FlyerBase, range: 'week' | 'month'): FlyerContent {
+  const today = todayIsoDate()
+  const until = addDays(today, range === 'week' ? 7 : 30)
+  const shown = activities
+    .filter((activity) => activity.activity_date <= until)
+    .slice(0, AGENDA_ROWS[base.format])
+  const first = shown[0]?.activity_date
+  const last = shown[shown.length - 1]?.activity_date
+
+  return {
+    ...base,
+    template: 'agenda',
+    palette: shown.some((activity) => activity.category === 'podio') ? 'podio' : 'brasa',
+    eyebrow: 'Coyotes',
+    title: range === 'week' ? 'La semana de la manada' : 'El mes de la manada',
+    subtitle: first && last && first !== last ? `${formatDayMonth(first)} al ${formatDayMonth(last)}` : (first ? formatDayMonth(first) : ''),
+    highlight: '',
+    date: '',
+    time: '',
+    location: '',
+    details: '',
+    cta: 'Te esperamos en la cancha',
+    opponentLogo: '',
+    logos: [],
+    agenda: shown.map(agendaRow),
   }
 }

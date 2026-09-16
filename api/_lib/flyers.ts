@@ -4,9 +4,11 @@
 import { shortTime } from '../../shared/dates.js'
 import { ACTIVITY_CATEGORY_LABELS } from '../../shared/domain.js'
 import {
+  FLYER_AGENDA_LIMITS,
   FLYER_CAPTION_HASHTAGS_MAX,
   FLYER_CAPTION_MAX,
   FLYER_FORMATS,
+  FLYER_MAX_AGENDA_ITEMS,
   FLYER_MAX_LOGOS,
   FLYER_PALETTES,
   FLYER_PALETTE_LABELS,
@@ -14,6 +16,8 @@ import {
   FLYER_TEMPLATE_LABELS,
   FLYER_TEXT_FIELDS,
   FLYER_TEXT_LIMITS,
+  type FlyerAgendaField,
+  type FlyerAgendaItem,
   type FlyerAssetRef,
   type FlyerCaptionInput,
   type FlyerCaptionResult,
@@ -48,6 +52,7 @@ const TEMPLATE_GUIDE: Record<(typeof FLYER_TEMPLATES)[number], string> = {
   entrenamiento: 'entrenamiento o práctica: title, subtitle, date, time, location, details, cta',
   resultado: 'resultado de un partido jugado: eyebrow, title ("¡Victoria!"), highlight (marcador), opponentLogo, subtitle, details (parciales), cta',
   anuncio: 'anuncio general, convocatoria o evento: eyebrow, title, subtitle, details, date, location, cta',
+  agenda: 'varias actividades en una imagen: eyebrow, title, subtitle (rango de fechas), cta y el array agenda',
 }
 
 function systemPrompt(): string {
@@ -79,6 +84,13 @@ function systemPrompt(): string {
     '',
     `Formatos (format): ${FLYER_FORMATS.join(', ')} (post 4:5, cuadrado, historia 9:16). No lo cambies salvo que te lo pidan.`,
     'showLogo: true salvo que pidan quitar el logo.',
+    '',
+    `Agenda (solo en la plantilla agenda): lista de hasta ${FLYER_MAX_AGENDA_ITEMS} actividades, cada una con when, what, where y highlight.`,
+    `- when (máx. ${FLYER_AGENDA_LIMITS.when}): cuándo, p.ej. "Sáb 20/09 · 18:00".`,
+    `- what (máx. ${FLYER_AGENDA_LIMITS.what}): qué, p.ej. "vs Onas Vóley" o "Entrenamiento".`,
+    `- where (máx. ${FLYER_AGENDA_LIMITS.where}): dónde. highlight: true solo para Liga Podio o lo más importante.`,
+    '- Usa únicamente actividades de la lista de próximas actividades; no inventes ninguna.',
+    '- En el resto de plantillas, agenda debe ser una lista vacía.',
     '',
     'Imágenes: el usuario puede subir imágenes (logos de rivales, auspiciantes, ligas). Recibes su id y el nombre que les puso.',
     '- opponentLogo: id de la imagen del rival en partido y resultado (se dibuja junto al logo de Coyotes). Usa una solo si su nombre corresponde al rival; si no, "".',
@@ -151,6 +163,27 @@ function pick<T extends string>(values: readonly T[], value: unknown, fallback: 
   return typeof value === 'string' && (values as readonly string[]).includes(value) ? (value as T) : fallback
 }
 
+const agendaText = (value: unknown, field: FlyerAgendaField) =>
+  typeof value === 'string' ? value.trim().slice(0, FLYER_AGENDA_LIMITS[field]) : ''
+
+/** Filas de la agenda: se descartan las que no dicen qué pasa, que en el flyer serían un hueco. */
+function normalizeAgenda(raw: unknown[]): FlyerAgendaItem[] {
+  const rows: FlyerAgendaItem[] = []
+  for (const value of raw) {
+    if (!isRecord(value)) continue
+    const what = agendaText(value.what, 'what')
+    if (!what) continue
+    rows.push({
+      when: agendaText(value.when, 'when'),
+      what,
+      where: agendaText(value.where, 'where'),
+      highlight: value.highlight === true,
+    })
+    if (rows.length === FLYER_MAX_AGENDA_ITEMS) break
+  }
+  return rows
+}
+
 /**
  * Los modelos gratuitos no siempre respetan el formato: cada campo válido se toma, los textos se
  * recortan a su límite y lo que falte o no encaje conserva el valor del flyer actual.
@@ -172,6 +205,7 @@ function normalizeFlyer(raw: unknown, current: FlyerContent, assets: FlyerAssetR
   // Solo ids de imágenes que el usuario tiene: un id inventado dejaría un hueco vacío en el flyer.
   if (source.opponentLogo === '' || source.opponentLogo === null) flyer.opponentLogo = ''
   else if (typeof source.opponentLogo === 'string' && known.has(source.opponentLogo)) flyer.opponentLogo = source.opponentLogo
+  if (Array.isArray(source.agenda)) flyer.agenda = normalizeAgenda(source.agenda)
   if (Array.isArray(source.logos)) {
     const ids = source.logos.filter((id): id is string => typeof id === 'string' && known.has(id) && id !== flyer.opponentLogo)
     flyer.logos = [...new Set(ids)].slice(0, FLYER_MAX_LOGOS)

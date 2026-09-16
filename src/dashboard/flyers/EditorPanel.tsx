@@ -1,4 +1,4 @@
-import { useRef, type ReactNode } from 'react'
+import { useRef } from 'react'
 import {
   FLYER_FORMATS,
   FLYER_FORMAT_SIZES,
@@ -9,7 +9,9 @@ import {
   type FlyerContent,
 } from '@shared/flyers'
 import { Button, Field, Input, Textarea } from '../ui'
+import { Group, OptionButton } from './editorControls'
 import { CheckIcon, ImageIcon, TrashIcon } from '../ui/icons'
+import { AgendaFields } from './AgendaFields'
 import type { ImageLibrary } from './assetLibrary'
 import { ImageLibraryManager, ImagePicker } from './ImageLibrary'
 import { PALETTE_COLORS } from './render'
@@ -22,13 +24,23 @@ type EditorPanelProps = {
   onPhotoChange: (url: string | null) => void
   library: ImageLibrary
   onRemoveImage: (id: string) => void
+  /** Cambios grandes (traer la agenda del equipo) pasan por el historial. */
+  onReplace: (flyer: FlyerContent) => void
 }
 
 /** Plantillas con escudo propio frente al del rival. */
 const WITH_OPPONENT = new Set<FlyerContent['template']>(['partido', 'resultado'])
 
 /** Edición manual: formato, paleta, logo, foto de fondo y los textos que usa la plantilla. */
-export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library, onRemoveImage }: EditorPanelProps) {
+export function EditorPanel({
+  flyer,
+  onChange,
+  photoUrl,
+  onPhotoChange,
+  library,
+  onRemoveImage,
+  onReplace,
+}: EditorPanelProps) {
   const fileRef = useRef<HTMLInputElement>(null)
 
   return (
@@ -167,6 +179,8 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
         <ImageLibraryManager library={library} onRemove={onRemoveImage} />
       </Group>
 
+      {flyer.template === 'agenda' && <AgendaFields flyer={flyer} onChange={onChange} onReplace={onReplace} />}
+
       <Group label="Textos">
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-1 xl:grid-cols-2">
           {TEMPLATES[flyer.template].fields.map((field) => {
@@ -202,33 +216,5 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
         </div>
       </Group>
     </div>
-  )
-}
-
-function Group({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <fieldset className="flex min-w-0 flex-col gap-2.5">
-      <legend className="mb-2.5 text-xs font-semibold tracking-wide text-coyote-ash uppercase">{label}</legend>
-      {children}
-    </fieldset>
-  )
-}
-
-function OptionButton({ selected, onClick, children }: { selected: boolean; onClick: () => void; children: ReactNode }) {
-  return (
-    <button
-      type="button"
-      aria-pressed={selected}
-      onClick={onClick}
-      className={[
-        'flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium select-none md:min-h-10',
-        'transition-[background-color,color,box-shadow] duration-150 ease-out',
-        selected
-          ? 'bg-coyote-ember text-coyote-gold shadow-gold'
-          : 'bg-coyote-black text-coyote-ash shadow-border hover:text-coyote-silver hover:shadow-border-hover',
-      ].join(' ')}
-    >
-      {children}
-    </button>
   )
 }

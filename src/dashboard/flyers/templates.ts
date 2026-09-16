@@ -31,6 +31,7 @@ export const TEMPLATES: Record<FlyerTemplate, TemplateInfo> = {
       location: 'Club Ciudad, Palermo',
       details: '',
       cta: '¡Vení a alentar a la manada!',
+      agenda: [],
     },
   },
   entrenamiento: {
@@ -49,6 +50,7 @@ export const TEMPLATES: Record<FlyerTemplate, TemplateInfo> = {
       location: 'Polideportivo Parque Chas',
       details: 'Traé rodilleras, agua y muchas ganas. Se arranca puntual.',
       cta: 'La manada no falta',
+      agenda: [],
     },
   },
   resultado: {
@@ -67,6 +69,7 @@ export const TEMPLATES: Record<FlyerTemplate, TemplateInfo> = {
       location: '',
       details: '25-20 · 22-25 · 25-18 · 25-21',
       cta: 'Gracias por el aguante',
+      agenda: [],
     },
   },
   anuncio: {
@@ -85,6 +88,30 @@ export const TEMPLATES: Record<FlyerTemplate, TemplateInfo> = {
       location: 'CABA',
       details: 'Buscamos jugadoras y jugadores con ganas de entrenar, competir y pasarla bien.',
       cta: 'Escribinos por DM',
+      agenda: [],
+    },
+  },
+  agenda: {
+    label: FLYER_TEMPLATE_LABELS.agenda,
+    description: 'Varias actividades en una imagen',
+    fields: ['eyebrow', 'title', 'subtitle', 'cta'],
+    sample: {
+      template: 'agenda',
+      palette: 'brasa',
+      eyebrow: 'Coyotes',
+      title: 'La semana de la manada',
+      subtitle: '15 al 21 de septiembre',
+      highlight: '',
+      date: '',
+      time: '',
+      location: '',
+      details: '',
+      cta: 'Te esperamos en la cancha',
+      agenda: [
+        { when: 'Mar 16/09 · 20:00', what: 'Entrenamiento', where: 'Parque Chas', highlight: false },
+        { when: 'Jue 18/09 · 20:00', what: 'Físico', where: 'Gimnasio Norte', highlight: false },
+        { when: 'Sáb 20/09 · 18:00', what: 'vs Onas Vóley', where: 'Club Ciudad', highlight: true },
+      ],
     },
   },
 }

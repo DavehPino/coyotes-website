@@ -188,8 +188,12 @@ recibe una imagen, así que hay que pegarlo a mano).
   detalle de una actividad) abren la sección con el flyer ya armado: marcador, parciales, rival, fecha y paleta.
   El enlace es `/flyers?from=match:<slug>` o `?from=activity:<id>`; se resuelve con los datos del momento y se
   borra de la URL. El borrador anterior queda en el historial, así que **Deshacer** lo recupera.
-- **Plantillas:** Día de partido, Entrenamiento, Resultado y Anuncio, con textos de ejemplo. Viven en
+- **Plantillas:** Día de partido, Entrenamiento, Resultado, Anuncio y Agenda, con textos de ejemplo. Viven en
   `src/dashboard/flyers/templates.ts` (textos y campos) y `render.ts` (diseño y paletas).
+- **Agenda:** lista hasta 6 actividades en una sola imagen (la semana o el mes). En **Editar**, *Traer la semana*
+  y *Traer el mes* la rellenan con las actividades ya cargadas; cada fila tiene cuándo, qué, dónde y si va
+  destacada (Liga Podio). Al añadir campos al flyer, **siempre con `.default()`**: al leer la biblioteca los JSON
+  que no validan se descartan en silencio, así que un campo obligatorio nuevo haría desaparecer los guardados.
 - **Editar:** formato, paleta de marca (Brasa, Dorado, Atardecer, Liga Podio), logo, foto de fondo y textos. La foto
   solo se usa en el navegador: no se sube ni se envía a la IA. El borrador se recuerda en `localStorage`.
 - **Guardados:** los flyers de la IA se guardan solos al generarse y cualquier otro con **Guardar** (hasta 50).

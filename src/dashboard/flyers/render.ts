@@ -1,6 +1,6 @@
 // Dibujo de flyers en <canvas>. La vista previa y el PNG descargado salen del mismo código, así que lo
 // que se ve es exactamente lo que se exporta. Coordenadas en píxeles del tamaño final (1080 de ancho).
-import { FLYER_FORMAT_SIZES, type FlyerContent, type FlyerPalette } from '@shared/flyers'
+import { FLYER_FORMAT_SIZES, type FlyerAgendaItem, type FlyerContent, type FlyerPalette } from '@shared/flyers'
 
 type Colors = {
   /** Degradado de fondo, de arriba a la izquierda hacia abajo a la derecha. */
@@ -465,6 +465,85 @@ function infoPanel(frame: Frame, items: InfoItem[], scale: number): Block | null
   }
 }
 
+/**
+ * Una actividad de la agenda: barra de acento, cuándo (en color de acento), qué (destacado) y dónde (apagado).
+ * Dibuja a partir de `pad`; quien la monta desplaza el lienzo hasta el interior del panel.
+ */
+function agendaRowBlock(frame: Frame, item: FlyerAgendaItem, s: number, contentWidth: number): Block | null {
+  const { ctx, pad, colors } = frame
+  if (!item.what.trim()) return null
+  const rail = 10 * s
+  const railGap = 22 * s
+  const maxWidth = contentWidth - rail - railGap
+  const parts = [
+    textBlock(frame, { text: item.when, family: 'sans', weight: 600, size: 28 * s, minSize: 22 * s, maxLines: 1, color: colors.accent, align: 'left', uppercase: true, spacing: 2 * s, maxWidth }),
+    textBlock(frame, { text: item.what, family: 'display', weight: 600, size: 78 * s, minSize: 46 * s, maxLines: 1, color: colors.title, align: 'left', uppercase: true, maxWidth }),
+    textBlock(frame, { text: item.where, family: 'sans', weight: 400, size: 28 * s, minSize: 22 * s, maxLines: 1, color: colors.muted, align: 'left', maxWidth }),
+  ].filter((block): block is Block => block !== null)
+  if (parts.length === 0) return null
+
+  const lineGap = 6 * s
+  const height = parts.reduce((total, block) => total + block.height, 0) + lineGap * (parts.length - 1)
+  return {
+    height,
+    draw: (y) => {
+      ctx.fillStyle = item.highlight ? colors.accent : colors.line
+      ctx.fillRect(pad, y, rail, height)
+      ctx.save()
+      ctx.translate(rail + railGap, 0)
+      let cursor = y
+      for (const block of parts) {
+        block.draw(cursor)
+        cursor += block.height + lineGap
+      }
+      ctx.restore()
+    },
+  }
+}
+
+/** Panel con las actividades separadas por una línea fina. Null si ninguna fila tiene qué mostrar. */
+function agendaListBlock(frame: Frame, items: FlyerAgendaItem[], s: number): Block | null {
+  const { ctx, width, pad, colors } = frame
+  const inner = 40 * s
+  const panelWidth = width - pad * 2
+  const contentWidth = panelWidth - inner * 2
+  const rows = items
+    .map((item) => agendaRowBlock(frame, item, s, contentWidth))
+    .filter((block): block is Block => block !== null)
+  if (rows.length === 0) return null
+
+  const rowGap = 24 * s
+  const separator = 2
+  const height =
+    inner * 2 + rows.reduce((total, row) => total + row.height, 0) + (rowGap * 2 + separator) * (rows.length - 1)
+
+  return {
+    height,
+    draw: (y) => {
+      ctx.fillStyle = colors.panel
+      roundRect(ctx, pad, y, panelWidth, height, 28)
+      ctx.fill()
+      ctx.strokeStyle = colors.line
+      ctx.lineWidth = 2
+      ctx.stroke()
+
+      ctx.save()
+      ctx.translate(inner, 0)
+      let cursor = y + inner
+      rows.forEach((row, index) => {
+        row.draw(cursor)
+        cursor += row.height
+        if (index === rows.length - 1) return
+        cursor += rowGap
+        ctx.fillStyle = colors.line
+        ctx.fillRect(pad, cursor, contentWidth, separator)
+        cursor += separator + rowGap
+      })
+      ctx.restore()
+    },
+  }
+}
+
 function barBlock(frame: Frame, align: Align, scale: number): Block {
   const { ctx, width, pad, colors } = frame
   const w = 150 * scale
@@ -689,7 +768,29 @@ function anuncio(frame: Frame, flyer: FlyerContent, s: number, tall: boolean): Z
   }
 }
 
-const TEMPLATES = { partido, entrenamiento, resultado, anuncio }
+/** Varias actividades en una sola imagen: la semana o el mes de la manada. */
+function agenda(frame: Frame, flyer: FlyerContent, s: number): Zones {
+  const { colors } = frame
+  const logos = logoRowBlock(frame, flyer.logos, 110 * s, 'left')
+  // Las filas sin "qué" no se dibujan: sin panel tampoco va el hueco que lo separa del título.
+  const list = agendaListBlock(frame, flyer.agenda, s)
+  return {
+    top: [headerRow(frame, flyer.eyebrow, 150 * s, flyer.showLogo)],
+    middle: [
+      textBlock(frame, { text: flyer.title, family: 'display', weight: 700, size: 190 * s, minSize: 100 * s, maxLines: 2, color: colors.title, align: 'left', uppercase: true }),
+      textBlock(frame, { text: flyer.subtitle, family: 'display', weight: 600, size: 80 * s, minSize: 50 * s, maxLines: 1, color: colors.accent, align: 'left', uppercase: true }),
+      list ? gap(20 * s) : null,
+      list,
+    ],
+    bottom: [
+      logos,
+      logos && flyer.cta ? gap(20 * s) : null,
+      pillBlock(frame, flyer.cta, { align: 'left', size: 38 * s, fill: colors.accent, color: colors.onAccent }),
+    ],
+  }
+}
+
+const TEMPLATES = { partido, entrenamiento, resultado, anuncio, agenda }
 
 // ─── Composición ─────────────────────────────────────────────────────────────
 

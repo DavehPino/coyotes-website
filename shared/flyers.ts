@@ -2,7 +2,7 @@
 // El flyer es solo datos; el dibujo vive en el frontend (src/dashboard/flyers/render.ts).
 import { z } from 'zod'
 
-export const FLYER_TEMPLATES = ['partido', 'entrenamiento', 'resultado', 'anuncio'] as const
+export const FLYER_TEMPLATES = ['partido', 'entrenamiento', 'resultado', 'anuncio', 'agenda'] as const
 export type FlyerTemplate = (typeof FLYER_TEMPLATES)[number]
 
 export const FLYER_TEMPLATE_LABELS: Record<FlyerTemplate, string> = {
@@ -10,6 +10,7 @@ export const FLYER_TEMPLATE_LABELS: Record<FlyerTemplate, string> = {
   entrenamiento: 'Entrenamiento',
   resultado: 'Resultado',
   anuncio: 'Anuncio',
+  agenda: 'Agenda',
 }
 
 /** Paletas de marca: el asistente elige entre ellas en vez de inventar colores. */
@@ -72,6 +73,22 @@ export const FLYER_MAX_ASSETS = 20
 export const FLYER_ASSET_NAME_MAX = 60
 const assetId = z.string().regex(FLYER_ASSET_ID)
 
+/** Filas de la plantilla Agenda: varias actividades en una sola imagen. */
+export const FLYER_MAX_AGENDA_ITEMS = 6
+export const FLYER_AGENDA_LIMITS = { when: 20, what: 34, where: 28 } as const
+export type FlyerAgendaField = keyof typeof FLYER_AGENDA_LIMITS
+
+export const flyerAgendaItem = z.object({
+  /** "Sáb 20/09 · 18:00" */
+  when: z.string().max(FLYER_AGENDA_LIMITS.when),
+  /** "vs Onas Vóley" o el título de la actividad. */
+  what: z.string().max(FLYER_AGENDA_LIMITS.what),
+  where: z.string().max(FLYER_AGENDA_LIMITS.where),
+  /** Liga Podio u otro evento a destacar: barra de acento a la izquierda. */
+  highlight: z.boolean().default(false),
+})
+export type FlyerAgendaItem = z.infer<typeof flyerAgendaItem>
+
 export const flyerContentSchema = z.object({
   template: z.enum(FLYER_TEMPLATES),
   palette: z.enum(FLYER_PALETTES),
@@ -87,10 +104,15 @@ export const flyerContentSchema = z.object({
   details: text('details'),
   cta: text('cta'),
   // Con valor por defecto: los borradores y guardados de antes de existir estos campos siguen siendo válidos.
+  // REGLA: todo campo nuevo lleva `.default()`, y ninguno se renombra ni se elimina. Al leer la biblioteca,
+  // `readJson` descarta en silencio los JSON que no validan, así que un campo obligatorio nuevo haría
+  // desaparecer de golpe los flyers ya guardados (api/_lib/flyerLibrary.ts).
   /** Logo del rival junto al escudo propio (plantillas partido y resultado). */
   opponentLogo: z.union([assetId, z.literal('')]).default(''),
   /** Fila de logos extra (auspiciantes, liga, organizadores). */
   logos: z.array(assetId).max(FLYER_MAX_LOGOS).default([]),
+  /** Actividades de la plantilla Agenda; el resto de plantillas la ignoran. */
+  agenda: z.array(flyerAgendaItem).max(FLYER_MAX_AGENDA_ITEMS).default([]),
 })
 export type FlyerContent = z.infer<typeof flyerContentSchema>
 
