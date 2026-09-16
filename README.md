@@ -194,11 +194,11 @@ misma base de datos, las lee al sincronizar):
 
 - **Lista:** cada temporada en curso con su competición, liga y asociación de CourtTrack, cómo aparece el equipo,
   activa/pausada y último sync. **Sincronizar** abre el diálogo de sync con esa liga; **Pausar** la saca del sync sin
-  borrar nada; **Clasificación** muestra la tabla de posiciones guardada en el último sync; **Cerrar temporada** la
-  archiva a mano; **Quitar** elimina la configuración (y su clasificación guardada) pero conserva los partidos
-  importados (con su `courtrack_id`, así que volver a añadirla los reconoce) y la competición.
-- **Temporadas finalizadas:** sección plegada con las temporadas archivadas, su motivo (CourtTrack reinició la liga,
-  la liga ya no existe o cierre manual) y su clasificación final.
+  borrar nada; **Clasificación** muestra la tabla de posiciones guardada en el último sync; **Quitar** elimina la
+  configuración (y su clasificación guardada) pero conserva los partidos importados (con su `courtrack_id`, así que
+  volver a añadirla los reconoce) y la competición. Las temporadas no se cierran a mano: las cierra el sync.
+- **Temporadas finalizadas:** sección plegada con las temporadas que el sync archivó, su motivo (CourtTrack reinició la
+  liga o la liga ya no existe) y su clasificación final.
 - **Agregar liga:** asistente con el catálogo de CourtTrack. Tras elegir la asociación (p.ej. PODIO), **busca tu
   equipo en todas sus ligas** y propone las que encuentre (marcadas las que aún no sigues); cada una se guarda como
   una competición nueva con su nombre. También se puede **elegir a mano**: liga → tu equipo tal como aparece en esa
@@ -362,7 +362,7 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/courtrack-catalog` | Catálogo de CourtTrack: `{ resource: 'clientes' }`, `{ resource: 'ligas', id_cliente }`, `{ resource: 'equipos', id_cliente, liga_id }` o `{ resource: 'descubrir', id_cliente, team }` (ligas donde juega el equipo) |
 | POST | `/api/admin/leagues` | `CourtrackLeague[]`: temporadas configuradas |
 | POST | `/api/admin/league-create` | 201 `CourtrackLeague`: alta de una liga (`{ id_cliente, cliente_name, liga_id, team_name, competition }`; 409 si ya tiene temporada abierta) |
-| POST | `/api/admin/league-update` | `CourtrackLeague`: pausa/activa (`is_active`), cambia `team_name` o cierra la temporada (`archive: true`) |
+| POST | `/api/admin/league-update` | `CourtrackLeague`: pausa/activa (`is_active`) o cambia `team_name` (400 si la temporada ya finalizó) |
 | POST | `/api/admin/league-delete` | `{ ok: true }`: quita la temporada; partidos y competición se conservan |
 | POST | `/api/admin/league-snapshot` | `CourtrackLeagueSnapshot`: clasificación y fixture guardados en el último sync de la temporada |
 | POST | `/api/admin/team-link-create` | `{ ok: true }`: vincula un nombre de CourtTrack a un rival (`{ courtrack_name, team_id }`) |

@@ -23,7 +23,7 @@ import { competitionsKey, useCompetitions } from '../competitions'
 import { Callout, formatInstant, lastSyncLabel } from '../sync/SyncCourtrackDialog'
 
 type WizardStep = 'cliente' | 'descubrir' | 'liga' | 'equipo' | 'competition'
-type Step = 'safeword' | 'list' | WizardStep | 'confirm-delete' | 'confirm-archive' | 'standings'
+type Step = 'safeword' | 'list' | WizardStep | 'confirm-delete' | 'standings'
 
 const WIZARD_TITLES: Record<WizardStep, string> = {
   cliente: 'Asociación',
@@ -36,7 +36,6 @@ const WIZARD_TITLES: Record<WizardStep, string> = {
 const ARCHIVE_REASONS: Record<NonNullable<CourtrackLeague['archive_reason']>, string> = {
   reset: 'CourtTrack reinició la liga',
   removed: 'la liga ya no existe en CourtTrack',
-  manual: 'archivada a mano',
 }
 
 type ManageLeaguesDialogProps = {
@@ -170,12 +169,11 @@ type LeagueRowProps = {
   busy: boolean
   onSync: () => void
   onToggle: () => void
-  onArchive: () => void
   onDelete: () => void
   onStandings: () => void
 }
 
-function LeagueRow({ league, busy, onSync, onToggle, onArchive, onDelete, onStandings }: LeagueRowProps) {
+function LeagueRow({ league, busy, onSync, onToggle, onDelete, onStandings }: LeagueRowProps) {
   const archived = league.archived_at !== null
   return (
     <li className="flex flex-col gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
@@ -213,11 +211,6 @@ function LeagueRow({ league, busy, onSync, onToggle, onArchive, onDelete, onStan
         {league.snapshot_at && (
           <Button size="sm" onClick={onStandings} disabled={busy}>
             Clasificación
-          </Button>
-        )}
-        {!archived && (
-          <Button size="sm" variant="ghost" onClick={onArchive} disabled={busy}>
-            Cerrar temporada
           </Button>
         )}
         <Button size="sm" variant="ghost" onClick={onDelete} disabled={busy} className="ml-auto text-coyote-orange">
@@ -292,8 +285,9 @@ function StandingsView({ snapshot, teamName }: { snapshot: CourtrackLeagueSnapsh
 }
 
 /**
- * Ligas de CourtTrack que sigue el equipo: temporadas abiertas y finalizadas con su clasificación, pausar/activar,
- * cerrar, quitar, y el asistente "Agregar liga" (asociación → descubrir tus ligas, o elegir liga → equipo → competición).
+ * Ligas de CourtTrack que sigue el equipo: temporadas abiertas y finalizadas (las cierra el sync solo) con su
+ * clasificación, pausar/activar, quitar, y el asistente "Agregar liga" (asociación → descubrir tus ligas, o elegir
+ * liga → equipo → competición).
  */
 export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: ManageLeaguesDialogProps) {
   const formId = useId()
@@ -508,7 +502,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
     }
   }
 
-  async function updateLeague(body: Record<string, unknown>, after: () => void = () => setStep('list')) {
+  async function updateLeague(body: { id: string; is_active: boolean }, after: () => void = () => setStep('list')) {
     if (!safeword) return handleUnauthorized()
     setBusy(true)
     setActionError(null)
@@ -572,9 +566,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
   const title =
     step === 'confirm-delete'
       ? 'Quitar liga'
-      : step === 'confirm-archive'
-        ? 'Cerrar temporada'
-        : step === 'standings'
+      : step === 'standings'
           ? 'Clasificación'
           : step === 'safeword'
             ? 'Ligas'
@@ -689,18 +681,6 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
         </>
       )
       break
-    case 'confirm-archive':
-      footer = (
-        <>
-          <Button variant="ghost" onClick={() => setStep('list')} disabled={busy}>
-            Cancelar
-          </Button>
-          <Button variant="primary" onClick={() => target && void updateLeague({ id: target.id, archive: true })} disabled={busy}>
-            {busy ? 'Cerrando…' : 'Cerrar temporada'}
-          </Button>
-        </>
-      )
-      break
     case 'standings':
       footer = (
         <Button variant="primary" onClick={() => setStep('list')}>
@@ -785,10 +765,6 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
                       busy={busy}
                       onSync={() => onSyncLeague(league.id)}
                       onToggle={() => void updateLeague({ id: league.id, is_active: !league.is_active })}
-                      onArchive={() => {
-                        setTarget(league)
-                        setStep('confirm-archive')
-                      }}
                       onDelete={() => {
                         setTarget(league)
                         setStep('confirm-delete')
@@ -822,7 +798,6 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
                           busy={busy}
                           onSync={() => undefined}
                           onToggle={() => undefined}
-                          onArchive={() => undefined}
                           onDelete={() => {
                             setTarget(league)
                             setStep('confirm-delete')
@@ -1067,19 +1042,6 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
             Los partidos ya importados y la competición "{target.competition.name}" se conservan, pero se pierde la
             clasificación guardada de esta temporada. Si vuelves a añadir la liga, los partidos se reconocen y no se
             duplican.
-          </p>
-          {actionError && <FormError>{actionError}</FormError>}
-        </div>
-      )}
-
-      {step === 'confirm-archive' && target && (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-pretty text-coyote-silver">
-            ¿Cerrar la temporada <span className="font-medium">{target.season_label}</span>?
-          </p>
-          <p className="text-sm text-pretty text-coyote-ash">
-            Deja de sincronizarse y queda como finalizada con sus partidos y su última clasificación. Normalmente no
-            hace falta: cuando CourtTrack reinicia la liga, el sync la cierra solo y abre la temporada siguiente.
           </p>
           {actionError && <FormError>{actionError}</FormError>}
         </div>

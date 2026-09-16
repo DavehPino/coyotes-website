@@ -235,7 +235,7 @@ export type CourtrackLeague = {
   is_active: boolean
   last_synced_at: string | null
   archived_at: string | null
-  archive_reason: 'reset' | 'removed' | 'manual' | null
+  archive_reason: 'reset' | 'removed' | null
   /** Hay instantánea de clasificación y fixture guardada. */
   snapshot_at: string | null
 }
@@ -302,8 +302,6 @@ export const leagueUpdateInput = z.object({
   id: z.uuid(),
   is_active: z.boolean().optional(),
   team_name: z.string().trim().min(1).max(120).optional(),
-  /** true: cierra la temporada a mano (conserva partidos e instantánea). */
-  archive: z.literal(true).optional(),
 })
 export type LeagueUpdateInput = z.infer<typeof leagueUpdateInput>
 

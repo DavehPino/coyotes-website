@@ -19,7 +19,7 @@ type LeagueRow = Omit<CourtrackLeague, 'competition' | 'archive_reason'> & {
   competition: { id: string; name: string; kind: string } | null
 }
 
-const REASONS = ['reset', 'removed', 'manual'] as const
+const REASONS = ['reset', 'removed'] as const
 
 function toLeague(row: LeagueRow): CourtrackLeague {
   if (!row.competition) throw new Error(`La liga ${row.id} no tiene competición`)
@@ -96,16 +96,11 @@ export async function createLeague(input: LeagueCreateInput): Promise<CourtrackL
 
 export async function updateLeague(input: LeagueUpdateInput): Promise<CourtrackLeague> {
   const current = await getLeagueRow(input.id)
-  if (current.archived_at && !input.archive) throw badRequest('La temporada está archivada: solo se puede consultar o quitar')
+  // Las temporadas las cierra el sync cuando CourtTrack reinicia la liga; aquí solo se consultan o quitan.
+  if (current.archived_at) throw badRequest('La temporada ya finalizó: solo se puede consultar o quitar')
 
-  const changes: { is_active?: boolean; team_name?: string; archived_at?: string; archive_reason?: string } = {}
-  if (input.archive) {
-    changes.archived_at = new Date().toISOString()
-    changes.archive_reason = 'manual'
-    changes.is_active = false
-  } else if (input.is_active !== undefined) {
-    changes.is_active = input.is_active
-  }
+  const changes: { is_active?: boolean; team_name?: string } = {}
+  if (input.is_active !== undefined) changes.is_active = input.is_active
   if (input.team_name !== undefined && input.team_name !== current.team_name) {
     const equipos = await getCourtrackEquipos(current.id_cliente, current.liga_id)
     if (!equipos.some((item) => item.name === input.team_name)) throw badRequest('Ese equipo no juega en la liga')
