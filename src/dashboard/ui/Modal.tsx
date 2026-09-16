@@ -82,7 +82,7 @@ export function Modal({
       ].join(' ')}
     >
       <div className="flex max-h-[85dvh] flex-col">
-        <header className="flex min-h-14 items-start gap-3 p-4 pb-2 pl-5">
+        <header className="flex min-h-14 shrink-0 items-start gap-3 p-4 pb-2 pl-5">
           <div className="min-w-0 flex-1">
             {eyebrow && <div className="mb-1.5 flex flex-wrap items-center gap-1.5">{eyebrow}</div>}
             <h2 id={titleId} className="text-3xl leading-none text-coyote-gold">
@@ -99,7 +99,7 @@ export function Modal({
           {children}
         </div>
         {footer && (
-          <footer className="flex flex-wrap items-center justify-end gap-2 border-t border-coyote-steel/60 px-5 py-3">
+          <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-coyote-steel/60 px-5 py-3">
             {footer}
           </footer>
         )}
