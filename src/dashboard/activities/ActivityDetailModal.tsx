@@ -1,5 +1,6 @@
 import { useQueryClient } from '@tanstack/react-query'
 import { useEffect, useId, useState, type FormEvent, type ReactNode } from 'react'
+import { useNavigate } from 'react-router'
 import { todayIsoDate } from '@shared/dates'
 import { ACTIVITY_TYPE_LABELS } from '@shared/domain'
 import type { Activity } from '@shared/schemas'
@@ -8,7 +9,8 @@ import { adminPost, errorMessage, isUnauthorized, safewordStore } from '../admin
 import { SafewordStep } from '../admin/SafewordStep'
 import { NEW_TEAM, rivalsKey, useRivalTeams } from '../admin/teams'
 import { Button, Chip, FormError, Modal, TeamLogo } from '../ui'
-import { PencilIcon, TrashIcon } from '../ui/icons'
+import { ImageIcon, PencilIcon, TrashIcon } from '../ui/icons'
+import { flyerLinkForActivity } from '../flyers/flyerLinks'
 import { activitiesKeys, refreshUpcomingActivities } from './api'
 import { ActivityFields } from './new/ActivityFields'
 import {
@@ -65,6 +67,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
   }, [activity])
 
   const rivals = useRivalTeams({ enabled: mode === 'edit' })
+  const navigate = useNavigate()
 
   function enter(next: AdminMode, current: Activity) {
     setActionError(null)
@@ -152,6 +155,18 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
           <Button variant="ghost" onClick={() => enter('delete', shown)} className="mr-auto pr-3.5 pl-3">
             <TrashIcon className="size-4" />
             Eliminar
+          </Button>
+          {/* El flyer es solo el borrador local: la palabra clave sigue apareciendo al guardarlo o usar la IA. */}
+          <Button
+            variant="ghost"
+            onClick={() => {
+              onClose()
+              void navigate(flyerLinkForActivity(shown.id))
+            }}
+            className="pr-3.5 pl-3"
+          >
+            <ImageIcon className="size-4" />
+            Flyer
           </Button>
           <Button onClick={() => enter('edit', shown)} className="pr-4 pl-3.5">
             <PencilIcon className="size-4" />

@@ -8,6 +8,7 @@ import { isNotFound, useMatch } from './api'
 import type { EditTab } from './edit/EditMatchDialog'
 import { MatchHeader } from './MatchHeader'
 import { matchTitle } from './matchLabels'
+import { MatchShareCard } from './MatchShareCard'
 import { SetScores } from './SetScores'
 import { VideoSection } from './VideoSection'
 
@@ -97,6 +98,7 @@ export function MatchDetailPage() {
         <>
           <MatchHeader match={query.data} />
           <SetScores match={query.data} />
+          <MatchShareCard match={query.data} />
           <VideoSection videos={query.data.videos} onManage={() => dialog.openEdit('videos')} />
           {query.data.summary && (
             <section aria-labelledby="summary-title">

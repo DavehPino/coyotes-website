@@ -39,6 +39,11 @@ export function formatWeekdayShort(isoDate: string): string {
   return fmt(isoDate, 'EEE').replaceAll('.', '')
 }
 
+/** "Sáb 20/09" — fecha dentro de un flyer: corta y con el día de la semana. */
+export function formatFlyerDate(isoDate: string): string {
+  return capitalize(fmt(isoDate, 'EEE dd/MM')).replaceAll('.', '')
+}
+
 /** "Septiembre 2026" — cabeceras de mes. */
 export function formatMonthYear(isoDate: string): string {
   return capitalize(fmt(isoDate, 'LLLL yyyy'))

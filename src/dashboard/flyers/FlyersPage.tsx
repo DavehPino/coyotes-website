@@ -8,6 +8,7 @@ import { useImageLibrary } from './assetLibrary'
 import { EditorPanel } from './EditorPanel'
 import { ExportActions } from './ExportActions'
 import { FlyerCanvas, useFlyerAssets } from './FlyerCanvas'
+import { usePrefill } from './prefill'
 import { SavedPanel } from './SavedPanel'
 import { useSavedFlyers } from './savedFlyers'
 import { draftStore } from './templates'
@@ -36,6 +37,19 @@ export function FlyersPage() {
   const saved = useSavedFlyers(access.run)
   const { assets, ready, failedImages } = useFlyerAssets(photoUrl, library.images)
   const canvasRef = useRef<HTMLCanvasElement>(null)
+  const [notice, setNotice] = useState<string | null>(null)
+
+  // ?from=match:<slug> o ?from=activity:<id>: el flyer llega armado desde un partido o una actividad.
+  const prefill = usePrefill({
+    base: { format: flyer.format, showLogo: flyer.showLogo },
+    images: library.images,
+    libraryReady: !library.loading,
+    apply: (next, message) => {
+      replace(next)
+      setTab('editor')
+      setNotice(message)
+    },
+  })
 
   // Último borrador confirmado: la respuesta de la IA puede llegar después de otras ediciones.
   const latest = useRef(flyer)
@@ -127,6 +141,23 @@ export function FlyersPage() {
 
         <div className="flex min-w-0 flex-col gap-4">
           <TabSwitch value={tab} onChange={setTab} savedCount={saved.items.length} />
+          {notice && (
+            <div className="flex items-center justify-between gap-2 rounded-xl bg-coyote-night py-1.5 pr-1.5 pl-3 text-sm text-coyote-ash shadow-border">
+              <span>{notice}</span>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  undo()
+                  setNotice(null)
+                }}
+                disabled={past.length === 0}
+              >
+                Deshacer
+              </Button>
+            </div>
+          )}
+          {prefill.error && <FormError>{prefill.error}</FormError>}
           {saved.error && tab !== 'saved' && <FormError>{saved.error}</FormError>}
           {tab === 'templates' && <TemplatesPanel flyer={flyer} onApply={replace} />}
           {tab === 'saved' && (

@@ -10,8 +10,21 @@ import { renderFlyerBlob, type FlyerAssets } from './render'
 
 export type { SavedFlyer }
 
+/**
+ * Copia con las claves ordenadas en todos los niveles. No sirve `JSON.stringify(flyer, claves)`: ese segundo
+ * argumento filtra propiedades de forma recursiva, así que los objetos anidados saldrían vacíos.
+ */
+function stable(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(stable)
+  if (value && typeof value === 'object') {
+    const source = value as Record<string, unknown>
+    return Object.fromEntries(Object.keys(source).sort().map((key) => [key, stable(source[key])]))
+  }
+  return value
+}
+
 /** Igualdad por contenido, sin depender del orden de las claves. */
-const fingerprint = (flyer: FlyerContent) => JSON.stringify(flyer, Object.keys(flyer).sort())
+const fingerprint = (flyer: FlyerContent) => JSON.stringify(stable(flyer))
 export const sameFlyer = (a: FlyerContent, b: FlyerContent) => fingerprint(a) === fingerprint(b)
 
 export function useSavedFlyers(run: RunProtected) {
