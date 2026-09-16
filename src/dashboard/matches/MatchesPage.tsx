@@ -1,26 +1,66 @@
-import { lazy, Suspense } from 'react'
+import { lazy, Suspense, useState } from 'react'
+import { useSearchParams } from 'react-router'
 import { useDialogSession } from '../admin/useDialogSession'
 import { Button, EmptyState, ErrorState, PageHeader } from '../ui'
-import { BallIcon, PlusIcon, RefreshIcon } from '../ui/icons'
+import { BallIcon, PlusIcon, RefreshIcon, TrophyIcon } from '../ui/icons'
 import { useMatches } from './api'
+import { CompetitionFilter } from './CompetitionFilter'
+import { useCompetitions } from './competitions'
 import { MatchCarousel, MatchCarouselSkeleton } from './MatchCarousel'
 import { MatchList, MatchListSkeleton } from './MatchList'
 
 // Los diálogos solo se descargan la primera vez que se abren.
 const NewMatchDialog = lazy(() => import('./new/NewMatchDialog'))
 const SyncCourtrackDialog = lazy(() => import('./sync/SyncCourtrackDialog'))
+const ManageLeaguesDialog = lazy(() => import('./leagues/ManageLeaguesDialog'))
 
 const CAROUSEL_SIZE = 10
+/** Parámetro de la URL con la competición elegida: el filtro sobrevive a recargar y se puede compartir. */
+const FILTER_PARAM = 'liga'
 
-/** Partidos pasados: carrusel con los últimos y listado completo por mes. */
+/** Partidos pasados: filtro por liga, carrusel con los últimos y listado completo por mes. */
 export function MatchesPage() {
-  const query = useMatches()
+  const [params, setParams] = useSearchParams()
+  const competitionId = params.get(FILTER_PARAM)
+  const competitions = useCompetitions()
+  const query = useMatches(competitionId)
   const dialog = useDialogSession()
   const syncDialog = useDialogSession()
+  const leaguesDialog = useDialogSession()
+  const [syncLeagueId, setSyncLeagueId] = useState<string | null>(null)
+
+  const filterOptions = (competitions.data ?? []).filter((item) => item.match_count > 0)
+  const selected = competitions.data?.find((item) => item.id === competitionId) ?? null
+
+  function setFilter(id: string | null) {
+    setParams(id ? { [FILTER_PARAM]: id } : {}, { replace: true })
+  }
+
+  /** Desde el gestor de ligas: cierra ese diálogo y abre el de sync ya con la liga elegida. */
+  function syncLeague(leagueId: string) {
+    leaguesDialog.close(false)
+    setSyncLeagueId(leagueId)
+    syncDialog.restart()
+    syncDialog.openDialog()
+  }
+
+  function openSync() {
+    setSyncLeagueId(null)
+    syncDialog.openDialog()
+  }
+
+  function manageLeagues() {
+    syncDialog.close(false)
+    leaguesDialog.openDialog()
+  }
 
   const actions = (
     <>
-      <Button onClick={syncDialog.openDialog} className="pr-4 pl-3.5">
+      <Button onClick={leaguesDialog.openDialog} className="pr-4 pl-3.5">
+        <TrophyIcon className="size-4" strokeWidth={2} />
+        Ligas
+      </Button>
+      <Button onClick={openSync} className="pr-4 pl-3.5">
         <RefreshIcon className="size-4" strokeWidth={2} />
         Sincronizar
       </Button>
@@ -35,6 +75,12 @@ export function MatchesPage() {
     <section>
       <PageHeader title="Partidos" description="Resultados y videos de los partidos jugados." actions={actions} />
 
+      {filterOptions.length > 1 && (
+        <div className="mb-5">
+          <CompetitionFilter competitions={filterOptions} value={competitionId} onChange={setFilter} />
+        </div>
+      )}
+
       {query.isPending ? (
         <div className="flex flex-col gap-8">
           <MatchCarouselSkeleton />
@@ -48,15 +94,30 @@ export function MatchesPage() {
           retrying={query.isFetching}
         />
       ) : query.data.length === 0 ? (
-        <EmptyState
-          icon={<BallIcon className="size-8" />}
-          title="Todavía no hay partidos cargados"
-          description="Cuando se registre un partido jugado aparecerá aquí con su marcador y sus videos."
-        />
+        competitionId ? (
+          <EmptyState
+            icon={<BallIcon className="size-8" />}
+            title={selected ? `Todavía no hay partidos de ${selected.name}` : 'No hay partidos en esta liga'}
+            description="Cuando se registre o sincronice un partido de esta competición aparecerá aquí."
+            action={
+              <Button onClick={() => setFilter(null)} className="mt-1">
+                Ver todos los partidos
+              </Button>
+            }
+          />
+        ) : (
+          <EmptyState
+            icon={<BallIcon className="size-8" />}
+            title="Todavía no hay partidos cargados"
+            description="Cuando se registre un partido jugado aparecerá aquí con su marcador y sus videos."
+          />
+        )
       ) : (
         <div className="flex flex-col gap-8">
           <div>
-            <h2 className="mb-3 text-3xl leading-none text-coyote-silver">Últimos partidos</h2>
+            <h2 className="mb-3 text-3xl leading-none text-balance text-coyote-silver">
+              Últimos partidos{selected ? ` · ${selected.name}` : ''}
+            </h2>
             <MatchCarousel matches={query.data.slice(0, CAROUSEL_SIZE)} label="Últimos partidos" />
           </div>
           <div>
@@ -73,7 +134,23 @@ export function MatchesPage() {
       )}
       {syncDialog.mounted && (
         <Suspense fallback={null}>
-          <SyncCourtrackDialog key={syncDialog.session} open={syncDialog.open} onClose={syncDialog.close} />
+          <SyncCourtrackDialog
+            key={syncDialog.session}
+            open={syncDialog.open}
+            initialLeagueId={syncLeagueId}
+            onClose={syncDialog.close}
+            onManageLeagues={manageLeagues}
+          />
+        </Suspense>
+      )}
+      {leaguesDialog.mounted && (
+        <Suspense fallback={null}>
+          <ManageLeaguesDialog
+            key={leaguesDialog.session}
+            open={leaguesDialog.open}
+            onClose={leaguesDialog.close}
+            onSyncLeague={syncLeague}
+          />
         </Suspense>
       )}
     </section>

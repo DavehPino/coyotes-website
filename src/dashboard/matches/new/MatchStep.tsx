@@ -1,10 +1,11 @@
-import { useId, type FormEvent } from 'react'
+import { useEffect, useId, type FormEvent } from 'react'
 import { TEAM_NAME } from '@/config'
 import { todayIsoDate } from '@shared/dates'
-import { MATCH_COMPETITIONS, MAX_SETS, type MatchCompetition } from '@shared/domain'
+import { MAX_SETS } from '@shared/domain'
 import { tallySets } from '@shared/matches'
 import { Button, Chip, Field, FormError, Input, Select } from '../../ui'
 import { PlusIcon, TrashIcon } from '../../ui/icons'
+import { useCompetitions } from '../competitions'
 import { newKey, setErrorKey, toSetScores, type Errors, type MatchDraft, type SetDraft } from './draft'
 
 type MatchStepProps = {
@@ -57,6 +58,14 @@ type MatchFieldsProps = Omit<MatchStepProps, 'formId' | 'onSubmit'> & {
 /** Campos del partido, compartidos por el alta y la edición. Van dentro de un `<form>` de quien los usa. */
 export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: MatchFieldsProps) {
   const setsId = useId()
+  const competitions = useCompetitions()
+
+  // Sin competición elegida (alta nueva), se propone la primera liga en cuanto llega la lista.
+  useEffect(() => {
+    if (match.competitionId || !competitions.data?.length) return
+    const first = competitions.data.find((item) => item.kind === 'league') ?? competitions.data[0]
+    if (first) onChange({ competitionId: first.id })
+  }, [match.competitionId, competitions.data, onChange])
   const updateSet = (key: number, patch: Partial<SetDraft>) =>
     onChange({ sets: match.sets.map((set) => (set.key === key ? { ...set, ...patch } : set)) })
 
@@ -78,14 +87,21 @@ export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: M
       </div>
 
       <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-        <Field label="Competición">
+        <Field
+          label="Competición"
+          error={errors.competition ?? (competitions.isError ? 'No se pudieron cargar las competiciones' : null)}
+          hint={competitions.data?.length === 0 ? 'Añade una liga desde Partidos → Ligas' : undefined}
+        >
           <Select
-            value={match.competition}
-            onChange={(event) => onChange({ competition: event.target.value as MatchCompetition })}
+            value={match.competitionId}
+            disabled={competitions.isPending}
+            onChange={(event) => onChange({ competitionId: event.target.value })}
           >
-            {MATCH_COMPETITIONS.map((competition) => (
-              <option key={competition} value={competition}>
-                {competition}
+            {competitions.isPending && <option value="">Cargando…</option>}
+            {!competitions.isPending && !match.competitionId && <option value="">Elige la competición</option>}
+            {competitions.data?.map((competition) => (
+              <option key={competition.id} value={competition.id}>
+                {competition.name}
               </option>
             ))}
           </Select>

@@ -29,7 +29,7 @@ export function MatchHeader({ match }: MatchHeaderProps) {
           {OUTCOME_LABELS[match.outcome]}
         </Chip>
         {(match.competition || match.phase) && (
-          <span className="text-sm text-coyote-ash">{[match.competition, match.phase].filter(Boolean).join(' · ')}</span>
+          <span className="text-sm text-coyote-ash">{[match.competition?.name, match.phase].filter(Boolean).join(' · ')}</span>
         )}
       </div>
 
@@ -69,7 +69,7 @@ export function MatchHeader({ match }: MatchHeaderProps) {
         <div>
           <dt className="text-xs font-medium tracking-wide text-coyote-ash uppercase">Competición</dt>
           <dd className="text-coyote-silver">
-            {[match.competition, match.phase].filter(Boolean).join(' · ') || 'Sin especificar'}
+            {[match.competition?.name, match.phase].filter(Boolean).join(' · ') || 'Sin especificar'}
           </dd>
         </div>
       </dl>

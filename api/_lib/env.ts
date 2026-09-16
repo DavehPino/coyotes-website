@@ -41,6 +41,10 @@ export const env = {
   get cronSecret() {
     return optional('CRON_SECRET')
   },
+  /** Organización dueña de los datos (competiciones, ligas de CourtTrack, cupo de syncs). Un solo equipo por deploy hoy. */
+  get orgId() {
+    return optional('ORG_ID') ?? 'coyotes'
+  },
   /** Microservicio courtrack-service (repo aparte). Sin URL o token, /api/admin/courtrack-* responde 503. */
   get courtrackSync() {
     return {

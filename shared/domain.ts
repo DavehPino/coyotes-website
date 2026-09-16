@@ -73,9 +73,16 @@ export const VIDEO_FILE_EXTENSIONS = [
   ".mkv",
 ] as const;
 
-/** Competiciones que se pueden elegir al cargar un partido desde el dashboard. */
-export const MATCH_COMPETITIONS = ["Liga Podio", "Amistoso"] as const;
-export type MatchCompetition = (typeof MATCH_COMPETITIONS)[number];
+/** Tipo de competición (tabla competitions). Debe coincidir con el CHECK `competitions_kind_check`. */
+export const COMPETITION_KINDS = ["league", "friendly", "tournament", "other"] as const;
+export type CompetitionKind = (typeof COMPETITION_KINDS)[number];
+
+export const COMPETITION_KIND_LABELS: Record<CompetitionKind, string> = {
+  league: "Liga",
+  friendly: "Amistoso",
+  tournament: "Torneo",
+  other: "Otra",
+};
 
 /** Un partido de vóley tiene como máximo 5 sets (igual que `videos.set_number`). */
 export const MAX_SETS = 5;

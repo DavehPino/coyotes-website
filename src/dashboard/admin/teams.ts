@@ -9,7 +9,7 @@ export const rivalsKey = ['teams', 'rivals'] as const
 export function rivalTeamsOptions() {
   return queryOptions({
     queryKey: rivalsKey,
-    queryFn: ({ signal }) => apiGet<TeamSummary[]>('/teams', signal),
+    queryFn: ({ signal }) => apiGet<TeamSummary[]>('/lookups/teams', signal),
     staleTime: 0,
   })
 }

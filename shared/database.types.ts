@@ -14,11 +14,131 @@ export type Database = {
   }
   public: {
     Tables: {
+      competitions: {
+        Row: {
+          created_at: string
+          id: string
+          kind: string
+          name: string
+          org_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name: string
+          org_id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          kind?: string
+          name?: string
+          org_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      courtrack_leagues: {
+        Row: {
+          cliente_name: string | null
+          competition_id: string
+          created_at: string
+          id: string
+          id_cliente: number
+          is_active: boolean
+          last_synced_at: string | null
+          liga_id: number
+          liga_name: string
+          org_id: string
+          team_logo_url: string | null
+          team_name: string
+          updated_at: string
+        }
+        Insert: {
+          cliente_name?: string | null
+          competition_id: string
+          created_at?: string
+          id?: string
+          id_cliente: number
+          is_active?: boolean
+          last_synced_at?: string | null
+          liga_id: number
+          liga_name: string
+          org_id: string
+          team_logo_url?: string | null
+          team_name: string
+          updated_at?: string
+        }
+        Update: {
+          cliente_name?: string | null
+          competition_id?: string
+          created_at?: string
+          id?: string
+          id_cliente?: number
+          is_active?: boolean
+          last_synced_at?: string | null
+          liga_id?: number
+          liga_name?: string
+          org_id?: string
+          team_logo_url?: string | null
+          team_name?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courtrack_leagues_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      courtrack_team_links: {
+        Row: {
+          courtrack_name: string
+          created_at: string
+          id: string
+          normalized_name: string
+          org_id: string
+          team_id: string
+        }
+        Insert: {
+          courtrack_name: string
+          created_at?: string
+          id?: string
+          normalized_name: string
+          org_id: string
+          team_id: string
+        }
+        Update: {
+          courtrack_name?: string
+          created_at?: string
+          id?: string
+          normalized_name?: string
+          org_id?: string
+          team_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "courtrack_team_links_team_id_fkey"
+            columns: ["team_id"]
+            isOneToOne: false
+            referencedRelation: "teams"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           activity_id: string | null
           competition: string | null
+          competition_id: string | null
           courtrack_id: string | null
+          courtrack_league_id: string | null
           cover_image_url: string | null
           created_at: string
           id: string
@@ -38,7 +158,9 @@ export type Database = {
         Insert: {
           activity_id?: string | null
           competition?: string | null
+          competition_id?: string | null
           courtrack_id?: string | null
+          courtrack_league_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           id?: string
@@ -58,7 +180,9 @@ export type Database = {
         Update: {
           activity_id?: string | null
           competition?: string | null
+          competition_id?: string | null
           courtrack_id?: string | null
+          courtrack_league_id?: string | null
           cover_image_url?: string | null
           created_at?: string
           id?: string
@@ -84,6 +208,20 @@ export type Database = {
             referencedColumns: ["id"]
           },
           {
+            foreignKeyName: "matches_competition_id_fkey"
+            columns: ["competition_id"]
+            isOneToOne: false
+            referencedRelation: "competitions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "matches_courtrack_league_id_fkey"
+            columns: ["courtrack_league_id"]
+            isOneToOne: false
+            referencedRelation: "courtrack_leagues"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "matches_opponent_team_id_fkey"
             columns: ["opponent_team_id"]
             isOneToOne: false
@@ -94,6 +232,7 @@ export type Database = {
       }
       sync_log: {
         Row: {
+          courtrack_league_id: string | null
           dry_run: boolean
           error: string | null
           finished_at: string | null
@@ -105,6 +244,7 @@ export type Database = {
           status: string
         }
         Insert: {
+          courtrack_league_id?: string | null
           dry_run?: boolean
           error?: string | null
           finished_at?: string | null
@@ -116,6 +256,7 @@ export type Database = {
           status?: string
         }
         Update: {
+          courtrack_league_id?: string | null
           dry_run?: boolean
           error?: string | null
           finished_at?: string | null
@@ -126,7 +267,15 @@ export type Database = {
           started_at?: string
           status?: string
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "sync_log_courtrack_league_id_fkey"
+            columns: ["courtrack_league_id"]
+            isOneToOne: false
+            referencedRelation: "courtrack_leagues"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       teams: {
         Row: {

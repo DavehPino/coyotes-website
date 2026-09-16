@@ -54,9 +54,9 @@ export function MatchList({ matches }: MatchListProps) {
                           {match.opponent.name}
                           <span className="ml-1.5 text-xs font-normal text-coyote-ash">{match.is_home ? 'Local' : 'Visitante'}</span>
                         </span>
-                        {match.competition && (
+                        {(match.competition || match.phase) && (
                           <span className="truncate text-xs text-coyote-ash">
-                            {[match.competition, match.phase].filter(Boolean).join(' · ')}
+                            {[match.competition?.name, match.phase].filter(Boolean).join(' · ')}
                           </span>
                         )}
                       </span>

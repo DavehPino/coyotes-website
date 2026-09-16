@@ -1,13 +1,24 @@
 // Proxy al microservicio courtrack-service (repo aparte, mismo Supabase): el navegador solo habla con /api y el
 // token del servicio nunca sale del servidor. Los errores del servicio se reenvían con su mismo código y mensaje.
-import type { ApiErrorBody, CourtrackSyncResult, CourtrackSyncStatus } from '../../shared/schemas.js'
+// Todas las llamadas llevan la organización de este deploy (ORG_ID).
+import type {
+  ApiErrorBody,
+  CourtrackCatalogInput,
+  CourtrackCliente,
+  CourtrackEquipo,
+  CourtrackLiga,
+  CourtrackSyncResult,
+  CourtrackSyncStatus,
+} from '../../shared/schemas.js'
 import { env } from './env.js'
 import { HttpError } from './http.js'
 
 /** Margen por debajo del maxDuration de api/admin/[action].ts (60 s). */
 const TIMEOUT_MS = 55_000
 
-async function callSyncService<T>(method: 'GET' | 'POST', body?: unknown): Promise<T> {
+type Call = { method: 'GET' | 'POST'; path: string; query?: Record<string, string>; body?: unknown }
+
+async function callSyncService<T>({ method, path, query, body }: Call): Promise<T> {
   const { url, secret } = env.courtrackSync
   if (!url || !secret) {
     throw new HttpError(
@@ -17,9 +28,12 @@ async function callSyncService<T>(method: 'GET' | 'POST', body?: unknown): Promi
     )
   }
 
+  const target = new URL(`${url}${path}`)
+  for (const [key, value] of Object.entries(query ?? {})) target.searchParams.set(key, value)
+
   let res: Response
   try {
-    res = await fetch(`${url}/api/sync`, {
+    res = await fetch(target, {
       method,
       headers: {
         Authorization: `Bearer ${secret}`,
@@ -48,8 +62,36 @@ async function callSyncService<T>(method: 'GET' | 'POST', body?: unknown): Promi
   return data as T
 }
 
-/** Cupo restante y últimas sincronizaciones. */
-export const getCourtrackSyncStatus = () => callSyncService<CourtrackSyncStatus>('GET')
+/** Cupo restante, ligas configuradas y últimas sincronizaciones de la organización. */
+export const getCourtrackSyncStatus = () =>
+  callSyncService<CourtrackSyncStatus>({ method: 'GET', path: '/api/sync', query: { org_id: env.orgId } })
 
-/** Ejecuta la sincronización (o la simula con `dry_run`). */
-export const runCourtrackSync = (dryRun: boolean) => callSyncService<CourtrackSyncResult>('POST', { dry_run: dryRun })
+/** Ejecuta la sincronización de una liga (o la simula con `dry_run`). */
+export const runCourtrackSync = (leagueId: string, dryRun: boolean) =>
+  callSyncService<CourtrackSyncResult>({
+    method: 'POST',
+    path: '/api/sync',
+    body: { org_id: env.orgId, league_id: leagueId, dry_run: dryRun },
+  })
+
+/** Catálogo de CourtTrack para el asistente "Agregar liga". */
+export function getCourtrackCatalog(input: CourtrackCatalogInput) {
+  const query: Record<string, string> = {}
+  if ('id_cliente' in input) query.id_cliente = String(input.id_cliente)
+  if ('liga_id' in input) query.liga_id = String(input.liga_id)
+  return callSyncService<CourtrackCliente[] | CourtrackLiga[] | CourtrackEquipo[]>({
+    method: 'GET',
+    path: `/api/courtrack/${input.resource}`,
+    query,
+  })
+}
+
+export const getCourtrackLigas = (idCliente: number) =>
+  callSyncService<CourtrackLiga[]>({ method: 'GET', path: '/api/courtrack/ligas', query: { id_cliente: String(idCliente) } })
+
+export const getCourtrackEquipos = (idCliente: number, ligaId: number) =>
+  callSyncService<CourtrackEquipo[]>({
+    method: 'GET',
+    path: '/api/courtrack/equipos',
+    query: { id_cliente: String(idCliente), liga_id: String(ligaId) },
+  })

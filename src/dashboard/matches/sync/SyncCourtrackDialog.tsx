@@ -7,6 +7,7 @@ import { ApiError } from '@/lib/api'
 import { formatDateShort } from '@/lib/dates'
 import type {
   CourtrackSyncAction,
+  CourtrackSyncLeague,
   CourtrackSyncLogEntry,
   CourtrackSyncMatch,
   CourtrackSyncQuota,
@@ -15,16 +16,21 @@ import type {
 } from '@shared/schemas'
 import { adminPost, errorMessage, isAbort, isUnauthorized, safewordStore } from '../../admin/adminApi'
 import { SafewordStep } from '../../admin/SafewordStep'
-import { Button, buttonClasses, Chip, FormError, Modal, Skeleton, type ChipTone } from '../../ui'
-import { AlertIcon, CheckIcon, RefreshIcon } from '../../ui/icons'
+import { useRivalTeams } from '../../admin/teams'
+import { Button, buttonClasses, Chip, Field, FormError, Modal, Select, Skeleton, type ChipTone } from '../../ui'
+import { AlertIcon, CheckIcon, RefreshIcon, TrophyIcon } from '../../ui/icons'
 import { refreshMatchData } from '../api'
 
 type Step = 'safeword' | 'status' | 'running' | 'result' | 'error'
 
 type SyncCourtrackDialogProps = {
   open: boolean
+  /** Liga preseleccionada (desde el gestor de ligas). */
+  initialLeagueId?: string | null
   /** `finished`: se importó algo y el listado ya se refrescó. */
   onClose: (finished: boolean) => void
+  /** Abre el gestor de ligas (cuando no hay ninguna configurada). */
+  onManageLeagues: () => void
 }
 
 const ACTION_LABELS: Record<CourtrackSyncAction, string> = {
@@ -44,9 +50,9 @@ const ACTION_TONES: Record<CourtrackSyncAction, ChipTone> = {
 }
 
 /** "16 sep, 11:02" a partir de un instante ISO (hora local de quien mira). */
-const formatInstant = (iso: string) => format(new Date(iso), 'd MMM, HH:mm', { locale: es }).replace('.', '')
+export const formatInstant = (iso: string) => format(new Date(iso), 'd MMM, HH:mm', { locale: es }).replace('.', '')
 
-function quotaLabel(quota: CourtrackSyncQuota): string {
+export function quotaLabel(quota: CourtrackSyncQuota): string {
   if (quota.remaining === 0) {
     return quota.resets_at
       ? `Cupo agotado: la próxima sincronización estará disponible el ${formatInstant(quota.resets_at)}.`
@@ -57,7 +63,7 @@ function quotaLabel(quota: CourtrackSyncQuota): string {
     : `Te quedan ${quota.remaining} sincronizaciones de ${quota.limit} en las próximas 24 horas.`
 }
 
-function lastSyncLabel(entry: CourtrackSyncLogEntry): string {
+export function lastSyncLabel(entry: CourtrackSyncLogEntry): string {
   const when = formatInstant(entry.started_at)
   if (entry.status === 'success' && entry.summary) {
     const { created, updated, adopted, unchanged } = entry.summary
@@ -69,7 +75,7 @@ function lastSyncLabel(entry: CourtrackSyncLogEntry): string {
   return `${when} · en curso`
 }
 
-function Callout({ tone, icon, children }: { tone: 'gold' | 'orange' | 'ash'; icon: ReactNode; children: ReactNode }) {
+export function Callout({ tone, icon, children }: { tone: 'gold' | 'orange' | 'ash'; icon: ReactNode; children: ReactNode }) {
   const iconTone = {
     gold: 'bg-coyote-ember text-coyote-gold',
     orange: 'bg-coyote-orange/15 text-coyote-orange',
@@ -83,7 +89,16 @@ function Callout({ tone, icon, children }: { tone: 'gold' | 'orange' | 'ash'; ic
   )
 }
 
-function StatusView({ status, error, onRetry }: { status: CourtrackSyncStatus | null; error: string | null; onRetry: () => void }) {
+type StatusViewProps = {
+  status: CourtrackSyncStatus | null
+  error: string | null
+  leagueId: string
+  onLeagueChange: (id: string) => void
+  onRetry: () => void
+  onManageLeagues: () => void
+}
+
+function StatusView({ status, error, leagueId, onLeagueChange, onRetry, onManageLeagues }: StatusViewProps) {
   if (error) {
     return (
       <div className="flex flex-col gap-3">
@@ -95,47 +110,96 @@ function StatusView({ status, error, onRetry }: { status: CourtrackSyncStatus | 
       </div>
     )
   }
+  if (!status) {
+    return (
+      <div className="flex flex-col gap-3">
+        <Skeleton className="h-11 w-full rounded-lg" />
+        <Skeleton className="h-15 w-full rounded-xl" />
+      </div>
+    )
+  }
+
+  const active = status.leagues.filter((league) => league.is_active)
+  if (active.length === 0) {
+    return (
+      <div className="flex flex-col gap-4">
+        <Callout tone="ash" icon={<TrophyIcon className="size-5" />}>
+          {status.leagues.length === 0
+            ? 'Todavía no hay ninguna liga de CourtTrack configurada.'
+            : 'Todas las ligas configuradas están pausadas.'}
+        </Callout>
+        <Button variant="primary" className="self-start" onClick={onManageLeagues}>
+          Gestionar ligas
+        </Button>
+      </div>
+    )
+  }
+
+  const league = active.find((item) => item.id === leagueId) ?? active[0]!
   return (
     <div className="flex flex-col gap-4">
       <p className="text-sm text-pretty text-coyote-ash">
-        Trae los resultados de Liga Podio publicados en la app CourtTrack: partidos jugados con sus parciales, rival,
-        fase y cancha. Los partidos ya importados se actualizan y los cargados a mano el mismo día contra el mismo rival
-        se vinculan sin duplicarlos. <span className="text-coyote-silver">Vista previa</span> muestra qué haría sin
-        guardar nada ni gastar cupo.
+        Trae de CourtTrack los partidos jugados de la liga elegida: parciales, rival, fase y cancha. Los ya importados
+        se actualizan y los cargados a mano el mismo día contra el mismo rival se vinculan sin duplicarlos.{' '}
+        <span className="text-coyote-silver">Vista previa</span> muestra qué haría sin guardar nada ni gastar cupo.
       </p>
-      {status ? (
-        <Callout
-          tone={status.quota.remaining === 0 ? 'orange' : 'gold'}
-          icon={status.quota.remaining === 0 ? <AlertIcon className="size-5" /> : <RefreshIcon className="size-5" />}
-        >
-          <span className="tabular-nums">{quotaLabel(status.quota)}</span>
-        </Callout>
-      ) : (
-        <Skeleton className="h-15 w-full rounded-xl" />
-      )}
-      {status && status.last_syncs.length > 0 && (
-        <div className="flex flex-col gap-1.5">
-          <h3 className="text-xs font-semibold tracking-wide text-coyote-ash uppercase">Últimas sincronizaciones</h3>
-          <ul className="flex flex-col gap-1 text-sm text-coyote-ash">
-            {status.last_syncs.map((entry) => (
-              <li key={entry.id} className="flex items-start gap-2 tabular-nums">
-                <span
-                  aria-hidden
-                  className={`mt-1.5 size-2 shrink-0 rounded-full ${
-                    entry.status === 'success' ? 'bg-coyote-gold' : entry.status === 'running' ? 'bg-coyote-ash' : 'bg-coyote-orange'
-                  }`}
-                />
-                <span className="min-w-0 text-pretty">{lastSyncLabel(entry)}</span>
-              </li>
+      {active.length > 1 ? (
+        <Field label="Liga">
+          <Select value={league.id} onChange={(event) => onLeagueChange(event.target.value)}>
+            {active.map((item) => (
+              <option key={item.id} value={item.id}>
+                {item.liga_name} · {item.competition.name}
+              </option>
             ))}
-          </ul>
-        </div>
+          </Select>
+        </Field>
+      ) : (
+        <LeagueSummary league={league} />
       )}
+      <p className="text-xs text-coyote-ash tabular-nums">
+        {league.last_sync ? `Último sync de esta liga: ${lastSyncLabel(league.last_sync)}` : 'Esta liga todavía no se sincronizó.'}
+      </p>
+      <Callout
+        tone={status.quota.remaining === 0 ? 'orange' : 'gold'}
+        icon={status.quota.remaining === 0 ? <AlertIcon className="size-5" /> : <RefreshIcon className="size-5" />}
+      >
+        <span className="tabular-nums">{quotaLabel(status.quota)}</span>
+      </Callout>
     </div>
   )
 }
 
-function ResultView({ result }: { result: CourtrackSyncResult }) {
+function LeagueSummary({ league }: { league: CourtrackSyncLeague }) {
+  return (
+    <div className="flex items-center gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+      {league.team_logo_url ? (
+        <img
+          src={league.team_logo_url}
+          alt=""
+          className="size-9 shrink-0 rounded-lg bg-white/90 object-contain p-0.5 outline-1 outline-white/10"
+        />
+      ) : (
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-ember text-coyote-gold">
+          <TrophyIcon className="size-5" />
+        </span>
+      )}
+      <div className="flex min-w-0 flex-col">
+        <span className="truncate text-sm font-medium text-coyote-silver">{league.liga_name}</span>
+        <span className="truncate text-xs text-coyote-ash">
+          {league.competition.name} · {league.cliente_name ?? 'CourtTrack'} · como {league.team_name}
+        </span>
+      </div>
+    </div>
+  )
+}
+
+type ResultViewProps = {
+  result: CourtrackSyncResult
+  /** Vincula un rival "a crear" a uno ya cargado (solo en vista previa). */
+  onLinkRival: ((courtrackName: string, teamId: string) => Promise<void>) | null
+}
+
+function ResultView({ result, onLinkRival }: ResultViewProps) {
   const counters: { label: string; value: number }[] = [
     { label: result.dry_run ? 'Se crearían' : 'Nuevos', value: result.created },
     { label: result.dry_run ? 'Se actualizarían' : 'Actualizados', value: result.updated + result.adopted },
@@ -145,7 +209,9 @@ function ResultView({ result }: { result: CourtrackSyncResult }) {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-balance text-coyote-silver">{result.league.name}</p>
+        <p className="text-sm font-medium text-balance text-coyote-silver">
+          {result.league.name} · {result.league.competition.name}
+        </p>
         <p className="text-xs text-coyote-ash tabular-nums">
           {result.own} de {result.scanned} partidos de la liga son nuestros
         </p>
@@ -164,13 +230,14 @@ function ResultView({ result }: { result: CourtrackSyncResult }) {
         <p className="text-sm text-pretty text-coyote-ash">
           {result.dry_run ? 'Rivales que se crearían: ' : 'Rivales creados: '}
           <span className="text-coyote-silver">{result.rivals_created.join(', ')}</span>
+          {onLinkRival && ' Si alguno ya está cargado con otro nombre, vincúlalo abajo antes de sincronizar.'}
         </p>
       )}
 
       {result.matches.length > 0 && (
         <ol className="flex flex-col gap-2">
           {result.matches.map((match) => (
-            <MatchRow key={match.courtrack_id} match={match} dryRun={result.dry_run} />
+            <MatchRow key={match.courtrack_id} match={match} dryRun={result.dry_run} onLinkRival={onLinkRival} />
           ))}
         </ol>
       )}
@@ -180,7 +247,13 @@ function ResultView({ result }: { result: CourtrackSyncResult }) {
   )
 }
 
-function MatchRow({ match, dryRun }: { match: CourtrackSyncMatch; dryRun: boolean }) {
+type MatchRowProps = {
+  match: CourtrackSyncMatch
+  dryRun: boolean
+  onLinkRival: ((courtrackName: string, teamId: string) => Promise<void>) | null
+}
+
+function MatchRow({ match, dryRun, onLinkRival }: MatchRowProps) {
   const played = match.status === 'played'
   const score = played ? `${match.home_sets ?? '–'} – ${match.away_sets ?? '–'}` : 'vs'
   const detail =
@@ -191,38 +264,75 @@ function MatchRow({ match, dryRun }: { match: CourtrackSyncMatch; dryRun: boolea
         ? `Rival renombrado: ${match.opponent.renamed_from} → ${match.opponent.name}`
         : null)
   const showLink = !dryRun && match.slug && match.action !== 'skipped'
+  const canLink = onLinkRival !== null && match.opponent?.created === true
   return (
-    <li className="flex items-center gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
-      <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-        <span className="truncate text-sm font-medium text-coyote-silver">
-          {match.home} <span className="text-coyote-gold tabular-nums">{score}</span> {match.away}
-        </span>
-        <span className="truncate text-xs text-coyote-ash tabular-nums">
-          {formatDateShort(match.played_on)}
-          {match.start_time ? ` · ${match.start_time}` : ''}
-          {detail ? ` · ${detail}` : ''}
-        </span>
-      </div>
-      {showLink ? (
-        <Link
-          to={`/matches/${match.slug}`}
-          className={buttonClasses({ variant: 'ghost', size: 'sm', className: 'px-3' })}
-          aria-label={`Ver partido ${match.home} contra ${match.away}`}
-        >
+    <li className="flex flex-col gap-2.5 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+      <div className="flex items-center gap-3">
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <span className="truncate text-sm font-medium text-coyote-silver">
+            {match.home} <span className="text-coyote-gold tabular-nums">{score}</span> {match.away}
+          </span>
+          <span className="truncate text-xs text-coyote-ash tabular-nums">
+            {formatDateShort(match.played_on)}
+            {match.start_time ? ` · ${match.start_time}` : ''}
+            {detail ? ` · ${detail}` : ''}
+          </span>
+        </div>
+        {showLink ? (
+          <Link
+            to={`/matches/${match.slug}`}
+            className={buttonClasses({ variant: 'ghost', size: 'sm', className: 'px-3' })}
+            aria-label={`Ver partido ${match.home} contra ${match.away}`}
+          >
+            <Chip tone={ACTION_TONES[match.action]}>{ACTION_LABELS[match.action]}</Chip>
+          </Link>
+        ) : (
           <Chip tone={ACTION_TONES[match.action]}>{ACTION_LABELS[match.action]}</Chip>
-        </Link>
-      ) : (
-        <Chip tone={ACTION_TONES[match.action]}>{ACTION_LABELS[match.action]}</Chip>
-      )}
+        )}
+      </div>
+      {canLink && match.opponent && <LinkRivalField courtrackName={match.opponent.courtrack_name} onLink={onLinkRival} />}
     </li>
   )
 }
 
+/** "¿Es un rival ya cargado?": select de rivales que crea el vínculo y vuelve a previsualizar. */
+function LinkRivalField({
+  courtrackName,
+  onLink,
+}: {
+  courtrackName: string
+  onLink: (courtrackName: string, teamId: string) => Promise<void>
+}) {
+  const rivals = useRivalTeams()
+  const [busy, setBusy] = useState(false)
+  return (
+    <Field label={`¿"${courtrackName}" es un rival ya cargado?`} className="text-xs">
+      <Select
+        value=""
+        disabled={busy || rivals.isPending}
+        onChange={(event) => {
+          const teamId = event.target.value
+          if (!teamId) return
+          setBusy(true)
+          void onLink(courtrackName, teamId).finally(() => setBusy(false))
+        }}
+      >
+        <option value="">{busy ? 'Vinculando…' : 'No, es un rival nuevo'}</option>
+        {rivals.data?.map((rival) => (
+          <option key={rival.id} value={rival.id}>
+            Sí, es {rival.name}
+          </option>
+        ))}
+      </Select>
+    </Field>
+  )
+}
+
 /**
- * Sincronización con CourtTrack: palabra clave → cupo y últimas ejecuciones → vista previa o sync → resultado.
+ * Sincronización con CourtTrack de una liga: palabra clave → liga, cupo y último sync → vista previa o sync → resultado.
  * Habla con /api/admin/courtrack-*, que reenvía al microservicio courtrack-service.
  */
-export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDialogProps) {
+export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, onManageLeagues }: SyncCourtrackDialogProps) {
   const formId = useId()
   const queryClient = useQueryClient()
   const [safeword, setSafeword] = useState<string | null>(() => safewordStore.get())
@@ -231,6 +341,7 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
   const [verifying, setVerifying] = useState(false)
   const [status, setStatus] = useState<CourtrackSyncStatus | null>(null)
   const [statusError, setStatusError] = useState<string | null>(null)
+  const [leagueId, setLeagueId] = useState<string>(initialLeagueId ?? '')
   const [result, setResult] = useState<CourtrackSyncResult | null>(null)
   const [error, setError] = useState<{ message: string; quota: CourtrackSyncQuota | null } | null>(null)
   const [lastDryRun, setLastDryRun] = useState(false)
@@ -248,7 +359,13 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
       setStatus(null)
       setStatusError(null)
       try {
-        setStatus(await adminPost<CourtrackSyncStatus>('/courtrack-status', {}, word, signal))
+        const data = await adminPost<CourtrackSyncStatus>('/courtrack-status', {}, word, signal)
+        setStatus(data)
+        // Sin liga elegida (o ya no activa): la única activa o la primera.
+        setLeagueId((current) => {
+          const active = data.leagues.filter((league) => league.is_active)
+          return active.some((league) => league.id === current) ? current : (active[0]?.id ?? '')
+        })
       } catch (err) {
         if (isAbort(err)) return
         if (isUnauthorized(err)) return handleUnauthorized()
@@ -258,7 +375,7 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
     [handleUnauthorized],
   )
 
-  // El cupo se consulta cada vez que se vuelve al paso inicial con la palabra clave ya validada.
+  // El cupo y las ligas se consultan cada vez que se vuelve al paso inicial con la palabra clave ya validada.
   useEffect(() => {
     if (step !== 'status' || !safeword) return
     const controller = new AbortController()
@@ -268,11 +385,12 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
 
   async function run(dryRun: boolean) {
     if (!safeword) return handleUnauthorized()
+    if (!leagueId) return
     setLastDryRun(dryRun)
     setError(null)
     setStep('running')
     try {
-      const data = await adminPost<CourtrackSyncResult>('/courtrack-sync', { dry_run: dryRun }, safeword)
+      const data = await adminPost<CourtrackSyncResult>('/courtrack-sync', { league_id: leagueId, dry_run: dryRun }, safeword)
       setResult(data)
       setStep('result')
       if (!dryRun && data.created + data.updated + data.adopted + data.rivals_created.length > 0) {
@@ -290,9 +408,24 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
     }
   }
 
+  /** Vincula un nombre de CourtTrack a un rival existente y repite la vista previa. */
+  async function linkRival(courtrackName: string, teamId: string) {
+    if (!safeword) return handleUnauthorized()
+    try {
+      await adminPost('/team-link-create', { courtrack_name: courtrackName, team_id: teamId }, safeword)
+    } catch (err) {
+      if (isUnauthorized(err)) return handleUnauthorized()
+      setError({ message: errorMessage(err), quota: null })
+      setStep('error')
+      return
+    }
+    await run(true)
+  }
+
   const busy = step === 'running' || verifying
   const remaining = result?.quota.remaining ?? error?.quota?.remaining ?? status?.quota.remaining ?? null
-  const canSync = remaining !== null && remaining > 0
+  const canSync = remaining !== null && remaining > 0 && leagueId !== ''
+  const leagueName = status?.leagues.find((league) => league.id === leagueId)?.liga_name ?? result?.league.name
 
   function handleClose() {
     if (busy) return
@@ -308,7 +441,13 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
   }
 
   const eyebrow =
-    step === 'safeword' ? <Chip tone="ash">Acceso restringido</Chip> : <Chip tone="podio">Liga Podio · CourtTrack</Chip>
+    step === 'safeword' ? (
+      <Chip tone="ash">Acceso restringido</Chip>
+    ) : (
+      <Chip tone="gold" className="max-w-full truncate">
+        {leagueName ? `CourtTrack · ${leagueName}` : 'CourtTrack'}
+      </Chip>
+    )
 
   let footer: ReactNode = null
   switch (step) {
@@ -330,7 +469,7 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
           <Button variant="ghost" onClick={handleClose}>
             Cancelar
           </Button>
-          <Button onClick={() => void run(true)} disabled={!status}>
+          <Button onClick={() => void run(true)} disabled={!status || !leagueId}>
             Vista previa
           </Button>
           <Button variant="primary" onClick={() => void run(false)} disabled={!status || !canSync}>
@@ -394,7 +533,14 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
         />
       )}
       {step === 'status' && (
-        <StatusView status={status} error={statusError} onRetry={() => safeword && void loadStatus(safeword)} />
+        <StatusView
+          status={status}
+          error={statusError}
+          leagueId={leagueId}
+          onLeagueChange={setLeagueId}
+          onRetry={() => safeword && void loadStatus(safeword)}
+          onManageLeagues={onManageLeagues}
+        />
       )}
       {step === 'running' && (
         <Callout tone="gold" icon={<RefreshIcon className="size-5 animate-spin" />}>
@@ -414,7 +560,7 @@ export default function SyncCourtrackDialog({ open, onClose }: SyncCourtrackDial
               </Callout>
             </div>
           )}
-          <ResultView result={result} />
+          <ResultView result={result} onLinkRival={result.dry_run ? linkRival : null} />
         </>
       )}
       {step === 'error' && error && (

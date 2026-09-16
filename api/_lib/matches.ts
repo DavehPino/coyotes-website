@@ -11,19 +11,25 @@ import type {
   TeamSummary,
   Video,
 } from '../../shared/schemas.js'
+import { requireCompetition } from './competitions.js'
 import { badRequest, notFound } from './http.js'
-import { compareVideos, outcomeOf, TEAM_SUMMARY_SELECT, toSetScores, toVideo } from './mappers.js'
+import { compareVideos, outcomeOf, toCompetition, toSetScores, toVideo } from './mappers.js'
 import { deleteObject, listObjectKeys, matchFolderKey } from './storage.js'
 import { db, type Tables } from './supabase.js'
 import { discardCreatedTeam, resolveOpponent } from './teams.js'
 
 type MatchRow = Tables['matches']['Row']
 
-const MATCH_SUMMARY_SELECT = `*, opponent:teams!matches_opponent_team_id_fkey(${TEAM_SUMMARY_SELECT}), videos(count)`
+// Un único literal: el cliente de Supabase infiere el tipo del select solo desde literales.
+const MATCH_SUMMARY_SELECT =
+  '*, opponent:teams!matches_opponent_team_id_fkey(id,name,short_name,logo_url), competition:competitions!matches_competition_id_fkey(id,name,kind), videos(count)'
 
 type CountEmbed = { count: number }[]
+type CompetitionEmbed = { id: string; name: string; kind: string } | null
+/** La fila sin el texto `competition` (columna heredada; el embed `competition` lo sustituye). */
+type MatchRowData = Omit<MatchRow, 'competition'>
 
-function toMatchSummary(row: MatchRow, opponent: TeamSummary, videos: CountEmbed): MatchSummary {
+function toMatchSummary(row: MatchRowData, opponent: TeamSummary, competition: CompetitionEmbed, videos: CountEmbed): MatchSummary {
   return {
     id: row.id,
     slug: row.slug,
@@ -31,7 +37,7 @@ function toMatchSummary(row: MatchRow, opponent: TeamSummary, videos: CountEmbed
     start_time: row.start_time,
     is_home: row.is_home,
     location: row.location,
-    competition: row.competition,
+    competition: competition ? toCompetition(competition) : null,
     phase: row.phase,
     sets_won: row.sets_won,
     sets_lost: row.sets_lost,
@@ -42,18 +48,17 @@ function toMatchSummary(row: MatchRow, opponent: TeamSummary, videos: CountEmbed
   }
 }
 
-/** Partidos jugados hasta `until` (incluido), del más reciente al más antiguo. */
-export async function listMatchesUntil(until: string, limit: number): Promise<MatchSummary[]> {
-  const { data, error } = await db()
-    .from('matches')
-    .select(MATCH_SUMMARY_SELECT)
-    .lte('played_on', until)
+/** Partidos jugados hasta `until` (incluido), del más reciente al más antiguo; opcionalmente de una competición. */
+export async function listMatchesUntil(until: string, limit: number, competitionId?: string): Promise<MatchSummary[]> {
+  let query = db().from('matches').select(MATCH_SUMMARY_SELECT).lte('played_on', until)
+  if (competitionId) query = query.eq('competition_id', competitionId)
+  const { data, error } = await query
     .order('played_on', { ascending: false })
     .order('start_time', { ascending: false, nullsFirst: false })
     .limit(limit)
   if (error) throw error
 
-  return data.map(({ opponent, videos, ...row }) => toMatchSummary(row, opponent, videos))
+  return data.map(({ opponent, competition, videos, ...row }) => toMatchSummary(row, opponent, competition, videos))
 }
 
 /** Detalle de un partido con parciales y videos ordenados. Null si el slug no existe. */
@@ -62,7 +67,7 @@ export async function getMatchBySlug(slug: string): Promise<MatchDetail | null> 
   if (error) throw error
   if (!data) return null
 
-  const { opponent, videos: videoCount, ...row } = data
+  const { opponent, competition, videos: videoCount, ...row } = data
   const { data: videoRows, error: videosError } = await db()
     .from('videos')
     .select('*')
@@ -72,7 +77,7 @@ export async function getMatchBySlug(slug: string): Promise<MatchDetail | null> 
 
   const videos: Video[] = videoRows.map(toVideo).sort(compareVideos)
   return {
-    ...toMatchSummary(row, opponent, videoCount),
+    ...toMatchSummary(row, opponent, competition, videoCount),
     set_scores: toSetScores(row.set_scores),
     summary: row.summary,
     videos,
@@ -111,6 +116,7 @@ async function freeSlug(base: string): Promise<string> {
  */
 export async function createMatch(input: MatchCreateInput): Promise<MatchCreated> {
   assertPlayed(input.played_on)
+  const competition = await requireCompetition(input.competition_id)
 
   const resolved = await resolveOpponent(input.opponent)
   const opponent = resolved.team as TeamSummary // los partidos siempre tienen rival
@@ -130,7 +136,7 @@ export async function createMatch(input: MatchCreateInput): Promise<MatchCreated
           opponent_team_id: opponent.id,
           is_home: false,
           location: input.location,
-          competition: input.competition,
+          competition_id: competition.id,
           phase: input.phase,
           sets_won: won,
           sets_lost: lost,
@@ -157,6 +163,7 @@ export async function updateMatch(input: MatchUpdateInput): Promise<MatchCreated
   assertPlayed(input.played_on)
   const current = await getMatchRef(input.id)
   if (!current) throw notFound('Partido no encontrado')
+  const competition = await requireCompetition(input.competition_id)
 
   const resolved = await resolveOpponent(input.opponent)
   const opponent = resolved.team as TeamSummary
@@ -169,7 +176,7 @@ export async function updateMatch(input: MatchUpdateInput): Promise<MatchCreated
       start_time: input.start_time,
       opponent_team_id: opponent.id,
       location: input.location,
-      competition: input.competition,
+      competition_id: competition.id,
       phase: input.phase,
       sets_won: won,
       sets_lost: lost,

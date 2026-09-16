@@ -143,7 +143,8 @@ Formulario en tres pasos:
 
 1. **Rival:** uno existente o uno nuevo con nombre, abreviatura y URL del logo opcionales. Se guarda con
    `is_own_team = false` y sin categoría ni ciudad.
-2. **Partido:** fecha, hora, competición (`Liga Podio` o `Amistoso`), fase, lugar y parciales. Los sets ganados y
+2. **Partido:** fecha, hora, competición (una de las de la organización: las ligas de CourtTrack configuradas en
+   **Ligas** y `Amistoso`), fase, lugar y parciales. Los sets ganados y
    perdidos se calculan de los parciales y el partido se guarda siempre como visitante (`is_home = false`). El slug
    se genera solo (`2026-09-20-vs-las-onas`, con `-2` si ya existe).
 3. **Videos (opcional):** se suben al guardar, directo del navegador al bucket con subida multiparte (trozos de 25 MB,
@@ -176,22 +177,45 @@ con la palabra clave):
 del bucket (la carpeta `games/<slug>/` completa y cualquier otro video vinculado), después las filas de `videos` y por
 último el partido. Si el bucket falla no se borra nada de la base de datos. El rival se conserva.
 
+### Competiciones y filtro por liga
+
+Cada partido pertenece a una **competición** de la organización (tabla `competitions`: ligas, amistosos, torneos).
+En Partidos, una fila de chips filtra el carrusel y la lista por competición; el filtro va en la URL (`?liga=<id>`),
+así que sobrevive a recargar y se puede compartir. Las competiciones se crean al configurar una liga de CourtTrack
+(abajo) o vienen de la migración inicial (`Liga Podio`, `Amistoso`).
+
+### Ligas de CourtTrack
+
+El botón **Ligas** de Partidos (con la palabra clave) gestiona las ligas de la app CourtTrack que sigue el equipo
+(tabla `courtrack_leagues`; el microservicio [`courtrack-service`](../courtrack-service), repo y deploy aparte con la
+misma base de datos, las lee al sincronizar):
+
+- **Lista:** competición, liga y asociación de CourtTrack, cómo aparece el equipo, activa/pausada y último sync.
+  **Sincronizar** abre el diálogo de sync con esa liga; **Pausar** la saca del selector sin borrar nada; **Quitar**
+  elimina la configuración pero conserva los partidos importados (con su `courtrack_id`, así que volver a añadirla
+  los reconoce) y la competición.
+- **Agregar liga:** asistente en cuatro pasos con el catálogo de CourtTrack: asociación (p.ej. PODIO) → liga →
+  tu equipo tal como aparece en esa liga (lista derivada de los partidos; se preselecciona si coincide con el nombre
+  del equipo) → competición: una nueva con el nombre de la liga (una por temporada, filtrable por separado) o
+  añadirla a una existente (junta temporadas bajo el mismo nombre). Al guardar ofrece la vista previa.
+
 ### Sincronizar con CourtTrack
 
-El botón **Sincronizar** de Partidos (con la palabra clave) importa los resultados de **Liga Podio** desde la app
-CourtTrack a través del microservicio [`courtrack-service`](../courtrack-service) (repo y deploy aparte, misma base de
-datos). El diálogo muestra el cupo restante (**3 sincronizaciones por 24 h**) y las últimas ejecuciones, y ofrece:
+El botón **Sincronizar** de Partidos importa los resultados de **una liga por vez**. El diálogo muestra la liga (con
+selector si hay varias activas), su último sync y el cupo restante (**`SYNC_DAILY_LIMIT` sincronizaciones por 24 h**
+sumando todas las ligas), y ofrece:
 
 - **Vista previa:** qué crearía, actualizaría u omitiría, y qué rivales nuevos daría de alta. No escribe ni gasta cupo.
-  Conviene revisarla antes de la primera sincronización para detectar rivales que ya existen con otro nombre (se
-  unen con `COURTRACK_TEAM_ALIASES` en el microservicio).
+  Si un rival "a crear" ya existe con otro nombre, la propia fila permite **vincularlo** a un rival cargado
+  (`courtrack_team_links`) y la vista previa se repite.
 - **Sincronizar:** crea los partidos jugados con parciales, rival, fase y cancha; actualiza los ya importados y
-  **vincula** los cargados a mano el mismo día contra el mismo rival en vez de duplicarlos (`matches.courtrack_id`).
-  El slug, el resumen, la portada y los videos no se tocan. Los partidos importados aparecen como local o visitante
-  según CourtTrack; si se editan a mano, la siguiente sincronización vuelve a poner los datos de CourtTrack.
+  **vincula** los cargados a mano el mismo día contra el mismo rival y de la misma competición en vez de duplicarlos
+  (`matches.courtrack_id`). CourtTrack es la fuente de verdad: también pisa el nombre y el logo del rival (la
+  abreviatura se conserva). El slug, el resumen, la portada y los videos no se tocan; si se editan datos de resultado a
+  mano, la siguiente sincronización vuelve a poner los de CourtTrack.
 
-Requiere `COURTRACK_SYNC_URL` y `COURTRACK_SYNC_SECRET` (sin ellos el botón responde 503) y las migraciones
-`20260916000000_matches_courtrack_id.sql` y `20260916000100_sync_log.sql` (después, `npm run db:types`).
+Requiere `COURTRACK_SYNC_URL` y `COURTRACK_SYNC_SECRET` (sin ellos Ligas y Sincronizar responden 503) y `ORG_ID`
+(por defecto `coyotes`).
 
 ## Flyers para Instagram
 
@@ -262,7 +286,7 @@ Cancelar actividades, los resúmenes y las portadas todavía se hace en **Supaba
    `is_cancelled`. Las canceladas y las que ya empezaron no se muestran.
 3. **Partidos** (`matches`): `slug` único en kebab-case (p.ej. `2026-09-06-vs-onas`; es la URL
    `dashboard.<dominio>/matches/<slug>` y la carpeta del bucket), `played_on`, `start_time`, `opponent_team_id`, `is_home`,
-   `location`, `competition`, `phase`, `sets_won`, `sets_lost` y `set_scores` con los parciales:
+   `location`, `competition_id` (fila de `competitions`), `phase`, `sets_won`, `sets_lost` y `set_scores` con los parciales:
    `[{"us":25,"them":20},{"us":22,"them":25}]`. `summary` admite saltos de línea y `cover_image_url` es la portada
    del carrusel (sin ella se muestran los escudos). Solo aparecen los partidos con `played_on <= hoy`.
 4. **Videos** (`videos`): los del bucket los crea el cron (abajo). Para enlaces externos crea una fila con
@@ -299,9 +323,10 @@ Editor).
 
 | Método | Ruta | Respuesta |
 |---|---|---|
-| GET | `/api/teams` | Rivales por nombre (sin caché) |
+| GET | `/api/lookups/teams` | Rivales por nombre (sin caché) |
+| GET | `/api/lookups/competitions` | Competiciones con su número de partidos (sin caché) |
 | GET | `/api/activities?from=YYYY-MM-DD&limit=30` | Próximas actividades no canceladas, de la más cercana a la más lejana, con el rival embebido |
-| GET | `/api/matches?until=YYYY-MM-DD&limit=50` | Partidos jugados hasta la fecha, del más reciente al más antiguo |
+| GET | `/api/matches?until=YYYY-MM-DD&limit=50&competition_id=` | Partidos jugados hasta la fecha, del más reciente al más antiguo; opcionalmente de una competición |
 | GET | `/api/matches/:slug` | Detalle con parciales y videos ordenados (404 si no existe) |
 | GET | `/api/videos/:id/playback` | URL de reproducción (pública o firmada temporal) |
 | GET | `/api/cron/sync-videos` | Sincroniza el bucket; requiere `Authorization: Bearer <CRON_SECRET>` |
@@ -317,8 +342,14 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
 | POST | `/api/admin/match-update` | `{ id, slug, opponent }`: edita el partido `id` con los campos del alta; el slug no cambia |
 | POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
-| POST | `/api/admin/courtrack-status` | `CourtrackSyncStatus`: cupo restante y últimas sincronizaciones (proxy a courtrack-service; 503 sin configurar) |
-| POST | `/api/admin/courtrack-sync` | `CourtrackSyncResult`: importa los partidos de Liga Podio desde CourtTrack (`{ dry_run?: boolean }`); 429 `quota_exceeded` si se agotó el cupo |
+| POST | `/api/admin/courtrack-status` | `CourtrackSyncStatus`: cupo, ligas configuradas con su último sync y últimas ejecuciones (proxy a courtrack-service; 503 sin configurar) |
+| POST | `/api/admin/courtrack-sync` | `CourtrackSyncResult`: importa los partidos de una liga desde CourtTrack (`{ league_id, dry_run? }`); 429 `quota_exceeded` si se agotó el cupo |
+| POST | `/api/admin/courtrack-catalog` | Catálogo de CourtTrack: `{ resource: 'clientes' }`, `{ resource: 'ligas', id_cliente }` o `{ resource: 'equipos', id_cliente, liga_id }` |
+| POST | `/api/admin/leagues` | `CourtrackLeague[]`: ligas configuradas |
+| POST | `/api/admin/league-create` | 201 `CourtrackLeague`: alta de una liga (`{ id_cliente, cliente_name, liga_id, team_name, competition }`; 409 si ya estaba) |
+| POST | `/api/admin/league-update` | `CourtrackLeague`: pausa/activa (`is_active`) o cambia `team_name` |
+| POST | `/api/admin/league-delete` | `{ ok: true }`: quita la liga; partidos y competición se conservan |
+| POST | `/api/admin/team-link-create` | `{ ok: true }`: vincula un nombre de CourtTrack a un rival (`{ courtrack_name, team_id }`) |
 | POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
 | POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
@@ -354,7 +385,8 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 
 | Archivo | Rutas |
 |---|---|
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/courtrack-status`, `/courtrack-sync` |
+| `api/lookups/[resource].ts` | `GET /api/lookups/teams`, `/competitions` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/courtrack-status`, `/courtrack-sync`, `/courtrack-catalog`, `/leagues`, `/league-create`, `/league-update`, `/league-delete`, `/team-link-create` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
 | `api/flyers/[action].ts` | `GET /api/flyers/library`; `POST /api/flyers/verify`, `/suggest`, `/upload-url`, `/image-save`, `/image-rename`, `/image-delete`, `/flyer-save`, `/flyer-delete` |
 

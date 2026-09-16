@@ -3,17 +3,26 @@
 import {
   ACTIVITY_CATEGORIES,
   ACTIVITY_TYPES,
+  COMPETITION_KINDS,
   VIDEO_CATEGORIES,
   VIDEO_SOURCES,
   VIDEO_STATUSES,
   type ActivityCategory,
   type ActivityType,
+  type CompetitionKind,
   type MatchOutcome,
   type VideoCategory,
   type VideoSource,
   type VideoStatus,
 } from '../../shared/domain.js'
-import { setScoreSchema, type Activity, type SetScore, type TeamSummary, type Video } from '../../shared/schemas.js'
+import {
+  setScoreSchema,
+  type Activity,
+  type Competition,
+  type SetScore,
+  type TeamSummary,
+  type Video,
+} from '../../shared/schemas.js'
 import type { Tables } from './supabase.js'
 
 type ActivityRow = Tables['weekly_activities']['Row']
@@ -28,6 +37,12 @@ function oneOf<T extends string>(values: readonly T[], value: string, fallback: 
 export function toTeamSummary(row: TeamSummary | null): TeamSummary | null {
   if (!row) return null
   return { id: row.id, name: row.name, short_name: row.short_name, logo_url: row.logo_url }
+}
+
+export const COMPETITION_SELECT = 'id,name,kind'
+
+export function toCompetition(row: { id: string; name: string; kind: string }): Competition {
+  return { id: row.id, name: row.name, kind: oneOf<CompetitionKind>(COMPETITION_KINDS, row.kind, 'other') }
 }
 
 export function toActivity(row: ActivityRow, opponent: TeamSummary | null): Activity {

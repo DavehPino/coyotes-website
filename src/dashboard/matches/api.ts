@@ -3,23 +3,28 @@ import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
 import { ApiError, apiGet } from '@/lib/api'
 import type { MatchDetail, MatchSummary, Playback } from '@shared/schemas'
 import { rivalsKey } from '../admin/teams'
+import { competitionsKey } from './competitions'
 
 export const matchesKeys = {
   all: ['matches'] as const,
-  list: () => ['matches', 'list'] as const,
+  /** Prefijo de todos los listados (sin filtro y por competición). */
+  lists: () => ['matches', 'list'] as const,
+  list: (competitionId?: string | null) => ['matches', 'list', competitionId ?? 'all'] as const,
   detail: (slug: string) => ['matches', 'detail', slug] as const,
   playback: (videoId: string) => ['videos', videoId, 'playback'] as const,
 }
 
-const MATCH_LIST_PATH = '/matches?limit=50'
+const matchListPath = (competitionId?: string | null) =>
+  `/matches?limit=100${competitionId ? `&competition_id=${encodeURIComponent(competitionId)}` : ''}`
 const matchDetailPath = (slug: string) => `/matches/${encodeURIComponent(slug)}`
 
 const isNotFound = (error: unknown) => error instanceof ApiError && error.status === 404
 
-export function matchListOptions() {
+/** Partidos jugados, opcionalmente solo de una competición (filtro por liga). */
+export function matchListOptions(competitionId?: string | null) {
   return queryOptions({
-    queryKey: matchesKeys.list(),
-    queryFn: ({ signal }) => apiGet<MatchSummary[]>(MATCH_LIST_PATH, signal),
+    queryKey: matchesKeys.list(competitionId),
+    queryFn: ({ signal }) => apiGet<MatchSummary[]>(matchListPath(competitionId), signal),
     staleTime: 60_000,
   })
 }
@@ -48,17 +53,23 @@ export function playbackOptions(videoId: string) {
 }
 
 /**
- * Tras guardar datos: vuelve a pedir el listado (y el detalle, si se indica) saltando la caché HTTP
- * del navegador, que guarda las lecturas un minuto, y lo deja en TanStack Query.
+ * Tras guardar datos: vuelve a pedir el listado completo (y el detalle, si se indica) saltando la caché HTTP
+ * del navegador, que guarda las lecturas un minuto, y lo deja en TanStack Query. Los listados filtrados por
+ * competición y los contadores de competiciones se invalidan para que se refresquen si están en pantalla.
  */
 export async function refreshMatchData(queryClient: QueryClient, slug?: string): Promise<void> {
   const [list, detail] = await Promise.all([
-    apiGet<MatchSummary[]>(MATCH_LIST_PATH, undefined, 'reload'),
+    apiGet<MatchSummary[]>(matchListPath(), undefined, 'reload'),
     slug ? apiGet<MatchDetail>(matchDetailPath(slug), undefined, 'reload') : null,
   ])
   queryClient.setQueryData(matchesKeys.list(), list)
   if (slug && detail) queryClient.setQueryData(matchesKeys.detail(slug), detail)
+  void queryClient.invalidateQueries({
+    queryKey: matchesKeys.lists(),
+    predicate: (query) => query.queryKey[2] !== 'all',
+  })
   void queryClient.invalidateQueries({ queryKey: rivalsKey })
+  void queryClient.invalidateQueries({ queryKey: competitionsKey })
 }
 
 /** Aplica un cambio ya guardado al detalle en caché, para verlo al instante mientras llega el refresco. */
@@ -66,7 +77,7 @@ export function patchMatchDetail(queryClient: QueryClient, slug: string, update:
   queryClient.setQueryData<MatchDetail>(matchesKeys.detail(slug), (match) => match && update(match))
 }
 
-export const useMatches = () => useQuery(matchListOptions())
+export const useMatches = (competitionId?: string | null) => useQuery(matchListOptions(competitionId))
 export const useMatch = (slug: string) => useQuery(matchDetailOptions(slug))
 export const useVideoPlayback = (videoId: string) => useQuery(playbackOptions(videoId))
 export { isNotFound }

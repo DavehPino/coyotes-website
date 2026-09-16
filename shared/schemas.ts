@@ -3,11 +3,12 @@
 import { z } from 'zod'
 import {
   ACTIVITY_CATEGORIES,
-  MATCH_COMPETITIONS,
+  COMPETITION_KINDS,
   MAX_SETS,
   MAX_VIDEO_BYTES,
   type ActivityCategory,
   type ActivityType,
+  type CompetitionKind,
   type MatchOutcome,
   type VideoCategory,
   type VideoSource,
@@ -28,6 +29,17 @@ export type Team = {
 }
 
 export type TeamSummary = Pick<Team, 'id' | 'name' | 'short_name' | 'logo_url'>
+
+// ─── Competitions ────────────────────────────────────────────────────────────
+/** Liga, amistoso, torneo... de la organización. Los partidos cuelgan de una competición. */
+export type Competition = {
+  id: string
+  name: string
+  kind: CompetitionKind
+}
+
+/** Listado para filtros y formularios: con el número de partidos jugados. */
+export type CompetitionListItem = Competition & { match_count: number }
 
 // ─── Activities ──────────────────────────────────────────────────────────────
 export type Activity = {
@@ -84,6 +96,32 @@ export type SyncResult = {
 // ─── Sincronización con CourtTrack ───────────────────────────────────────────
 // Copia de los contratos de courtrack-service (api/_lib/types.ts), que el dashboard consume vía /api/admin/courtrack-*.
 
+/** Asociación en CourtTrack (PODIO = 5). */
+export type CourtrackCliente = {
+  id: number
+  nombre: string
+  titulo: string | null
+  logo: string | null
+  deporte: string | null
+}
+
+/** Liga dentro de una asociación. */
+export type CourtrackLiga = {
+  id: number
+  nombre: string
+  descripcion: string | null
+  logo: string | null
+  etapas: { id: number; titulo: string }[]
+}
+
+/** Equipo que juega en una liga (derivado de sus partidos). `name` es el nombre crudo que guarda la liga. */
+export type CourtrackEquipo = {
+  name: string
+  display_name: string
+  logo: string | null
+  matches: number
+}
+
 export type CourtrackSyncQuota = {
   limit: number
   used: number
@@ -107,8 +145,8 @@ export type CourtrackSyncMatch = {
   action: CourtrackSyncAction
   reason?: string
   slug?: string
-  /** `renamed_from`: nombre que tenía el rival en el dashboard antes de que CourtTrack lo pisara. */
-  opponent?: { name: string; created: boolean; renamed_from?: string }
+  /** `courtrack_name`: nombre crudo en CourtTrack (para vincularlo a un rival); `renamed_from`: nombre anterior en el dashboard. */
+  opponent?: { name: string; courtrack_name: string; created: boolean; renamed_from?: string }
 }
 
 export type CourtrackSyncSummary = {
@@ -124,13 +162,14 @@ export type CourtrackSyncSummary = {
 
 export type CourtrackSyncResult = CourtrackSyncSummary & {
   dry_run: boolean
-  league: { id: number; name: string }
+  league: { id: string; courtrack_id: number; name: string; competition: { id: string; name: string } }
   matches: CourtrackSyncMatch[]
   quota: CourtrackSyncQuota
 }
 
 export type CourtrackSyncLogEntry = {
   id: string
+  league_id: string | null
   status: 'running' | 'success' | 'error' | 'rejected'
   started_at: string
   finished_at: string | null
@@ -138,17 +177,82 @@ export type CourtrackSyncLogEntry = {
   error: string | null
 }
 
+/** Liga de CourtTrack que sigue la organización (tabla courtrack_leagues). */
+export type CourtrackLeague = {
+  id: string
+  competition: Competition
+  id_cliente: number
+  cliente_name: string | null
+  liga_id: number
+  liga_name: string
+  team_name: string
+  team_logo_url: string | null
+  is_active: boolean
+  last_synced_at: string | null
+}
+
+/** La misma liga tal como la devuelve el servicio, con su último sync. */
+export type CourtrackSyncLeague = Omit<CourtrackLeague, 'competition'> & {
+  competition: { id: string; name: string; kind: string }
+  last_sync: CourtrackSyncLogEntry | null
+}
+
 export type CourtrackSyncStatus = {
   org_id: string
   quota: CourtrackSyncQuota
+  leagues: CourtrackSyncLeague[]
   last_syncs: CourtrackSyncLogEntry[]
 }
 
 export const courtrackSyncInput = z.object({
+  /** Liga a sincronizar (courtrack_leagues.id). */
+  league_id: z.uuid(),
   /** true: calcula qué haría sin escribir nada ni gastar cupo. */
   dry_run: z.boolean().default(false),
 })
 export type CourtrackSyncInput = z.infer<typeof courtrackSyncInput>
+
+/** Catálogo de CourtTrack para el asistente "Agregar liga". */
+export const courtrackCatalogInput = z.discriminatedUnion('resource', [
+  z.object({ resource: z.literal('clientes') }),
+  z.object({ resource: z.literal('ligas'), id_cliente: z.number().int().positive() }),
+  z.object({ resource: z.literal('equipos'), id_cliente: z.number().int().positive(), liga_id: z.number().int().positive() }),
+])
+export type CourtrackCatalogInput = z.infer<typeof courtrackCatalogInput>
+
+const existingCompetition = z.object({ kind: z.literal('existing'), id: z.uuid() })
+const newCompetition = z.object({
+  kind: z.literal('new'),
+  name: z.string().trim().min(1, 'Escribe el nombre de la competición').max(80),
+  competition_kind: z.enum(COMPETITION_KINDS),
+})
+
+export const leagueCreateInput = z.object({
+  id_cliente: z.number().int().positive(),
+  cliente_name: z.string().trim().max(120).nullable(),
+  liga_id: z.number().int().positive(),
+  /** Nombre crudo del equipo propio en esa liga, tal como lo lista /courtrack/equipos. */
+  team_name: z.string().trim().min(1, 'Elige tu equipo').max(120),
+  competition: z.discriminatedUnion('kind', [existingCompetition, newCompetition]),
+})
+export type LeagueCreateInput = z.infer<typeof leagueCreateInput>
+
+export const leagueUpdateInput = z.object({
+  id: z.uuid(),
+  is_active: z.boolean().optional(),
+  team_name: z.string().trim().min(1).max(120).optional(),
+})
+export type LeagueUpdateInput = z.infer<typeof leagueUpdateInput>
+
+export const leagueDeleteInput = z.object({ id: z.uuid() })
+export type LeagueDeleteInput = z.infer<typeof leagueDeleteInput>
+
+/** Vincula un nombre de CourtTrack a un rival ya cargado (desde la vista previa del sync). */
+export const teamLinkCreateInput = z.object({
+  courtrack_name: z.string().trim().min(1).max(120),
+  team_id: z.uuid(),
+})
+export type TeamLinkCreateInput = z.infer<typeof teamLinkCreateInput>
 
 // ─── Matches ─────────────────────────────────────────────────────────────────
 export const setScoreSchema = z.object({
@@ -164,7 +268,7 @@ export type MatchSummary = {
   start_time: string | null
   is_home: boolean
   location: string | null
-  competition: string | null
+  competition: Competition | null
   phase: string | null
   sets_won: number | null
   sets_lost: number | null
@@ -184,6 +288,8 @@ export const matchListQuery = z.object({
   // Solo partidos jugados antes de esta fecha (incluida). Por defecto, hoy.
   until: isoDate.optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
+  // Solo partidos de esta competición (filtro por liga).
+  competition_id: z.uuid().optional(),
 })
 
 // ─── Escritura desde el dashboard (/api/admin/*) ─────────────────────────────
@@ -245,7 +351,7 @@ export const matchCreateInput = z.object({
   played_on: isoDate,
   start_time: timeOfDay.nullable(),
   location: optionalText(120),
-  competition: z.enum(MATCH_COMPETITIONS),
+  competition_id: z.uuid('Elige la competición'),
   phase: optionalText(60),
   set_scores: z
     .array(setScoreSchema.refine((set) => set.us !== set.them, 'Un set no puede terminar empatado'))

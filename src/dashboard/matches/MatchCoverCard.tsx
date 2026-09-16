@@ -14,7 +14,7 @@ type MatchCoverCardProps = {
 /** Tarjeta grande con portada. Toda la tarjeta enlaza al detalle. */
 export function MatchCoverCard({ match, eager }: MatchCoverCardProps) {
   const [left, right] = scoreParts(match)
-  const meta = [formatDateShort(match.played_on), match.competition, match.phase].filter(Boolean).join(' · ')
+  const meta = [formatDateShort(match.played_on), match.competition?.name, match.phase].filter(Boolean).join(' · ')
   const homeTeam = match.is_home ? null : match.opponent
   const awayTeam = match.is_home ? match.opponent : null
   const loading = eager ? 'eager' : 'lazy'

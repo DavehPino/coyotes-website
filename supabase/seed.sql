@@ -76,35 +76,39 @@ begin
        E'Torneo cuadrangular.\nPrimer partido a las 10:00. Llevar comida.', null, false);
   end if;
 
+  -- ─── Competiciones ────────────────────────────────────────────────────────
+  insert into public.competitions (org_id, name, kind) values ('coyotes', 'Liga Regional', 'league') on conflict do nothing;
+  insert into public.competitions (org_id, name, kind) values ('coyotes', 'Amistoso', 'friendly') on conflict do nothing;
+
   -- ─── Partidos pasados ─────────────────────────────────────────────────────
   insert into public.matches
-    (slug, played_on, start_time, opponent_team_id, is_home, location, competition, phase, sets_won, sets_lost, set_scores, summary)
+    (slug, played_on, start_time, opponent_team_id, is_home, location, competition_id, phase, sets_won, sets_lost, set_scores, summary)
   select '2026-09-06-vs-onas', '2026-09-06', '18:00', v_onas, true, 'Polideportivo Municipal',
-         'Liga Regional', 'Jornada 4', 3, 1,
+         (select id from public.competitions where org_id = 'coyotes' and lower(name) = 'liga regional'), 'Jornada 4', 3, 1,
          '[{"us":25,"them":20},{"us":22,"them":25},{"us":25,"them":18},{"us":25,"them":19}]'::jsonb,
          E'Gran partido en casa. Tras perder el segundo set, el equipo ajustó el bloqueo y dominó los dos siguientes.\nDestacó el saque en el cuarto set.'
   where not exists (select 1 from public.matches where slug = '2026-09-06-vs-onas');
 
   insert into public.matches
-    (slug, played_on, start_time, opponent_team_id, is_home, location, competition, phase, sets_won, sets_lost, set_scores, summary)
+    (slug, played_on, start_time, opponent_team_id, is_home, location, competition_id, phase, sets_won, sets_lost, set_scores, summary)
   select '2026-08-30-vs-pumas', '2026-08-30', '20:00', v_pumas, false, 'Pabellón Villa Norte',
-         'Liga Regional', 'Jornada 3', 1, 3,
+         (select id from public.competitions where org_id = 'coyotes' and lower(name) = 'liga regional'), 'Jornada 3', 1, 3,
          '[{"us":21,"them":25},{"us":25,"them":23},{"us":19,"them":25},{"us":22,"them":25}]'::jsonb,
          'Derrota fuera de casa. Muchos errores de recepción en los sets 3 y 4; lo trabajamos esta semana.'
   where not exists (select 1 from public.matches where slug = '2026-08-30-vs-pumas');
 
   insert into public.matches
-    (slug, played_on, start_time, opponent_team_id, is_home, location, competition, phase, sets_won, sets_lost, set_scores, summary)
+    (slug, played_on, start_time, opponent_team_id, is_home, location, competition_id, phase, sets_won, sets_lost, set_scores, summary)
   select '2026-08-23-vs-halcones', '2026-08-23', '18:00', v_halcones, true, 'Polideportivo Municipal',
-         'Liga Regional', 'Jornada 2', 3, 2,
+         (select id from public.competitions where org_id = 'coyotes' and lower(name) = 'liga regional'), 'Jornada 2', 3, 2,
          '[{"us":25,"them":22},{"us":23,"them":25},{"us":25,"them":27},{"us":25,"them":17},{"us":15,"them":12}]'::jsonb,
          'Partido a cinco sets resuelto en el tie-break. Gran reacción tras ir 1-2.'
   where not exists (select 1 from public.matches where slug = '2026-08-23-vs-halcones');
 
   insert into public.matches
-    (slug, played_on, start_time, opponent_team_id, is_home, location, competition, phase, sets_won, sets_lost, set_scores, summary)
+    (slug, played_on, start_time, opponent_team_id, is_home, location, competition_id, phase, sets_won, sets_lost, set_scores, summary)
   select '2026-08-15-vs-onas-amistoso', '2026-08-15', '11:00', v_onas, false, 'Pabellón Onas',
-         'Amistoso', 'Pretemporada', 3, 0,
+         (select id from public.competitions where org_id = 'coyotes' and lower(name) = 'amistoso'), 'Pretemporada', 3, 0,
          '[{"us":25,"them":15},{"us":25,"them":21},{"us":25,"them":19}]'::jsonb,
          null
   where not exists (select 1 from public.matches where slug = '2026-08-15-vs-onas-amistoso');

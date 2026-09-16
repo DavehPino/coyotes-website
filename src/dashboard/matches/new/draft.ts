@@ -1,13 +1,7 @@
 // Borrador del formulario de alta de partido: estado de cada paso, validación y payload para la API.
 // Los mensajes de error son para la persona que carga los datos; la API vuelve a validar todo.
 import { todayIsoDate } from '@shared/dates'
-import {
-  MAX_SETS,
-  MAX_VIDEO_BYTES,
-  MATCH_COMPETITIONS,
-  VIDEO_FILE_EXTENSIONS,
-  type MatchCompetition,
-} from '@shared/domain'
+import { MAX_SETS, MAX_VIDEO_BYTES, VIDEO_FILE_EXTENSIONS } from '@shared/domain'
 import type { MatchCreateInput, SetScore, TeamSummary } from '@shared/schemas'
 import { formatBytes } from '@/lib/format'
 import { emptyNewTeam, toNewTeamInput, validateNewTeam, type NewTeamDraft } from '../../admin/teams'
@@ -23,7 +17,8 @@ export type SetDraft = { key: number; us: string; them: string }
 export type MatchDraft = {
   playedOn: string
   startTime: string
-  competition: MatchCompetition
+  /** id de la competición (competitions). Vacío hasta que se elige o se carga la lista. */
+  competitionId: string
   phase: string
   location: string
   sets: SetDraft[]
@@ -51,7 +46,7 @@ export function initialDraft(): Draft {
     match: {
       playedOn: todayIsoDate(),
       startTime: '',
-      competition: MATCH_COMPETITIONS[0],
+      competitionId: '',
       phase: '',
       location: '',
       sets: Array.from({ length: 3 }, () => ({ key: newKey(), us: '', them: '' })),
@@ -82,6 +77,7 @@ export function validateMatch(match: MatchDraft): Errors {
   const errors: Errors = {}
   if (!match.playedOn) errors.playedOn = 'Elige la fecha del partido'
   else if (match.playedOn > todayIsoDate()) errors.playedOn = 'La fecha no puede ser futura'
+  if (!match.competitionId) errors.competition = 'Elige la competición'
 
   const filled = filledSets(match.sets)
   if (filled.length === 0) errors.sets = 'Carga al menos un set con su marcador'
@@ -102,7 +98,7 @@ export function toMatchInput(draft: Draft): MatchCreateInput {
     played_on: match.playedOn,
     start_time: match.startTime || null,
     location: match.location.trim() || null,
-    competition: match.competition,
+    competition_id: match.competitionId,
     phase: match.phase.trim() || null,
     set_scores: toSetScores(match.sets).slice(0, MAX_SETS),
   }
