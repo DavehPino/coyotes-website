@@ -181,9 +181,9 @@ del bucket (la carpeta `games/<slug>/` completa y cualquier otro video vinculado
 
 Cada partido pertenece a una **competición** de la organización (tabla `competitions`: ligas, amistosos, torneos) y,
 si vino de CourtTrack, a una **temporada** (fila de `courtrack_leagues`). En Partidos, una fila de chips filtra el
-carrusel y la lista por competición y, cuando la competición tiene varias temporadas (o alguna finalizada), un
-selector filtra por temporada. El filtro va en la URL (`?liga=<id>&temporada=<id>`), así que sobrevive a recargar y
-se puede compartir. Las competiciones se crean al configurar una liga de CourtTrack (abajo) o vienen de la migración
+carrusel y la lista por competición (se pueden marcar varias) y, cuando hay una sola marcada con varias temporadas
+(o alguna finalizada), un selector filtra por temporada. El filtro va en la URL (`?liga=<id>,<id>&temporada=<id>`),
+así que sobrevive a recargar y se puede compartir; la API acepta `competition_id=a,b`. Las competiciones se crean al configurar una liga de CourtTrack (abajo) o vienen de la migración
 inicial (`Liga Podio`, `Amistoso`).
 
 ### Ligas de CourtTrack

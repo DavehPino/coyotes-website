@@ -8,7 +8,8 @@ type MatchCarouselProps = {
   label: string
 }
 
-const SLIDE_WIDTH = 'basis-full md:basis-[68%] xl:basis-[52%] 2xl:basis-[42%]'
+// Más estrechas que antes: en móvil asoma la siguiente tarjeta y en escritorio caben tres.
+const SLIDE_WIDTH = 'basis-[82%] sm:basis-[58%] md:basis-[46%] xl:basis-[34%] 2xl:basis-[27%]'
 
 export function MatchCarousel({ matches, label }: MatchCarouselProps) {
   return (
@@ -30,7 +31,7 @@ export function MatchCarouselSkeleton() {
       <div className={CAROUSEL_TRACK_CLASSES}>
         {[0, 1, 2].map((i) => (
           <div key={i} className={carouselSlideClasses(SLIDE_WIDTH)}>
-            <Skeleton className="aspect-[4/3] rounded-2xl sm:aspect-[16/10]" />
+            <Skeleton className="aspect-[16/10] rounded-2xl" />
           </div>
         ))}
       </div>

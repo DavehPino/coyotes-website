@@ -353,8 +353,12 @@ export const matchListQuery = z.object({
   // Solo partidos jugados antes de esta fecha (incluida). Por defecto, hoy.
   until: isoDate.optional(),
   limit: z.coerce.number().int().min(1).max(100).default(50),
-  // Solo partidos de esta competición (filtro por liga).
-  competition_id: z.uuid().optional(),
+  // Solo partidos de estas competiciones (filtro por liga): uno o varios ids separados por coma.
+  competition_id: z
+    .string()
+    .transform((value) => value.split(',').map((item) => item.trim()).filter(Boolean))
+    .pipe(z.array(z.uuid()).min(1).max(20))
+    .optional(),
   // Solo partidos de esta temporada de CourtTrack (courtrack_leagues.id).
   courtrack_league_id: z.uuid().optional(),
 })

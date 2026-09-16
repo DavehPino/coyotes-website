@@ -73,7 +73,7 @@ export function HomePage() {
 
         <div {...rise(320)}>
           <h2 className="mb-3 text-3xl leading-none text-coyote-silver">Accesos rápidos</h2>
-          <QuickActions onNewActivity={activityDialog.openDialog} onNewMatch={matchDialog.openDialog} />
+          <QuickActions onNewActivity={activityDialog.openDialog} />
         </div>
       </div>
 

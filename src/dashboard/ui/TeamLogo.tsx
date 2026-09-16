@@ -9,7 +9,7 @@ const SIZES: Record<Size, string> = {
   md: 'size-9 text-sm',
   lg: 'size-14 text-xl',
   xl: 'size-20 text-3xl md:size-28 md:text-4xl',
-  cover: 'size-16 text-2xl sm:size-24 sm:text-3xl md:size-28 md:text-4xl',
+  cover: 'size-12 text-lg sm:size-14 sm:text-xl md:size-16 md:text-2xl',
 }
 
 type TeamLogoProps = {

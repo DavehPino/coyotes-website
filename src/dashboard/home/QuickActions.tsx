@@ -5,7 +5,6 @@ import { ArrowRightIcon, BallIcon, CalendarIcon, ImageIcon } from '../ui/icons'
 
 type QuickActionsProps = {
   onNewActivity: () => void
-  onNewMatch: () => void
 }
 
 const ACTION_CLASSES = [
@@ -34,8 +33,8 @@ function ActionBody({ icon, title, description }: ActionBodyProps) {
   )
 }
 
-/** Las tres cosas que se hacen desde el dashboard, a un toque desde la Home. */
-export function QuickActions({ onNewActivity, onNewMatch }: QuickActionsProps) {
+/** Lo que se hace desde el dashboard, a un toque desde la Home. Partidos solo lleva a la sección. */
+export function QuickActions({ onNewActivity }: QuickActionsProps) {
   return (
     <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
       <Card as="button" type="button" onClick={onNewActivity} className={`group ${ACTION_CLASSES}`}>
@@ -45,11 +44,11 @@ export function QuickActions({ onNewActivity, onNewMatch }: QuickActionsProps) {
           description="Entrenamiento, partido o reunión"
         />
       </Card>
-      <Card as="button" type="button" onClick={onNewMatch} className={`group ${ACTION_CLASSES}`}>
+      <Card as={Link} to="/matches" className={`group ${ACTION_CLASSES}`}>
         <ActionBody
           icon={<BallIcon className="size-5" strokeWidth={2} />}
-          title="Cargar partido"
-          description="Marcador, sets y videos"
+          title="Partidos"
+          description="Resultados, sets y videos"
         />
       </Card>
       <Card as={Link} to="/flyers" className={`group ${ACTION_CLASSES}`}>
