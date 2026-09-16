@@ -90,6 +90,7 @@ export async function getMatchBySlug(slug: string): Promise<MatchDetail | null> 
     set_scores: toSetScores(row.set_scores),
     summary: row.summary,
     videos,
+    courtrack_id: row.courtrack_id,
   }
 }
 

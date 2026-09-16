@@ -234,6 +234,26 @@ restante (**`SYNC_DAILY_LIMIT` sincronizaciones por 24 h**), y ofrece:
 Requiere `COURTRACK_SYNC_URL` y `COURTRACK_SYNC_SECRET` (sin ellos Ligas y Sincronizar responden 503) y `ORG_ID`
 (por defecto `coyotes`).
 
+### Progresión y estadísticas de un set
+
+En el detalle de un partido que vino de CourtTrack (tiene `courtrack_id`), cada parcial es un botón que abre un
+diálogo con pestañas por set y una de totales del partido. Los datos salen de `getDetallePartido` de CourtTrack a
+través del microservicio (`GET /api/courtrack/partido?id=`) y `GET /api/matches/:slug?view=stats`, que los orienta
+al equipo propio según `is_home`. Un partido cargado a mano no tiene el botón.
+
+- **Set:** marcador, duración, tiempos y cambios, mayor racha y máxima ventaja de cada equipo; el gráfico de
+  **progresión** (diferencia de puntos a lo largo del set, con los tiempos técnicos marcados y el punto bajo el
+  puntero) y la lista plegable punto a punto; **cómo se hicieron los puntos** (ataques, puntos de saque, bloqueos y
+  errores de cada equipo, enfrentados, más puntos propios y regalados por el rival); las acciones de **cada
+  jugador propio** en ese set (derivadas de la progresión, coinciden con los totales oficiales) y la **formación
+  inicial** en las seis zonas con quién saca primero y los líberos.
+- **Partido:** duración y horario real, MVP, el mismo enfrentamiento de acciones con los totales y la tabla de
+  jugadores propios con puntos disputados en cancha y el puntaje que calcula CourtTrack.
+
+Los componentes viven en `src/dashboard/matches/stats/` (`setStats.ts` tiene los cálculos: rachas, ventajas y
+líneas por jugador). CourtTrack guarda los errores de un equipo como puntos recibidos por el rival; el microservicio
+ya los devuelve como errores cometidos, así que `points = attacks + aces + blocks + errores del rival`.
+
 ## Alineación
 
 La sección **Alineación** (`dashboard.<dominio>/lineup`) guarda el plantel y las formaciones en Supabase
@@ -369,7 +389,8 @@ Editor).
 | GET | `/api/lookups/lineups` | Formaciones con sus jugadores en cancha (`slots` con `x`/`y` de 0 a 1), la editada más recientemente primero (sin caché) |
 | GET | `/api/activities?from=YYYY-MM-DD&limit=30` | Próximas actividades no canceladas, de la más cercana a la más lejana, con el rival embebido |
 | GET | `/api/matches?until=YYYY-MM-DD&limit=50&competition_id=&courtrack_league_id=` | Partidos jugados hasta la fecha, del más reciente al más antiguo; opcionalmente de una competición y de una temporada |
-| GET | `/api/matches/:slug` | Detalle con parciales y videos ordenados (404 si no existe) |
+| GET | `/api/matches/:slug` | Detalle con parciales, videos ordenados y `courtrack_id` (404 si no existe) |
+| GET | `/api/matches/:slug?view=stats` | `MatchStats` desde CourtTrack: por set, progresión punto a punto, tiempos, cambios, acciones de cada equipo y formación inicial propia; totales y estadísticas de cada jugador propio; MVP y duración real. Visto desde el equipo propio (`us`/`them`). 404 `no_stats` si el partido no vino del sync, 503 si el microservicio no está configurado. Caché de una hora |
 | GET | `/api/videos/:id/playback` | URL de reproducción (pública o firmada temporal) |
 | GET | `/api/cron/sync-videos` | Sincroniza el bucket; requiere `Authorization: Bearer <CRON_SECRET>` |
 

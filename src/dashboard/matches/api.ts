@@ -1,7 +1,7 @@
 // Hooks de TanStack Query para partidos y reproducción de videos. Query keys estables por recurso.
 import { queryOptions, useQuery, type QueryClient } from '@tanstack/react-query'
 import { ApiError, apiGet } from '@/lib/api'
-import type { MatchDetail, MatchSummary, Playback } from '@shared/schemas'
+import type { MatchDetail, MatchStats, MatchSummary, Playback } from '@shared/schemas'
 import { rivalsKey } from '../admin/teams'
 import { competitionsKey } from './competitions'
 
@@ -12,6 +12,7 @@ export const matchesKeys = {
   list: (competitionIds?: string[] | null, leagueId?: string | null) =>
     ['matches', 'list', competitionIds?.length ? [...competitionIds].sort().join(',') : 'all', leagueId ?? 'all'] as const,
   detail: (slug: string) => ['matches', 'detail', slug] as const,
+  stats: (slug: string) => ['matches', 'detail', slug, 'stats'] as const,
   playback: (videoId: string) => ['videos', videoId, 'playback'] as const,
 }
 
@@ -20,6 +21,7 @@ const matchListPath = (competitionIds?: string[] | null, leagueId?: string | nul
     competitionIds?.length ? `&competition_id=${encodeURIComponent([...competitionIds].sort().join(','))}` : ''
   }${leagueId ? `&courtrack_league_id=${encodeURIComponent(leagueId)}` : ''}`
 const matchDetailPath = (slug: string) => `/matches/${encodeURIComponent(slug)}`
+const matchStatsPath = (slug: string) => `${matchDetailPath(slug)}?view=stats`
 
 const isNotFound = (error: unknown) => error instanceof ApiError && error.status === 404
 
@@ -38,6 +40,19 @@ export function matchDetailOptions(slug: string) {
     queryFn: ({ signal }) => apiGet<MatchDetail>(matchDetailPath(slug), signal),
     staleTime: 60_000,
     retry: (count, error) => !isNotFound(error) && count < 1,
+  })
+}
+
+/**
+ * Progresión y estadísticas de CourtTrack. No cambian una vez jugado el partido: una hora en memoria. Sin reintento
+ * si el partido no vino de CourtTrack (404) o el servicio no está configurado (503).
+ */
+export function matchStatsOptions(slug: string) {
+  return queryOptions({
+    queryKey: matchesKeys.stats(slug),
+    queryFn: ({ signal }) => apiGet<MatchStats>(matchStatsPath(slug), signal),
+    staleTime: 60 * 60_000,
+    retry: (count, error) => !(error instanceof ApiError && (error.status === 404 || error.status === 503)) && count < 1,
   })
 }
 
@@ -83,5 +98,6 @@ export function patchMatchDetail(queryClient: QueryClient, slug: string, update:
 export const useMatches = (competitionIds?: string[] | null, leagueId?: string | null) =>
   useQuery(matchListOptions(competitionIds, leagueId))
 export const useMatch = (slug: string) => useQuery(matchDetailOptions(slug))
+export const useMatchStats = (slug: string) => useQuery(matchStatsOptions(slug))
 export const useVideoPlayback = (videoId: string) => useQuery(playbackOptions(videoId))
 export { isNotFound }

@@ -8,6 +8,7 @@ import type {
   CourtrackDiscoveredLiga,
   CourtrackEquipo,
   CourtrackLiga,
+  CourtrackPartido,
   CourtrackSyncAllResult,
   CourtrackSyncResult,
   CourtrackSyncStatus,
@@ -95,6 +96,10 @@ export async function getCourtrackCatalog(input: CourtrackCatalogInput) {
 
 export const getCourtrackLigas = (idCliente: number) =>
   callSyncService<CourtrackLiga[]>({ method: 'GET', path: '/api/courtrack/ligas', query: { id_cliente: String(idCliente) } })
+
+/** Progresión, estadísticas y formaciones de un partido de CourtTrack (`matches.courtrack_id`). */
+export const getCourtrackPartido = (courtrackId: number) =>
+  callSyncService<CourtrackPartido>({ method: 'GET', path: '/api/courtrack/partido', query: { id: String(courtrackId) } })
 
 export const getCourtrackEquipos = (idCliente: number, ligaId: number) =>
   callSyncService<CourtrackEquipo[]>({

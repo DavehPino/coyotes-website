@@ -15,7 +15,11 @@ type ModalProps = {
   dismissible?: boolean
   /** Al cambiar, el contenido vuelve arriba (p.ej. al pasar de paso en un formulario). */
   scrollResetKey?: string | number
+  /** `lg`: panel ancho (48 rem) para tablas y gráficos. */
+  size?: 'md' | 'lg'
 }
+
+const SIZES = { md: 'max-w-lg', lg: 'max-w-3xl' } as const
 
 /**
  * Diálogo modal sobre `<dialog>` nativo: Esc, foco atrapado y fondo inerte sin código extra.
@@ -30,6 +34,7 @@ export function Modal({
   footer,
   dismissible = true,
   scrollResetKey,
+  size = 'md',
 }: ModalProps) {
   const dialogRef = useRef<HTMLDialogElement>(null)
   const contentRef = useRef<HTMLDivElement>(null)
@@ -68,7 +73,7 @@ export function Modal({
         if (dismissible && event.target === event.currentTarget) onClose()
       }}
       className={[
-        'm-auto w-[calc(100%-2rem)] max-w-lg rounded-2xl bg-coyote-night p-0 text-coyote-silver shadow-border',
+        `m-auto w-[calc(100%-2rem)] ${SIZES[size]} rounded-2xl bg-coyote-night p-0 text-coyote-silver shadow-border`,
         'backdrop:bg-coyote-black/75',
         // Entrada y salida suaves: opacidad + desplazamiento corto, ease-out en ambas.
         'translate-y-2 opacity-0 transition-[opacity,translate,display,overlay] duration-200 ease-out transition-discrete',
