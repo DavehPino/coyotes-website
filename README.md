@@ -5,9 +5,10 @@ Un único deploy con dos apps:
 - **`<dominio>`**: web pública del equipo. Por defecto es una landing mínima (escudo, nombre y eslogan);
   con `VITE_HOME_VARIANT=full` se publica la página completa (Sobre el equipo, Entrenamientos y Contacto).
   Los textos viven en `src/content/public.ts`.
-- **`dashboard.<dominio>`**: dashboard interno con **Actividades** (carrusel de próximas actividades), **Partidos**
-  (partidos pasados con sus videos) y **Flyers** (generador de flyers para Instagram con IA). Se consulta sin login;
-  cargar datos pide una palabra clave y la sección Flyers tiene otra propia.
+- **`dashboard.<dominio>`**: dashboard interno con **Inicio** (resumen: próxima actividad, último partido, números
+  del equipo y accesos rápidos), **Actividades** (carrusel de próximas actividades), **Partidos** (partidos pasados
+  con sus videos) y **Flyers** (generador de flyers para Instagram con IA). Se consulta sin login; cargar datos pide
+  una palabra clave y la sección Flyers tiene otra propia.
 
 Stack:
 

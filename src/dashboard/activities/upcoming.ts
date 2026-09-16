@@ -14,14 +14,22 @@ function hasEnded(activity: Activity, today: string, time: string): boolean {
 }
 
 /**
+ * Actividades que aún no han pasado, en orden cronológico (el que devuelve la API).
+ * Se descartan las canceladas y las que ya terminaron hoy.
+ */
+export function filterUpcoming(items: Activity[], now = new Date()): Activity[] {
+  const today = todayIsoDate(now)
+  const time = currentTime(now)
+  return items.filter((activity) => !activity.is_cancelled && !hasEnded(activity, today, time))
+}
+
+/**
  * Próximas actividades en orden cronológico, salvo la primera: si hay alguna de Liga Podio,
  * la más cercana de ellas pasa al frente; si no, queda la más cercana de todas.
  * `items` llega ordenado por fecha y hora desde la API.
  */
 export function orderUpcoming(items: Activity[], now = new Date()): Activity[] {
-  const today = todayIsoDate(now)
-  const time = currentTime(now)
-  const upcoming = items.filter((activity) => !activity.is_cancelled && !hasEnded(activity, today, time))
+  const upcoming = filterUpcoming(items, now)
 
   const podioIndex = upcoming.findIndex((activity) => activity.category === 'podio')
   if (podioIndex <= 0) return upcoming

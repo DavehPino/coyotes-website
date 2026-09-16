@@ -32,6 +32,27 @@ export function CalendarIcon(props: IconProps) {
   )
 }
 
+export function HomeIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path
+        d="M4 10.5 12 4l8 6.5V19a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2v-8.5z"
+        fill={props.filled ? 'currentColor' : 'none'}
+        fillOpacity={0.2}
+      />
+      <path d="M9.5 21v-6h5v6" />
+    </svg>
+  )
+}
+
+export function ArrowRightIcon(props: IconProps) {
+  return (
+    <svg {...base(props)}>
+      <path d="M4 12h15M13 6l6 6-6 6" />
+    </svg>
+  )
+}
+
 export function BallIcon(props: IconProps) {
   return (
     <svg {...base(props)}>

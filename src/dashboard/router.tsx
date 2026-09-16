@@ -1,4 +1,4 @@
-import { createBrowserRouter, Navigate } from 'react-router'
+import { createBrowserRouter } from 'react-router'
 import { DashboardLayout } from './DashboardLayout'
 import { NotFoundPage } from './NotFoundPage'
 
@@ -8,8 +8,11 @@ export const router = createBrowserRouter([
     path: '/',
     element: <DashboardLayout />,
     children: [
-      // Actividades es la sección por defecto
-      { index: true, element: <Navigate to="/activities" replace /> },
+      // La Home resume lo importante y enlaza al resto de secciones.
+      {
+        index: true,
+        lazy: async () => ({ Component: (await import('./home/HomePage')).HomePage }),
+      },
       {
         path: 'activities',
         lazy: async () => ({ Component: (await import('./activities/ActivitiesPage')).ActivitiesPage }),

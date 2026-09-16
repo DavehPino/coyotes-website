@@ -1,9 +1,10 @@
 import { useEffect } from 'react'
 import { NavLink, Outlet } from 'react-router'
 import { LOGO_SRC, TEAM_NAME } from '@/config'
-import { BallIcon, CalendarIcon, ImageIcon, type IconProps } from './ui/icons'
+import { BallIcon, CalendarIcon, HomeIcon, ImageIcon, type IconProps } from './ui/icons'
 
-const SECTIONS: { to: string; label: string; icon: (props: IconProps) => React.JSX.Element }[] = [
+const SECTIONS: { to: string; label: string; icon: (props: IconProps) => React.JSX.Element; end?: boolean }[] = [
+  { to: '/', label: 'Inicio', icon: HomeIcon, end: true },
   { to: '/activities', label: 'Actividades', icon: CalendarIcon },
   { to: '/matches', label: 'Partidos', icon: BallIcon },
   { to: '/flyers', label: 'Flyers', icon: ImageIcon },
@@ -38,10 +39,11 @@ export function DashboardLayout() {
           <span className="font-display text-3xl leading-none text-coyote-gold uppercase">{TEAM_NAME}</span>
         </div>
         <nav aria-label="Secciones" className="flex md:flex-col md:gap-1 md:px-3">
-          {SECTIONS.map(({ to, label, icon: Icon }) => (
+          {SECTIONS.map(({ to, label, icon: Icon, end }) => (
             <NavLink
               key={to}
               to={to}
+              end={end}
               className={({ isActive }) =>
                 [
                   'relative flex min-h-14 flex-1 flex-col items-center justify-center gap-1 px-4 py-2 text-xs font-medium',

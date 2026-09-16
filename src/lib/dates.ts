@@ -29,6 +29,16 @@ export function formatDateCompact(isoDate: string): string {
   return fmt(isoDate, 'EEE d MMM').replaceAll('.', '')
 }
 
+/** "6 sep" — primera línea de las filas compactas. */
+export function formatDayMonth(isoDate: string): string {
+  return fmt(isoDate, 'd MMM').replaceAll('.', '')
+}
+
+/** "dom" — segunda línea de las filas compactas. */
+export function formatWeekdayShort(isoDate: string): string {
+  return fmt(isoDate, 'EEE').replaceAll('.', '')
+}
+
 /** "Septiembre 2026" — cabeceras de mes. */
 export function formatMonthYear(isoDate: string): string {
   return capitalize(fmt(isoDate, 'LLLL yyyy'))

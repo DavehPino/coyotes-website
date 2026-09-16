@@ -1,6 +1,6 @@
 import { Link } from 'react-router'
 import type { MatchSummary } from '@shared/schemas'
-import { formatMonthYear } from '@/lib/dates'
+import { formatDayMonth, formatMonthYear, formatWeekdayShort } from '@/lib/dates'
 import { format, parseISO } from 'date-fns'
 import { es } from 'date-fns/locale'
 import { Card, Chip, Skeleton, TeamLogo } from '../ui'
@@ -44,8 +44,8 @@ export function MatchList({ matches }: MatchListProps) {
                     ].join(' ')}
                   >
                     <span aria-hidden className="flex flex-col leading-tight text-coyote-ash tabular-nums">
-                      <span className="text-sm font-medium text-coyote-silver">{format(date, 'd MMM', { locale: es })}</span>
-                      <span className="text-xs">{format(date, 'EEE', { locale: es })}</span>
+                      <span className="text-sm font-medium text-coyote-silver">{formatDayMonth(match.played_on)}</span>
+                      <span className="text-xs">{formatWeekdayShort(match.played_on)}</span>
                     </span>
                     <span className="flex min-w-0 items-center gap-2.5">
                       <TeamLogo team={match.opponent} size="md" />
