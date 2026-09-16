@@ -14,6 +14,7 @@ import type {
 } from '../../shared/schemas.js'
 import { env } from './env.js'
 import { HttpError } from './http.js'
+import { getOwnTeam } from './teams.js'
 
 /** Margen por debajo del maxDuration de api/admin/[action].ts (60 s). */
 const TIMEOUT_MS = 55_000
@@ -76,12 +77,15 @@ export const runCourtrackSync = (leagueId: string | null, dryRun: boolean) =>
     body: { org_id: env.orgId, ...(leagueId ? { league_id: leagueId } : {}), dry_run: dryRun },
   })
 
-/** Catálogo de CourtTrack para el asistente "Agregar liga". */
-export function getCourtrackCatalog(input: CourtrackCatalogInput) {
+/**
+ * Catálogo de CourtTrack para el asistente "Agregar liga". En `descubrir`, el equipo buscado es siempre el propio de
+ * la organización (teams.is_own_team): el cliente no puede buscar otro nombre.
+ */
+export async function getCourtrackCatalog(input: CourtrackCatalogInput) {
   const query: Record<string, string> = {}
   if ('id_cliente' in input) query.id_cliente = String(input.id_cliente)
   if ('liga_id' in input) query.liga_id = String(input.liga_id)
-  if ('team' in input) query.team = input.team
+  if (input.resource === 'descubrir') query.team = (await getOwnTeam()).name
   return callSyncService<CourtrackCliente[] | CourtrackLiga[] | CourtrackEquipo[] | CourtrackDiscoveredLiga[]>({
     method: 'GET',
     path: `/api/courtrack/${input.resource}`,

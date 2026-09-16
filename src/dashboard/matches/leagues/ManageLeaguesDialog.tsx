@@ -14,7 +14,7 @@ import type {
 import { formatDateShort } from '@/lib/dates'
 import { adminPost, errorMessage, isAbort, isUnauthorized, safewordStore } from '../../admin/adminApi'
 import { SafewordStep } from '../../admin/SafewordStep'
-import { Button, Chip, Field, FormError, Input, Modal, Skeleton } from '../../ui'
+import { Button, Chip, FormError, Input, Modal, Skeleton } from '../../ui'
 import { CheckIcon, ChevronRightIcon, PlusIcon, RefreshIcon, TrophyIcon } from '../../ui/icons'
 import { competitionsKey } from '../competitions'
 import { courtrackKeys, useCourtrackStatus, useLeagueSnapshot } from '../sync/queries'
@@ -283,7 +283,6 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
   const [search, setSearch] = useState('')
   const [wizardError, setWizardError] = useState<string | null>(null)
   // Descubrimiento
-  const [teamQuery, setTeamQuery] = useState(TEAM_NAME)
   const [discovered, setDiscovered] = useState<CourtrackDiscoveredLiga[] | null>(null)
   const [discovering, setDiscovering] = useState(false)
   const [picked, setPicked] = useState<Set<number>>(new Set())
@@ -326,7 +325,8 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
     [handleUnauthorized],
   )
 
-  async function discover(cliente: CourtrackCliente, team: string) {
+  /** Ligas de la asociación donde juega el equipo propio: el nombre lo decide el servidor, no se puede elegir. */
+  async function discover(cliente: CourtrackCliente) {
     if (!safeword) return handleUnauthorized()
     setDiscovering(true)
     setCatalogError(null)
@@ -334,7 +334,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
     try {
       const found = await adminPost<CourtrackDiscoveredLiga[]>(
         '/courtrack-catalog',
-        { resource: 'descubrir', id_cliente: cliente.id, team: team.trim() },
+        { resource: 'descubrir', id_cliente: cliente.id },
         safeword,
       )
       setDiscovered(found)
@@ -354,7 +354,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
     setWizardError(null)
     setStep(target)
     if (target === 'descubrir') {
-      if (next.cliente) void discover(next.cliente, teamQuery)
+      if (next.cliente) void discover(next.cliente)
     } else if (!clientes) {
       void loadClientes(safeword)
     }
@@ -687,30 +687,20 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
 
       {step === 'descubrir' && wizard.cliente && (
         <div className="flex flex-col gap-4">
-          <form
-            className="flex items-end gap-2"
-            onSubmit={(event) => {
-              event.preventDefault()
-              if (wizard.cliente) void discover(wizard.cliente, teamQuery)
-            }}
-          >
-            <Field label={`Tu equipo en ${wizard.cliente.nombre}`} className="flex-1">
-              <Input value={teamQuery} onChange={(event) => setTeamQuery(event.target.value)} autoComplete="off" />
-            </Field>
-            <Button type="submit" disabled={discovering || !teamQuery.trim()}>
-              Buscar
-            </Button>
-          </form>
+          <p className="text-sm text-pretty text-coyote-ash">
+            Ligas de <span className="text-coyote-silver">{wizard.cliente.nombre}</span> en las que juega {TEAM_NAME}. Solo
+            se pueden seguir estas: el equipo se busca por su nombre en el fixture de cada liga.
+          </p>
           {catalogError ? (
-            <RetryError error={catalogError} onRetry={() => wizard.cliente && void discover(wizard.cliente, teamQuery)} />
+            <RetryError error={catalogError} onRetry={() => wizard.cliente && void discover(wizard.cliente)} />
           ) : discovering || !discovered ? (
             <Callout tone="gold" icon={<RefreshIcon className="size-5 animate-spin" />}>
-              Buscando "{teamQuery.trim()}" en las ligas de {wizard.cliente.nombre}…
+              Buscando a {TEAM_NAME} en las ligas de {wizard.cliente.nombre}…
             </Callout>
           ) : discovered.length === 0 ? (
             <Callout tone="ash" icon={<TrophyIcon className="size-5" />}>
-              No aparece ningún equipo llamado "{teamQuery.trim()}" en las ligas de {wizard.cliente.nombre}. Escribe el
-              nombre tal como figura en CourtTrack (sin importar mayúsculas ni acentos) y vuelve a buscar.
+              {TEAM_NAME} no aparece en ninguna liga de {wizard.cliente.nombre}. Si CourtTrack lo lista con otro nombre,
+              hay que corregir el nombre del equipo en el dashboard.
             </Callout>
           ) : (
             <ul className="flex flex-col gap-1.5">

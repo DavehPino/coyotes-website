@@ -1,5 +1,6 @@
 // Temporadas de ligas de CourtTrack que sigue la organización (tabla courtrack_leagues). El microservicio las lee al
 // sincronizar, guarda la instantánea y las archiva cuando CourtTrack resetea la liga; aquí se crean, pausan y consultan.
+import { slugify } from '../../shared/matches.js'
 import type { CourtrackLeague, CourtrackLeagueSnapshot, LeagueCreateInput, LeagueUpdateInput } from '../../shared/schemas.js'
 import { ensureCompetition, requireCompetition } from './competitions.js'
 import { getCourtrackEquipos, getCourtrackLigas } from './courtrackSync.js'
@@ -7,8 +8,20 @@ import { env } from './env.js'
 import { badRequest, conflict, notFound } from './http.js'
 import { toCompetition } from './mappers.js'
 import { db } from './supabase.js'
+import { getOwnTeam } from './teams.js'
 
 const UNIQUE_VIOLATION = '23505'
+
+/**
+ * Solo se puede seguir una liga como el equipo propio de la organización (teams.is_own_team), comparando el nombre
+ * sin mayúsculas ni acentos: "COYOTES" en CourtTrack es "Coyotes" en el dashboard. Evita seguir ligas de otro equipo.
+ */
+async function requireOwnTeamName(courtrackName: string): Promise<void> {
+  const own = await getOwnTeam()
+  if (slugify(own.name) !== slugify(courtrackName)) {
+    throw badRequest(`Solo puedes seguir ligas en las que juegue ${own.name} (en CourtTrack aparece "${courtrackName}")`)
+  }
+}
 
 // Un único literal: el cliente de Supabase infiere el tipo del select solo desde literales.
 const LEAGUE_SELECT =
@@ -68,6 +81,7 @@ export async function createLeague(input: LeagueCreateInput): Promise<CourtrackL
   const equipos = await getCourtrackEquipos(input.id_cliente, input.liga_id)
   const team = equipos.find((item) => item.name === input.team_name)
   if (!team) throw badRequest('Ese equipo no juega en la liga elegida')
+  await requireOwnTeamName(team.name)
 
   const competition =
     input.competition.kind === 'existing'
@@ -102,6 +116,7 @@ export async function updateLeague(input: LeagueUpdateInput): Promise<CourtrackL
   if (input.team_name === current.team_name) return toLeague(current)
   const equipos = await getCourtrackEquipos(current.id_cliente, current.liga_id)
   if (!equipos.some((item) => item.name === input.team_name)) throw badRequest('Ese equipo no juega en la liga')
+  await requireOwnTeamName(input.team_name)
 
   const { data, error } = await db()
     .from('courtrack_leagues')

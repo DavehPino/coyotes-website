@@ -277,7 +277,8 @@ export const courtrackCatalogInput = z.discriminatedUnion('resource', [
   z.object({ resource: z.literal('clientes') }),
   z.object({ resource: z.literal('ligas'), id_cliente: z.number().int().positive() }),
   z.object({ resource: z.literal('equipos'), id_cliente: z.number().int().positive(), liga_id: z.number().int().positive() }),
-  z.object({ resource: z.literal('descubrir'), id_cliente: z.number().int().positive(), team: z.string().trim().min(1).max(120) }),
+  // El equipo a buscar lo pone el servidor (el equipo propio de la organización), nunca el cliente.
+  z.object({ resource: z.literal('descubrir'), id_cliente: z.number().int().positive() }),
 ])
 export type CourtrackCatalogInput = z.infer<typeof courtrackCatalogInput>
 

@@ -200,11 +200,12 @@ misma base de datos, las lee al sincronizar):
   clasificación se cachean 25 s en el navegador.
 - **Temporadas finalizadas:** sección plegada con las temporadas que el sync archivó, su motivo (CourtTrack reinició la
   liga o la liga ya no existe) y su clasificación final.
-- **Agregar liga:** asistente con el catálogo de CourtTrack. Tras elegir la asociación (p.ej. PODIO), **busca tu
-  equipo en todas sus ligas** (recorre el fixture de cada una y compara el nombre sin mayúsculas ni acentos) y
+- **Agregar liga:** asistente con el catálogo de CourtTrack. Tras elegir la asociación (p.ej. PODIO), **busca al
+  equipo propio en todas sus ligas** (recorre el fixture de cada una y compara el nombre sin mayúsculas ni acentos) y
   propone solo las ligas donde aparece, marcadas las que aún no sigues; cada una se guarda como una competición con
-  su nombre. No hay alta a mano: el backend rechaza cualquier liga en la que el equipo no juegue. Al guardar ofrece la
-  vista previa.
+  su nombre. El nombre buscado es el del equipo propio de la base (`teams.is_own_team`): no se puede escribir otro,
+  y el backend rechaza cualquier alta cuyo equipo no sea el propio o no juegue en la liga. Al guardar ofrece la vista
+  previa.
 
 ### Temporadas e histórico
 
@@ -360,7 +361,7 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
 | POST | `/api/admin/courtrack-status` | `CourtrackSyncStatus`: cupo, temporadas configuradas (abiertas y finalizadas) con su último sync y últimas ejecuciones (proxy a courtrack-service; 503 sin configurar) |
 | POST | `/api/admin/courtrack-sync` | `{ league_id?, dry_run? }`: con `league_id`, `CourtrackSyncResult` de esa temporada; sin él, `CourtrackSyncAllResult` de todas las ligas activas (un cupo). 429 `quota_exceeded` si se agotó el cupo |
-| POST | `/api/admin/courtrack-catalog` | Catálogo de CourtTrack: `{ resource: 'clientes' }`, `{ resource: 'ligas', id_cliente }`, `{ resource: 'equipos', id_cliente, liga_id }` o `{ resource: 'descubrir', id_cliente, team }` (ligas donde juega el equipo) |
+| POST | `/api/admin/courtrack-catalog` | Catálogo de CourtTrack: `{ resource: 'clientes' }`, `{ resource: 'ligas', id_cliente }`, `{ resource: 'equipos', id_cliente, liga_id }` o `{ resource: 'descubrir', id_cliente }` (ligas donde juega el equipo propio) |
 | POST | `/api/admin/leagues` | `CourtrackLeague[]`: temporadas configuradas |
 | POST | `/api/admin/league-create` | 201 `CourtrackLeague`: alta de una liga (`{ id_cliente, cliente_name, liga_id, team_name, competition }`; 409 si ya tiene temporada abierta) |
 | POST | `/api/admin/league-update` | `CourtrackLeague`: cambia `team_name` (400 si la temporada ya finalizó) |

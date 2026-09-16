@@ -17,6 +17,20 @@ export async function listRivalTeams(): Promise<TeamSummary[]> {
   return data
 }
 
+/** El equipo propio de la organización (is_own_team). 500 claro si el seed no lo creó. */
+export async function getOwnTeam(): Promise<TeamSummary> {
+  const { data, error } = await db()
+    .from('teams')
+    .select('id,name,short_name,logo_url')
+    .eq('is_own_team', true)
+    .order('created_at', { ascending: true })
+    .limit(1)
+    .maybeSingle()
+  if (error) throw error
+  if (!data) throw new Error('No hay ningún equipo propio en la tabla teams (is_own_team = true)')
+  return data
+}
+
 /** Rival por id. Null si no existe o si es el equipo propio. */
 export async function getRivalTeam(id: string): Promise<TeamSummary | null> {
   const { data, error } = await db()
