@@ -103,7 +103,7 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
             aria-label={`Diferencia de puntos a lo largo del set: ${total} puntos jugados`}
             width={width}
             height={HEIGHT}
-            className="block overflow-visible"
+            className="block"
             onPointerMove={onPointerMove}
             onPointerLeave={() => setHover(null)}
           >

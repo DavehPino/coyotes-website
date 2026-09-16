@@ -95,7 +95,7 @@ export function Modal({
             </Button>
           )}
         </header>
-        <div ref={contentRef} className="overflow-y-auto px-5 pt-2 pb-5">
+        <div ref={contentRef} className="relative overflow-y-auto px-5 pt-2 pb-5">
           {children}
         </div>
         {footer && (
