@@ -6,6 +6,7 @@ import {
   activityUpdateInput,
   matchCreateInput,
   matchDeleteInput,
+  matchSummaryInput,
   matchUpdateInput,
   videoDeleteInput,
   videoUpdateInput,
@@ -13,7 +14,7 @@ import {
 import { createActivity, deleteActivity, updateActivity } from '../_lib/activities.js'
 import { requireAdmin } from '../_lib/admin.js'
 import { handle, noStore, parseBody, pathParam, routeFor, type Handler } from '../_lib/http.js'
-import { createMatch, deleteMatch, updateMatch } from '../_lib/matches.js'
+import { createMatch, deleteMatch, setMatchSummary, updateMatch } from '../_lib/matches.js'
 import { deleteVideo, updateVideo } from '../_lib/videos.js'
 
 const actions: Record<string, Handler> = {
@@ -43,6 +44,12 @@ const actions: Record<string, Handler> = {
   // POST /api/admin/match-delete → { ok: true }. Borra el partido, sus videos y sus archivos del bucket.
   'match-delete': async (request) => {
     await deleteMatch(await parseBody(request, matchDeleteInput))
+    return noStore({ ok: true })
+  },
+
+  // POST /api/admin/match-summary → { ok: true }. Guarda el resumen del partido.
+  'match-summary': async (request) => {
+    await setMatchSummary(await parseBody(request, matchSummaryInput))
     return noStore({ ok: true })
   },
 

@@ -4,6 +4,8 @@
 import { shortTime } from '../../shared/dates.js'
 import { ACTIVITY_CATEGORY_LABELS } from '../../shared/domain.js'
 import {
+  FLYER_CAPTION_HASHTAGS_MAX,
+  FLYER_CAPTION_MAX,
   FLYER_FORMATS,
   FLYER_MAX_LOGOS,
   FLYER_PALETTES,
@@ -13,6 +15,8 @@ import {
   FLYER_TEXT_FIELDS,
   FLYER_TEXT_LIMITS,
   type FlyerAssetRef,
+  type FlyerCaptionInput,
+  type FlyerCaptionResult,
   type FlyerContent,
   type FlyerSuggestInput,
   type FlyerSuggestion,
@@ -181,7 +185,13 @@ type ChatCompletion = {
   error?: { message?: string; code?: number }
 }
 
-async function callOpenRouter(apiKey: string, model: string, system: string, user: string): Promise<ChatCompletion> {
+async function callOpenRouter(
+  apiKey: string,
+  model: string,
+  system: string,
+  user: string,
+  maxTokens?: number,
+): Promise<ChatCompletion> {
   let res: Response
   try {
     res = await fetch(OPENROUTER_URL, {
@@ -196,6 +206,8 @@ async function callOpenRouter(apiKey: string, model: string, system: string, use
         model,
         temperature: 0.7,
         response_format: { type: 'json_object' },
+        // Respuesta corta: menos latencia y menos timeouts con los modelos gratuitos.
+        ...(maxTokens ? { max_tokens: maxTokens } : {}),
         messages: [
           { role: 'system', content: system },
           { role: 'user', content: user },
@@ -241,6 +253,102 @@ export async function suggestFlyer(input: FlyerSuggestInput): Promise<FlyerSugge
   return {
     flyer: normalizeFlyer(isRecord(parsed.flyer) ? parsed.flyer : parsed, input.flyer, input.assets),
     message: message.slice(0, 300),
+    model: completion.model ?? model,
+  }
+}
+
+// ─── Pie de foto del posteo ───────────────────────────────────────────────────
+// El navegador manda el texto ya armado con datos reales; el modelo solo lo reescribe.
+
+/** Respuesta corta: el pie de foto son unas pocas líneas. */
+const CAPTION_MAX_TOKENS = 400
+
+const TONE_GUIDE: Record<FlyerCaptionInput['tone'], string> = {
+  festejo: 'celebración: orgullo por el equipo, energía alta',
+  convocatoria: 'invitación: que la gente se acerque a la cancha o se sume al equipo',
+  sobrio: 'informativo y directo, sin signos de exclamación',
+  divertido: 'distendido, con un guiño de humor, sin payasadas',
+}
+
+function captionSystemPrompt(): string {
+  return [
+    'Eres quien escribe los posteos de Instagram de Coyotes, una comunidad de vóley de Buenos Aires (Argentina).',
+    'Su mascota es un coyote. Recibes el flyer que acompaña al posteo y un borrador del texto.',
+    '',
+    'Reglas:',
+    '- Escribe en español rioplatense (voseo: "vení", "sumate"), con energía deportiva y sin exagerar.',
+    '- Reescribe el borrador para que suene natural. No inventes datos (marcadores, fechas, horas, lugares,',
+    '  nombres) que no estén en el borrador ni en el flyer: si no están, no los menciones.',
+    '- De 2 a 5 líneas cortas. Nada de paréntesis explicativos ni de firmar el texto.',
+    '- Como mucho dos emojis en todo el pie de foto.',
+    '- Los hashtags van aparte, en "hashtags", nunca dentro de "caption".',
+    `- Entre 3 y ${FLYER_CAPTION_HASHTAGS_MAX} hashtags, sin tildes ni espacios, empezando por "#".`,
+    '',
+    'Responde SOLO con un objeto JSON, sin texto alrededor ni bloques de código:',
+    '{"caption": "el texto del posteo", "hashtags": ["#Coyotes", "#Voley"]}',
+  ].join('\n')
+}
+
+function captionUserPrompt(input: FlyerCaptionInput): string {
+  return [
+    `Hoy es ${input.today}.`,
+    `Tono pedido: ${input.tone} (${TONE_GUIDE[input.tone]}).`,
+    '',
+    'Flyer que acompaña al posteo (JSON):',
+    JSON.stringify(input.flyer),
+    '',
+    'Borrador del pie de foto:',
+    input.draft || '(vacío: escríbelo a partir del flyer)',
+  ].join('\n')
+}
+
+const HASHTAG = /^#[\p{L}\p{N}_]{2,30}$/u
+
+function normalizeHashtags(raw: unknown): string[] {
+  if (!Array.isArray(raw)) return []
+  const seen = new Set<string>()
+  const tags: string[] = []
+  for (const value of raw) {
+    if (typeof value !== 'string') continue
+    const tag = `#${value.trim().replace(/^#+/, '')}`
+    const key = tag.toLowerCase()
+    if (!HASHTAG.test(tag) || seen.has(key)) continue
+    seen.add(key)
+    tags.push(tag)
+    if (tags.length === FLYER_CAPTION_HASHTAGS_MAX) break
+  }
+  return tags
+}
+
+/**
+ * Si el modelo no devuelve un pie de foto utilizable se conserva el borrador: el texto local ya es
+ * correcto, así que fallar aquí empeoraría lo que el usuario ya tenía.
+ */
+function normalizeCaption(raw: unknown, draft: string): { caption: string; hashtags: string[] } {
+  const source = isRecord(raw) ? raw : {}
+  const text = typeof source.caption === 'string' ? source.caption.trim() : ''
+  if (!text) return { caption: draft, hashtags: [] }
+  const hashtags = normalizeHashtags(source.hashtags)
+  const full = hashtags.length > 0 ? `${text}\n\n${hashtags.join(' ')}` : text
+  return { caption: full.slice(0, FLYER_CAPTION_MAX), hashtags }
+}
+
+export async function suggestCaption(input: FlyerCaptionInput): Promise<FlyerCaptionResult> {
+  const { apiKey, model } = env.openrouter
+  if (!apiKey) {
+    throw new HttpError(503, 'ai_disabled', 'El asistente no está configurado en el servidor (falta OPENROUTER_API_KEY).')
+  }
+
+  const completion = await callOpenRouter(
+    apiKey,
+    model,
+    captionSystemPrompt(),
+    captionUserPrompt(input),
+    CAPTION_MAX_TOKENS,
+  )
+  const parsed = extractJson(completion.choices?.[0]?.message?.content ?? '')
+  return {
+    ...normalizeCaption(parsed, input.draft),
     model: completion.model ?? model,
   }
 }

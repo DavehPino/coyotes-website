@@ -7,6 +7,7 @@ import type {
   MatchDeleteInput,
   MatchDetail,
   MatchSummary,
+  MatchSummaryInput,
   MatchUpdateInput,
   TeamSummary,
   Video,
@@ -153,6 +154,19 @@ export async function createMatch(input: MatchCreateInput): Promise<MatchCreated
  * Edita los datos de un partido (rival, fecha, competición, parciales...). El slug no cambia: es la URL del
  * partido y el nombre de su carpeta en el bucket, donde ya pueden estar sus videos.
  */
+/**
+ * Guarda el resumen del partido. Va aparte de updateMatch porque el diálogo de edición no lo edita:
+ * si viajara en el mismo input, cada guardado lo borraría.
+ */
+export async function setMatchSummary(input: MatchSummaryInput): Promise<void> {
+  const { error, count } = await db()
+    .from('matches')
+    .update({ summary: input.summary }, { count: 'exact' })
+    .eq('id', input.id)
+  if (error) throw error
+  if (count === 0) throw notFound('Partido no encontrado')
+}
+
 export async function updateMatch(input: MatchUpdateInput): Promise<MatchCreated> {
   assertPlayed(input.played_on)
   const current = await getMatchRef(input.id)

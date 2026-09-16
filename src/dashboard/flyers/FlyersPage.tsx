@@ -1,5 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
-import { FLYER_FORMAT_SIZES, FLYER_TEMPLATE_LABELS, type FlyerContent } from '@shared/flyers'
+import { todayIsoDate } from '@shared/dates'
+import {
+  FLYER_FORMAT_SIZES,
+  FLYER_TEMPLATE_LABELS,
+  type FlyerCaptionResult,
+  type FlyerCaptionTone,
+  type FlyerContent,
+} from '@shared/flyers'
 import { Button, Card, FormError, PageHeader } from '../ui'
 import { BookmarkIcon, UndoIcon } from '../ui/icons'
 import { useFlyersAccess } from './access'
@@ -7,6 +14,7 @@ import { AiPanel } from './AiPanel'
 import { useImageLibrary } from './assetLibrary'
 import { EditorPanel } from './EditorPanel'
 import { ExportActions } from './ExportActions'
+import { flyersPost } from './api'
 import { captionFromFlyer } from './caption'
 import { CaptionPanel } from './CaptionPanel'
 import { FlyerCanvas, useFlyerAssets } from './FlyerCanvas'
@@ -47,6 +55,16 @@ export function FlyersPage() {
   function writeCaption(text: string, source: FlyerContent) {
     setCaption(text)
     captionOf.current = source
+  }
+
+  /** Reescribe el pie de foto con el asistente. Parte del texto local, que ya trae los datos reales. */
+  async function improveCaption(tone: FlyerCaptionTone) {
+    const current = flyer
+    const draft = caption || captionFromFlyer(current)
+    const result = await access.run((safeword) =>
+      flyersPost<FlyerCaptionResult>('caption', { flyer: current, today: todayIsoDate(), draft, tone }, safeword),
+    )
+    if (result) writeCaption(result.caption, current)
   }
 
   // ?from=match:<slug> o ?from=activity:<id>: el flyer llega armado desde un partido o una actividad.
@@ -175,6 +193,7 @@ export function FlyersPage() {
             onChange={(text) => writeCaption(text, flyer)}
             stale={captionStale}
             onRegenerate={() => writeCaption(captionFromFlyer(flyer), flyer)}
+            onImprove={improveCaption}
           />
           {saved.error && tab !== 'saved' && <FormError>{saved.error}</FormError>}
           {tab === 'templates' && <TemplatesPanel flyer={flyer} onApply={replace} />}

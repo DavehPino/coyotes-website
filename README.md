@@ -181,8 +181,13 @@ del bucket (la carpeta `games/<slug>/` completa y cualquier otro video vinculado
 La sección **Flyers** (`dashboard.<dominio>/flyers`) genera PNG listos para publicar en tres formatos: post 4:5
 (1080×1350), cuadrado (1080×1080) e historia (1080×1920). El flyer se dibuja en un `<canvas>` en el navegador, así
 que la vista previa es exactamente la imagen que se descarga. **Compartir** aparece en los móviles que admiten
-compartir archivos.
+compartir archivos: entrega el PNG y deja el pie de foto en el portapapeles (Instagram descarta el texto cuando
+recibe una imagen, así que hay que pegarlo a mano).
 
+- **Desde un partido o una actividad:** **Flyer del resultado** (en el detalle del partido) y **Flyer** (en el
+  detalle de una actividad) abren la sección con el flyer ya armado: marcador, parciales, rival, fecha y paleta.
+  El enlace es `/flyers?from=match:<slug>` o `?from=activity:<id>`; se resuelve con los datos del momento y se
+  borra de la URL. El borrador anterior queda en el historial, así que **Deshacer** lo recupera.
 - **Plantillas:** Día de partido, Entrenamiento, Resultado y Anuncio, con textos de ejemplo. Viven en
   `src/dashboard/flyers/templates.ts` (textos y campos) y `render.ts` (diseño y paletas).
 - **Editar:** formato, paleta de marca (Brasa, Dorado, Atardecer, Liga Podio), logo, foto de fondo y textos. La foto
@@ -199,6 +204,9 @@ compartir archivos.
   paleta, formato y qué imágenes usar; las imágenes no se envían, solo su id y el nombre que les pusiste (nómbralas
   como el equipo). Los campos inválidos o ids desconocidos conservan el valor anterior. **Deshacer** revierte
   plantillas, guardados abiertos y respuestas de la IA.
+- **Pie de foto:** debajo de las pestañas, un desplegable con el texto del posteo. Se arma en el navegador con los
+  datos reales (sin IA, sin conexión y sin gastar peticiones) y **Mejorar con IA** lo reescribe con el tono
+  elegido. Si la IA falla o se agota el límite gratuito, el texto local se conserva.
 
 ### Palabra clave de flyers
 
@@ -233,7 +241,8 @@ modelos gratuitos tienen límite de peticiones por minuto y por día; al superar
 
 ## Cómo editar datos a mano
 
-Cancelar actividades, los resúmenes y las portadas todavía se hace en **Supabase → Table Editor**
+Cancelar actividades y las portadas todavía se hace en **Supabase → Table Editor**
+(el resumen del partido se guarda desde **Compartir → Usar de resumen**, en el detalle del partido)
 (o con SQL). `supabase/seed.sql` es un ejemplo completo y se puede ejecutar varias veces sin duplicar filas:
 `npx supabase db query --linked -f supabase/seed.sql`.
 
@@ -300,6 +309,7 @@ Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` c
 | POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
 | POST | `/api/admin/match-update` | `{ id, slug, opponent }`: edita el partido `id` con los campos del alta; el slug no cambia |
 | POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
+| POST | `/api/admin/match-summary` | `{ ok: true }`: guarda el resumen del partido (`{ id, summary }`) |
 | POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
 | POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
 | POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
@@ -313,6 +323,7 @@ codificada con `encodeURIComponent` (la de admin no sirve aquí, ni al revés).
 |---|---|---|
 | GET | `/api/flyers/library` | `{ images, flyers }` del bucket con sus URLs de lectura |
 | POST | `/api/flyers/verify` | `{ ok: true }` o 401 |
+| POST | `/api/flyers/caption` | `{ caption, hashtags, model }`: la IA reescribe el pie de foto (`{ flyer, today, draft, tone }`); devuelve `draft` si responde mal |
 | POST | `/api/flyers/suggest` | `{ flyer, message, model }`: la IA reescribe el flyer (`{ prompt, flyer, today, assets: [{ id, name }] }`); 503 sin `OPENROUTER_API_KEY` |
 | POST | `/api/flyers/upload-url` | `{ id, url, headers }`: URL firmada para subir una imagen (`kind: "image"`, WebP o PNG) o el PNG de un flyer (`kind: "flyer"`) |
 | POST | `/api/flyers/image-save` | 201 imagen: registra la imagen subida con `{ id, contentType, name }` (409 si ya hay 20) |
@@ -335,9 +346,9 @@ en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
 
 | Archivo | Rutas |
 |---|---|
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete` |
+| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/match-summary`, `/video-update`, `/video-delete` |
 | `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
-| `api/flyers/[action].ts` | `GET /api/flyers/library`; `POST /api/flyers/verify`, `/suggest`, `/upload-url`, `/image-save`, `/image-rename`, `/image-delete`, `/flyer-save`, `/flyer-delete` |
+| `api/flyers/[action].ts` | `GET /api/flyers/library`; `POST /api/flyers/verify`, `/suggest`, `/caption`, `/upload-url`, `/image-save`, `/image-rename`, `/image-delete`, `/flyer-save`, `/flyer-delete` |
 
 Al añadir un endpoint:
 

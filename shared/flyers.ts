@@ -119,6 +119,39 @@ export type FlyerSuggestion = {
   model: string
 }
 
+// ─── Pie de foto del posteo ───────────────────────────────────────────────────
+// El texto se arma en el navegador con los datos del partido o la actividad; la IA solo lo reescribe.
+
+/** Límite de caracteres de un pie de foto en Instagram. */
+export const FLYER_CAPTION_MAX = 2200
+export const FLYER_CAPTION_HASHTAGS_MAX = 12
+
+export const FLYER_CAPTION_TONES = ['festejo', 'convocatoria', 'sobrio', 'divertido'] as const
+export type FlyerCaptionTone = (typeof FLYER_CAPTION_TONES)[number]
+
+export const FLYER_CAPTION_TONE_LABELS: Record<FlyerCaptionTone, string> = {
+  festejo: 'Festejo',
+  convocatoria: 'Convocatoria',
+  sobrio: 'Sobrio',
+  divertido: 'Divertido',
+}
+
+export const flyerCaptionInput = z.object({
+  flyer: flyerContentSchema,
+  /** Hoy según quien pide ("YYYY-MM-DD"). */
+  today: z.iso.date(),
+  /** Texto ya armado con datos reales: la IA reescribe sobre él en vez de inventar. */
+  draft: z.string().trim().max(FLYER_CAPTION_MAX).default(''),
+  tone: z.enum(FLYER_CAPTION_TONES).default('festejo'),
+})
+export type FlyerCaptionInput = z.infer<typeof flyerCaptionInput>
+
+export type FlyerCaptionResult = {
+  caption: string
+  hashtags: string[]
+  model: string
+}
+
 // ─── Biblioteca en el bucket (carpeta assets/) ───────────────────────────────
 // Lectura libre (GET /api/flyers/library); subir, renombrar, borrar y usar la IA exigen FLYERS_SAFEWORD.
 

@@ -2,6 +2,7 @@
 // La lectura es libre; todo lo que escribe en el bucket o usa la IA exige la cabecera x-flyers-safeword
 // (FLYERS_SAFEWORD), independiente de la palabra clave de actividades y partidos.
 import {
+  flyerCaptionInput,
   flyerImageDeleteInput,
   flyerImageRenameInput,
   flyerImageSaveInput,
@@ -20,7 +21,7 @@ import {
   saveFlyer,
   saveImage,
 } from '../_lib/flyerLibrary.js'
-import { suggestFlyer } from '../_lib/flyers.js'
+import { suggestCaption, suggestFlyer } from '../_lib/flyers.js'
 import { handle, noStore, parseBody, pathParam, routeFor, type Handler } from '../_lib/http.js'
 
 const reads: Record<string, Handler> = {
@@ -34,6 +35,9 @@ const writes: Record<string, Handler> = {
 
   // POST /api/flyers/suggest → FlyerSuggestion. El asistente de IA reescribe el flyer según el pedido.
   suggest: async (request) => noStore(await suggestFlyer(await parseBody(request, flyerSuggestInput))),
+
+  // POST /api/flyers/caption → FlyerCaptionResult. El asistente reescribe el pie de foto del posteo.
+  caption: async (request) => noStore(await suggestCaption(await parseBody(request, flyerCaptionInput))),
 
   // POST /api/flyers/upload-url → FlyerUploadUrl: URL firmada para subir una imagen o el PNG de un flyer.
   'upload-url': async (request) => noStore(await createUploadUrl(await parseBody(request, flyerUploadUrlInput))),

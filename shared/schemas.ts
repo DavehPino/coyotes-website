@@ -194,6 +194,13 @@ export type MatchUpdateInput = z.infer<typeof matchUpdateInput>
 export const matchDeleteInput = z.object({ id: z.uuid() })
 export type MatchDeleteInput = z.infer<typeof matchDeleteInput>
 
+/** Resumen del partido: se guarda aparte de la edición, que no lo toca. */
+export const matchSummaryInput = z.object({
+  id: z.uuid(),
+  summary: z.string().trim().max(2000).transform((value) => value || null),
+})
+export type MatchSummaryInput = z.infer<typeof matchSummaryInput>
+
 export const videoUpdateInput = z.object({
   id: z.uuid(),
   title: z.string().trim().min(1, 'Ponle un título al video').max(120),

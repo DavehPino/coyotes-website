@@ -12,12 +12,12 @@ import {
   type FlyerLibrary,
 } from '@shared/flyers'
 import { errorMessage } from '../admin/adminApi'
+import type { RunProtected } from '../admin/useSafewordAccess'
 import { flyerLibraryKey, flyersPost, uploadToBucket, useFlyerLibrary } from './api'
 
 export type { FlyerImage }
 
-/** Ejecuta una acción protegida (ver access.tsx). */
-export type RunProtected = <T>(action: (safeword: string) => Promise<T>) => Promise<T | undefined>
+export type { RunProtected }
 
 /** Lado mayor tras reducir: sobra para un logo en un flyer de 1080 px. */
 const MAX_SIDE = 512

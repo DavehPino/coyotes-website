@@ -1,16 +1,13 @@
 // Pie de foto para el posteo de Instagram, armado con los datos del partido o la actividad.
 // Sin IA: es instantáneo, funciona sin conexión y nunca falla. El asistente solo lo reescribe.
 import { formatDateCompact, shortTime } from '@/lib/dates'
-import type { FlyerContent } from '@shared/flyers'
+import { FLYER_CAPTION_MAX, type FlyerContent } from '@shared/flyers'
 import type { Activity, MatchDetail } from '@shared/schemas'
-
-/** Límite de caracteres de un pie de foto en Instagram. */
-export const CAPTION_MAX = 2200
 
 /** Sin tildes a propósito: son los que se usan al buscar. */
 const BASE_TAGS = ['#Coyotes', '#Voley', '#Volley', '#BuenosAires']
 
-const join = (lines: (string | null)[]) => lines.filter(Boolean).join('\n').slice(0, CAPTION_MAX)
+const join = (lines: (string | null)[]) => lines.filter(Boolean).join('\n').slice(0, FLYER_CAPTION_MAX)
 
 function tagsFor(competition: string | null): string {
   const tags = [...BASE_TAGS]
@@ -75,4 +72,18 @@ export function captionFromFlyer(flyer: FlyerContent): string {
     '',
     tagsFor(flyer.palette === 'podio' ? 'Liga Podio' : null),
   ])
+}
+
+/**
+ * El mismo texto sin las líneas de hashtags del final: el resumen del partido se lee en el dashboard,
+ * donde los hashtags no pintan nada.
+ */
+export function withoutHashtags(caption: string): string {
+  const lines = caption.split('\n')
+  while (lines.length > 0) {
+    const last = lines[lines.length - 1]!.trim()
+    if (last !== '' && !/^#[^\s#]+(\s+#[^\s#]+)*$/u.test(last)) break
+    lines.pop()
+  }
+  return lines.join('\n').trim()
 }
