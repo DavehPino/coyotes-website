@@ -2,7 +2,7 @@ import { lazy, Suspense, useEffect, useState } from 'react'
 import { useParams } from 'react-router'
 import { TEAM_NAME } from '@/config'
 import { NotFoundPage } from '../NotFoundPage'
-import { Button, Card, ErrorState, PageHeader, Skeleton } from '../ui'
+import { Button, ErrorState, PageHeader, Skeleton } from '../ui'
 import { PencilIcon, TrashIcon } from '../ui/icons'
 import { isNotFound, useMatch } from './api'
 import type { EditTab } from './edit/EditMatchDialog'
@@ -38,7 +38,7 @@ function useAdminDialog() {
   }
 }
 
-/** Detalle de un partido: cabecera, parciales, videos y resumen. */
+/** Detalle de un partido: cabecera, parciales y videos. */
 export function MatchDetailPage() {
   const { slug = '' } = useParams()
   const query = useMatch(slug)
@@ -98,16 +98,6 @@ export function MatchDetailPage() {
           <MatchHeader match={query.data} />
           <SetScores match={query.data} />
           <VideoSection videos={query.data.videos} onManage={() => dialog.openEdit('videos')} />
-          {query.data.summary && (
-            <section aria-labelledby="summary-title">
-              <h2 id="summary-title" className="mb-2 text-3xl leading-none text-coyote-silver">
-                Resumen
-              </h2>
-              <Card className="p-4 md:p-5">
-                <p className="whitespace-pre-line text-coyote-silver">{query.data.summary}</p>
-              </Card>
-            </section>
-          )}
         </>
       )}
 
