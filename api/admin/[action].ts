@@ -89,7 +89,7 @@ const actions: Record<string, Handler> = {
   // POST /api/admin/league-create → 201 CourtrackLeague. Da de alta una liga (409 si ya estaba).
   'league-create': async (request) => noStore(await createLeague(await parseBody(request, leagueCreateInput)), 201),
 
-  // POST /api/admin/league-update → CourtrackLeague. Pausa/activa la liga, cambia el equipo propio o archiva la temporada.
+  // POST /api/admin/league-update → CourtrackLeague. Cambia el equipo propio de la temporada.
   'league-update': async (request) => noStore(await updateLeague(await parseBody(request, leagueUpdateInput))),
 
   // POST /api/admin/league-delete → { ok: true }. Quita la liga; los partidos y la competición se conservan.

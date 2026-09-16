@@ -20,6 +20,7 @@ import { SafewordStep } from '../../admin/SafewordStep'
 import { Button, Chip, Field, FormError, Input, Modal, Select, Skeleton } from '../../ui'
 import { CheckIcon, ChevronRightIcon, PlusIcon, RefreshIcon, TrophyIcon } from '../../ui/icons'
 import { competitionsKey, useCompetitions } from '../competitions'
+import { courtrackKeys, useCourtrackStatus, useLeagueSnapshot } from '../sync/queries'
 import { Callout, formatInstant, lastSyncLabel } from '../sync/SyncCourtrackDialog'
 
 type WizardStep = 'cliente' | 'descubrir' | 'liga' | 'equipo' | 'competition'
@@ -40,7 +41,7 @@ const ARCHIVE_REASONS: Record<NonNullable<CourtrackLeague['archive_reason']>, st
 
 type ManageLeaguesDialogProps = {
   open: boolean
-  /** `changed`: se añadió, pausó, archivó o quitó alguna liga. */
+  /** `changed`: se añadió o quitó alguna liga. */
   onClose: (changed: boolean) => void
   /** Cierra este diálogo y abre el de sincronización con esa temporada. */
   onSyncLeague: (leagueId: string) => void
@@ -168,12 +169,11 @@ type LeagueRowProps = {
   league: CourtrackSyncLeague
   busy: boolean
   onSync: () => void
-  onToggle: () => void
   onDelete: () => void
   onStandings: () => void
 }
 
-function LeagueRow({ league, busy, onSync, onToggle, onDelete, onStandings }: LeagueRowProps) {
+function LeagueRow({ league, busy, onSync, onDelete, onStandings }: LeagueRowProps) {
   const archived = league.archived_at !== null
   return (
     <li className="flex flex-col gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
@@ -192,21 +192,14 @@ function LeagueRow({ league, busy, onSync, onToggle, onDelete, onStandings }: Le
                 : 'Todavía no se sincronizó'}
           </span>
         </div>
-        <Chip tone={archived ? 'steel' : league.is_active ? 'gold' : 'ash'}>
-          {archived ? 'Finalizada' : league.is_active ? 'Activa' : 'Pausada'}
-        </Chip>
+        <Chip tone={archived ? 'steel' : 'gold'}>{archived ? 'Finalizada' : 'En curso'}</Chip>
       </div>
       <div className="flex flex-wrap gap-2">
         {!archived && (
-          <>
-            <Button size="sm" variant="primary" className="pr-3.5 pl-3" onClick={onSync} disabled={busy || !league.is_active}>
-              <RefreshIcon className="size-4" strokeWidth={2} />
-              Sincronizar
-            </Button>
-            <Button size="sm" onClick={onToggle} disabled={busy}>
-              {league.is_active ? 'Pausar' : 'Activar'}
-            </Button>
-          </>
+          <Button size="sm" variant="primary" className="pr-3.5 pl-3" onClick={onSync} disabled={busy}>
+            <RefreshIcon className="size-4" strokeWidth={2} />
+            Sincronizar
+          </Button>
         )}
         {league.snapshot_at && (
           <Button size="sm" onClick={onStandings} disabled={busy}>
@@ -285,9 +278,9 @@ function StandingsView({ snapshot, teamName }: { snapshot: CourtrackLeagueSnapsh
 }
 
 /**
- * Ligas de CourtTrack que sigue el equipo: temporadas abiertas y finalizadas (las cierra el sync solo) con su
- * clasificación, pausar/activar, quitar, y el asistente "Agregar liga" (asociación → descubrir tus ligas, o elegir
- * liga → equipo → competición).
+ * Ligas de CourtTrack que sigue el equipo: temporadas en curso y finalizadas (las cierra el sync solo) con su
+ * clasificación, quitar, y el asistente "Agregar liga" (asociación → descubrir tus ligas, o elegir liga → equipo →
+ * competición). Estado y clasificación vienen cacheados de `sync/queries.ts`.
  */
 export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: ManageLeaguesDialogProps) {
   const formId = useId()
@@ -297,16 +290,12 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
   const [step, setStep] = useState<Step>(() => (safeword ? 'list' : 'safeword'))
   const [notice, setNotice] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
-  const [status, setStatus] = useState<CourtrackSyncStatus | null>(null)
-  const [statusError, setStatusError] = useState<string | null>(null)
   const [busy, setBusy] = useState(false)
   const [actionError, setActionError] = useState<string | null>(null)
   const [changed, setChanged] = useState(false)
   const [justAdded, setJustAdded] = useState<CourtrackLeague[]>([])
   const [target, setTarget] = useState<CourtrackSyncLeague | null>(null)
   const [showArchived, setShowArchived] = useState(false)
-  const [snapshot, setSnapshot] = useState<CourtrackLeagueSnapshot | null>(null)
-  const [snapshotError, setSnapshotError] = useState<string | null>(null)
 
   // Asistente
   const [wizard, setWizard] = useState<Wizard>(emptyWizard)
@@ -329,27 +318,19 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
     setStep('safeword')
   }, [])
 
-  const loadStatus = useCallback(
-    async (word: string, signal?: AbortSignal) => {
-      setStatus(null)
-      setStatusError(null)
-      try {
-        setStatus(await adminPost<CourtrackSyncStatus>('/courtrack-status', {}, word, signal))
-      } catch (err) {
-        if (isAbort(err)) return
-        if (isUnauthorized(err)) return handleUnauthorized()
-        setStatusError(errorMessage(err))
-      }
-    },
-    [handleUnauthorized],
-  )
+  // Estado (cupo, temporadas, último sync) cacheado 25 s: ir y volver entre pasos no vuelve a pedirlo.
+  const statusQuery = useCourtrackStatus(safeword)
+  const status: CourtrackSyncStatus | null = statusQuery.data ?? null
+  const statusError = statusQuery.error ? errorMessage(statusQuery.error) : null
+  const snapshotQuery = useLeagueSnapshot(safeword, step === 'standings' && target ? target.id : null)
+  const snapshot: CourtrackLeagueSnapshot | null = snapshotQuery.data ?? null
+  const snapshotError = snapshotQuery.error ? errorMessage(snapshotQuery.error) : null
 
   useEffect(() => {
-    if (step !== 'list' || !safeword) return
-    const controller = new AbortController()
-    void loadStatus(safeword, controller.signal)
-    return () => controller.abort()
-  }, [step, safeword, loadStatus])
+    if (isUnauthorized(statusQuery.error) || isUnauthorized(snapshotQuery.error)) handleUnauthorized()
+  }, [statusQuery.error, snapshotQuery.error, handleUnauthorized])
+
+  const invalidateStatus = () => queryClient.invalidateQueries({ queryKey: courtrackKeys.status })
 
   const configuredLigaIds = new Set((status?.leagues ?? []).filter((league) => !league.archived_at).map((league) => league.liga_id))
 
@@ -455,6 +436,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
       setChanged(true)
       setJustAdded(created)
       void queryClient.invalidateQueries({ queryKey: competitionsKey })
+      void invalidateStatus()
       setStep('list')
     } catch (err) {
       if (isUnauthorized(err)) return handleUnauthorized()
@@ -462,6 +444,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
         setChanged(true)
         setJustAdded(created)
         void queryClient.invalidateQueries({ queryKey: competitionsKey })
+        void invalidateStatus()
       }
       setWizardError(errorMessage(err))
     } finally {
@@ -493,29 +476,11 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
       setChanged(true)
       setJustAdded([created])
       void queryClient.invalidateQueries({ queryKey: competitionsKey })
+      void invalidateStatus()
       setStep('list')
     } catch (err) {
       if (isUnauthorized(err)) return handleUnauthorized()
       setWizardError(errorMessage(err))
-    } finally {
-      setBusy(false)
-    }
-  }
-
-  async function updateLeague(body: { id: string; is_active: boolean }, after: () => void = () => setStep('list')) {
-    if (!safeword) return handleUnauthorized()
-    setBusy(true)
-    setActionError(null)
-    try {
-      await adminPost('/league-update', body, safeword)
-      setChanged(true)
-      void queryClient.invalidateQueries({ queryKey: competitionsKey })
-      after()
-      await loadStatus(safeword)
-    } catch (err) {
-      if (isUnauthorized(err)) return handleUnauthorized()
-      setActionError(errorMessage(err))
-      after()
     } finally {
       setBusy(false)
     }
@@ -531,8 +496,9 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
       setChanged(true)
       setTarget(null)
       void queryClient.invalidateQueries({ queryKey: competitionsKey })
+      queryClient.removeQueries({ queryKey: courtrackKeys.snapshot(target.id) })
       setStep('list')
-      await loadStatus(safeword)
+      await invalidateStatus()
     } catch (err) {
       if (isUnauthorized(err)) return handleUnauthorized()
       setActionError(errorMessage(err))
@@ -542,18 +508,9 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
     }
   }
 
-  async function openStandings(league: CourtrackSyncLeague) {
-    if (!safeword) return handleUnauthorized()
+  function openStandings(league: CourtrackSyncLeague) {
     setTarget(league)
-    setSnapshot(null)
-    setSnapshotError(null)
     setStep('standings')
-    try {
-      setSnapshot(await adminPost<CourtrackLeagueSnapshot>('/league-snapshot', { id: league.id }, safeword))
-    } catch (err) {
-      if (isUnauthorized(err)) return handleUnauthorized()
-      setSnapshotError(errorMessage(err))
-    }
   }
 
   const dismissible = !busy && !verifying
@@ -710,6 +667,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
             safewordStore.set(value)
             setSafeword(value)
             setNotice(null)
+            void invalidateStatus()
             setStep('list')
           }}
         />
@@ -719,7 +677,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
         <div className="flex flex-col gap-4">
           <p className="text-sm text-pretty text-coyote-ash">
             Cada liga de CourtTrack alimenta una competición del dashboard. Cuando CourtTrack reinicia una liga al
-            terminar, la temporada se cierra sola con su clasificación y empieza la siguiente: nada se pierde.
+            terminar, la temporada se cierra sola al sincronizar, con su clasificación, y empieza la siguiente.
           </p>
           {justAdded.length > 0 && (
             <Callout tone="gold" icon={<CheckIcon className="size-5" strokeWidth={2} />}>
@@ -743,7 +701,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
           )}
           {actionError && <FormError>{actionError}</FormError>}
           {statusError ? (
-            <RetryError error={statusError} onRetry={() => safeword && void loadStatus(safeword)} />
+            <RetryError error={statusError} onRetry={() => void statusQuery.refetch()} />
           ) : !status ? (
             <div className="flex flex-col gap-2">
               <Skeleton className="h-28 w-full rounded-xl" />
@@ -764,12 +722,11 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
                       league={league}
                       busy={busy}
                       onSync={() => onSyncLeague(league.id)}
-                      onToggle={() => void updateLeague({ id: league.id, is_active: !league.is_active })}
                       onDelete={() => {
                         setTarget(league)
                         setStep('confirm-delete')
                       }}
-                      onStandings={() => void openStandings(league)}
+                      onStandings={() => openStandings(league)}
                     />
                   ))}
                 </ul>
@@ -797,12 +754,11 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
                           league={league}
                           busy={busy}
                           onSync={() => undefined}
-                          onToggle={() => undefined}
                           onDelete={() => {
                             setTarget(league)
                             setStep('confirm-delete')
                           }}
-                          onStandings={() => void openStandings(league)}
+                          onStandings={() => openStandings(league)}
                         />
                       ))}
                     </ul>
@@ -1049,7 +1005,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
 
       {step === 'standings' && target && (
         snapshotError ? (
-          <RetryError error={snapshotError} onRetry={() => void openStandings(target)} />
+          <RetryError error={snapshotError} onRetry={() => void snapshotQuery.refetch()} />
         ) : !snapshot ? (
           <div className="flex flex-col gap-2">
             <Skeleton className="h-6 w-1/2 rounded-md" />

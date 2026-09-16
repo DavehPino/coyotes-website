@@ -18,12 +18,13 @@ import type {
   CourtrackSyncStatus,
   CourtrackSyncSummary,
 } from '@shared/schemas'
-import { adminPost, errorMessage, isAbort, isUnauthorized, safewordStore } from '../../admin/adminApi'
+import { adminPost, errorMessage, isUnauthorized, safewordStore } from '../../admin/adminApi'
 import { SafewordStep } from '../../admin/SafewordStep'
 import { useRivalTeams } from '../../admin/teams'
 import { Button, buttonClasses, Chip, Field, FormError, Modal, Select, Skeleton, type ChipTone } from '../../ui'
 import { AlertIcon, CheckIcon, RefreshIcon, TrophyIcon } from '../../ui/icons'
 import { refreshMatchData } from '../api'
+import { courtrackKeys, useCourtrackStatus } from './queries'
 
 type Step = 'safeword' | 'status' | 'running' | 'result' | 'error'
 
@@ -159,7 +160,7 @@ function StatusView({ status, error, leagueId, onLeagueChange, onRetry, onManage
         <Callout tone="ash" icon={<TrophyIcon className="size-5" />}>
           {status.leagues.length === 0
             ? 'Todavía no hay ninguna liga de CourtTrack configurada.'
-            : 'No hay ligas activas: todas están pausadas o su temporada terminó.'}
+            : 'No hay ligas en curso: todas las temporadas terminaron. Añade la nueva desde Ligas.'}
         </Callout>
         <Button variant="primary" className="self-start" onClick={onManageLeagues}>
           Gestionar ligas
@@ -433,8 +434,6 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
   const [step, setStep] = useState<Step>(() => (safeword ? 'status' : 'safeword'))
   const [notice, setNotice] = useState<string | null>(null)
   const [verifying, setVerifying] = useState(false)
-  const [status, setStatus] = useState<CourtrackSyncStatus | null>(null)
-  const [statusError, setStatusError] = useState<string | null>(null)
   const [leagueId, setLeagueId] = useState<string>(initialLeagueId ?? ALL)
   const [outcome, setOutcome] = useState<Outcome | null>(null)
   const [error, setError] = useState<{ message: string; quota: CourtrackSyncQuota | null } | null>(null)
@@ -448,35 +447,24 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
     setStep('safeword')
   }, [])
 
-  const loadStatus = useCallback(
-    async (word: string, signal?: AbortSignal) => {
-      setStatus(null)
-      setStatusError(null)
-      try {
-        const data = await adminPost<CourtrackSyncStatus>('/courtrack-status', {}, word, signal)
-        setStatus(data)
-        // Una temporada elegida que ya no está activa vuelve a "todas".
-        setLeagueId((current) => {
-          const active = data.leagues.filter((league) => league.is_active && !league.archived_at)
-          if (current !== ALL && !active.some((league) => league.id === current)) return ALL
-          return current
-        })
-      } catch (err) {
-        if (isAbort(err)) return
-        if (isUnauthorized(err)) return handleUnauthorized()
-        setStatusError(errorMessage(err))
-      }
-    },
-    [handleUnauthorized],
-  )
+  // Cupo y ligas cacheados 25 s (compartidos con el gestor de Ligas): volver al paso inicial no vuelve a pedirlos.
+  const statusQuery = useCourtrackStatus(safeword)
+  const status: CourtrackSyncStatus | null = statusQuery.data ?? null
+  const statusError = statusQuery.error ? errorMessage(statusQuery.error) : null
 
-  // El cupo y las ligas se consultan cada vez que se vuelve al paso inicial con la palabra clave ya validada.
   useEffect(() => {
-    if (step !== 'status' || !safeword) return
-    const controller = new AbortController()
-    void loadStatus(safeword, controller.signal)
-    return () => controller.abort()
-  }, [step, safeword, loadStatus])
+    if (isUnauthorized(statusQuery.error)) handleUnauthorized()
+  }, [statusQuery.error, handleUnauthorized])
+
+  // Una temporada elegida que ya no está en curso vuelve a "todas".
+  useEffect(() => {
+    if (!status) return
+    setLeagueId((current) => {
+      const active = status.leagues.filter((league) => league.is_active && !league.archived_at)
+      if (current !== ALL && !active.some((league) => league.id === current)) return ALL
+      return current
+    })
+  }, [status])
 
   async function run(dryRun: boolean) {
     if (!safeword) return handleUnauthorized()
@@ -494,6 +482,10 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
       setStep('result')
       const changes = result.totals.created + result.totals.updated + result.totals.adopted + result.totals.rivals_created.length
       const seasonChanges = result.leagues.some((league) => league.season_event)
+      if (!dryRun) {
+        // El cupo y el último sync cambiaron: la próxima apertura del diálogo o del gestor los vuelve a pedir.
+        void queryClient.invalidateQueries({ queryKey: courtrackKeys.all })
+      }
       if (!dryRun && (changes > 0 || seasonChanges)) {
         setFinished(true)
         await refreshMatchData(queryClient)
@@ -637,6 +629,7 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
             safewordStore.set(value)
             setSafeword(value)
             setNotice(null)
+            void queryClient.invalidateQueries({ queryKey: courtrackKeys.status })
             setStep('status')
           }}
         />
@@ -647,7 +640,7 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
           error={statusError}
           leagueId={leagueId}
           onLeagueChange={setLeagueId}
-          onRetry={() => safeword && void loadStatus(safeword)}
+          onRetry={() => void statusQuery.refetch()}
           onManageLeagues={onManageLeagues}
         />
       )}

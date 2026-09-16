@@ -300,8 +300,8 @@ export type LeagueCreateInput = z.infer<typeof leagueCreateInput>
 
 export const leagueUpdateInput = z.object({
   id: z.uuid(),
-  is_active: z.boolean().optional(),
-  team_name: z.string().trim().min(1).max(120).optional(),
+  /** Nombre del equipo propio en esa liga, tal como lo lista /courtrack/equipos. */
+  team_name: z.string().trim().min(1).max(120),
 })
 export type LeagueUpdateInput = z.infer<typeof leagueUpdateInput>
 

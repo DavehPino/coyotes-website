@@ -99,18 +99,13 @@ export async function updateLeague(input: LeagueUpdateInput): Promise<CourtrackL
   // Las temporadas las cierra el sync cuando CourtTrack reinicia la liga; aquí solo se consultan o quitan.
   if (current.archived_at) throw badRequest('La temporada ya finalizó: solo se puede consultar o quitar')
 
-  const changes: { is_active?: boolean; team_name?: string } = {}
-  if (input.is_active !== undefined) changes.is_active = input.is_active
-  if (input.team_name !== undefined && input.team_name !== current.team_name) {
-    const equipos = await getCourtrackEquipos(current.id_cliente, current.liga_id)
-    if (!equipos.some((item) => item.name === input.team_name)) throw badRequest('Ese equipo no juega en la liga')
-    changes.team_name = input.team_name
-  }
-  if (Object.keys(changes).length === 0) return toLeague(current)
+  if (input.team_name === current.team_name) return toLeague(current)
+  const equipos = await getCourtrackEquipos(current.id_cliente, current.liga_id)
+  if (!equipos.some((item) => item.name === input.team_name)) throw badRequest('Ese equipo no juega en la liga')
 
   const { data, error } = await db()
     .from('courtrack_leagues')
-    .update(changes)
+    .update({ team_name: input.team_name })
     .eq('id', input.id)
     .eq('org_id', env.orgId)
     .select(LEAGUE_SELECT)
