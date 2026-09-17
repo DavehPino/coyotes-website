@@ -13,9 +13,8 @@ Un único deploy con dos apps:
 Stack:
 
 - **Frontend:** React 19 + Vite + TypeScript + Tailwind 4 + React Router 7 + TanStack Query
-- **Backend:** Vercel Functions (`/api`)
-- **Base de datos:** Supabase Postgres (plan Free)
-- **Videos:** bucket compatible con S3 (Cloudflare R2 recomendado)
+- **Backend:** [teamhub-api](https://github.com/DavehPino/teamhub-api), proyecto aparte (Vercel Functions,
+  Supabase y bucket R2). Este deploy reescribe `/api/*` a ese proyecto.
 
 El plan de construcción completo está en [`PROMPT.md`](./PROMPT.md).
 
@@ -25,50 +24,35 @@ El plan de construcción completo está en [`PROMPT.md`](./PROMPT.md).
 
 ```bash
 npm install
-npm i -g vercel        # CLI de Vercel para `vercel dev` y deploy
 ```
 
-### 2. Supabase (gratis)
+### 2. Backend
 
-1. Crea un proyecto en <https://supabase.com/dashboard>.
-2. Aplica las migraciones **en orden** con una de estas opciones:
-   - SQL Editor: ejecuta cada archivo de `supabase/migrations/` por orden de nombre y después `supabase/seed.sql`.
-   - CLI: `npx supabase login`, `npx supabase link --project-ref <ref>` y `npx supabase db push`.
-3. En Project Settings → API Keys, copia la URL y la **secret key** en `SUPABASE_URL` y `SUPABASE_SECRET_KEY`.
+Levanta y despliega [teamhub-api](https://github.com/DavehPino/teamhub-api) siguiendo su README: ahí viven Supabase
+(migraciones y seed), el bucket, las palabras clave, la IA y el cron. Este proyecto no tiene variables de servidor.
 
-> El plan Free pausa el proyecto tras 7 días sin actividad. El cron diario `sync-videos` de `vercel.json` lo evita.
+`vercel.json` reescribe `/api/:path*` al dominio de producción de teamhub-api. Si cambia ese dominio, actualiza el
+`destination` del primer rewrite. Como el navegador sigue llamando a `/api` en el mismo origen, no hace falta CORS.
 
-### 3. Bucket de videos: Cloudflare R2 (10 GB gratis y sin coste por salida de datos)
+### 3. CORS del bucket
 
-1. En Cloudflare → R2, crea el bucket `coyotes-videos`.
-2. Crea un API token con permiso **Object Read & Write** sobre ese bucket y cópialo en `S3_ACCESS_KEY_ID` y
-   `S3_SECRET_ACCESS_KEY`. Con solo lectura se ven los videos, pero la subida desde el dashboard responde
-   "Las credenciales del bucket no permiten subir videos".
-3. Usa `S3_ENDPOINT=https://<ACCOUNT_ID>.r2.cloudflarestorage.com` y `S3_REGION=auto`.
-4. En Bucket → Settings → **CORS Policy**, añade esta regla. El navegador sube videos, imágenes y flyers directo al
-   bucket (`PUT`, exponiendo `ETag`) y el generador de flyers lee las imágenes para dibujarlas en el lienzo (`GET`;
-   sin él los logos no aparecen y no se puede exportar el PNG):
+El navegador sube videos, imágenes y flyers directo al bucket (`PUT`, exponiendo `ETag`) y el generador de flyers
+lee las imágenes para dibujarlas en el lienzo (`GET`; sin él los logos no aparecen y no se puede exportar el PNG).
+En Cloudflare → R2 → Bucket → Settings → **CORS Policy**, añade los orígenes del dashboard:
 
-   ```json
-   [
-     {
-       "AllowedOrigins": ["https://dashboard.tudominio.com", "http://dashboard.localhost:5173", "http://dashboard.localhost:3000"],
-       "AllowedMethods": ["GET", "PUT"],
-       "AllowedHeaders": ["*"],
-       "ExposeHeaders": ["ETag"],
-       "MaxAgeSeconds": 3600
-     }
-   ]
-   ```
+```json
+[
+  {
+    "AllowedOrigins": ["https://dashboard.tudominio.com", "http://dashboard.localhost:5173"],
+    "AllowedMethods": ["GET", "PUT"],
+    "AllowedHeaders": ["*"],
+    "ExposeHeaders": ["ETag"],
+    "MaxAgeSeconds": 3600
+  }
+]
+```
 
-   Las URLs de preview de Vercel cambian en cada deploy: si quieres subir desde una preview, añade su dominio.
-5. Para la reproducción: deja `STORAGE_PUBLIC_BASE_URL` vacío si quieres URLs firmadas temporales (bucket privado),
-   o pon ahí el dominio público del bucket.
-6. Define `CRON_SECRET` (cualquier cadena larga): protege el cron de sincronización.
-7. Define `ADMIN_SAFEWORD` (una frase larga): es la palabra clave de **Cargar actividad** y **Cargar partido**.
-8. Define `FLYERS_SAFEWORD` (otra frase, distinta): es la palabra clave de la sección **Flyers** (ver abajo).
-
-Para usar **AWS S3**, deja `S3_ENDPOINT` vacío y pon la región real.
+Las URLs de preview de Vercel cambian en cada deploy: si quieres subir desde una preview, añade su dominio.
 
 ### 4. Variables de entorno
 
@@ -76,7 +60,7 @@ Para usar **AWS S3**, deja `S3_ENDPOINT` vacío y pon la región real.
 cp .env.example .env.local   # y rellena los valores
 ```
 
-Carga las mismas variables en Vercel → Settings → Environment Variables.
+Las variables `VITE_*` se cargan también en Vercel → Settings → Environment Variables.
 
 ### 5. Dominio en Vercel
 
@@ -98,27 +82,30 @@ dashboard en una preview, define `VITE_APP_TARGET=dashboard` solo en el entorno 
 ### 6. Desarrollo
 
 ```bash
-npm run dev          # solo frontend
-npm run dev:full     # frontend + /api con vercel dev (requiere `vercel link`)
+npm run dev          # en ../teamhub-api (backend en http://localhost:3200)
+npm run dev          # aquí: Vite reenvía /api a API_PROXY (http://localhost:3200 en .env.local)
 ```
 
-| App | `npm run dev` | `npm run dev:full` |
-|---|---|---|
-| Web pública | <http://localhost:5173> | <http://localhost:3000> |
-| Dashboard | <http://dashboard.localhost:5173> | <http://dashboard.localhost:3000> |
+| App | URL |
+|---|---|
+| Web pública | <http://localhost:5173> |
+| Dashboard | <http://dashboard.localhost:5173> |
+
+Sin `API_PROXY`, las llamadas a `/api` no tienen servidor.
 
 ### Scripts
 
 | Script | Descripción |
 |---|---|
-| `npm run dev` / `dev:full` | Desarrollo |
-| `npm run build` | Typecheck (app + api) y build de producción |
+| `npm run dev` | Desarrollo |
+| `npm run build` | Typecheck y build de producción |
 | `npm run typecheck` | Solo TypeScript |
-| `npm run check:functions` | Comprueba que `api/` no supere las 12 Vercel Functions del plan Hobby (corre en `build`) |
-| `npm run db:types` | Genera los tipos de Supabase (`shared/database.types.ts`) tras cada migración |
+| `npm run preview` | Sirve el build |
 
-Con `npm run dev` las llamadas a `/api` no tienen servidor. Para desarrollar el frontend contra otro backend local,
-`API_PROXY=http://localhost:3000 npm run dev` reenvía `/api` a ese puerto.
+### Contratos compartidos
+
+`shared/` es una copia de `teamhub-api/shared` (esquemas zod, tipos de la base de datos y constantes). Cuando cambie
+un contrato o se regeneren los tipos en el backend, copia esos archivos aquí.
 
 ## Acceso al dashboard
 
@@ -231,8 +218,8 @@ restante (**`SYNC_DAILY_LIMIT` sincronizaciones por 24 h**), y ofrece:
   mano, la siguiente sincronización vuelve a poner los de CourtTrack. El resultado se muestra por liga, con los
   totales cuando son varias.
 
-Requiere `COURTRACK_SYNC_URL` y `COURTRACK_SYNC_SECRET` (sin ellos Ligas y Sincronizar responden 503) y `ORG_ID`
-(por defecto `coyotes`).
+Requiere `COURTRACK_SYNC_URL`, `COURTRACK_SYNC_SECRET` (sin ellos Ligas y Sincronizar responden 503) y `ORG_ID`
+en teamhub-api.
 
 ### Progresión y estadísticas de un set
 
@@ -327,142 +314,14 @@ públicas (`STORAGE_PUBLIC_BASE_URL`) o firmadas que no cambian durante una hora
 
 ### IA
 
-Configuración: crea una clave en OpenRouter → Keys y guárdala en `OPENROUTER_API_KEY`. Sin clave, el asistente
+Configuración (en teamhub-api): crea una clave en OpenRouter → Keys y guárdala en `OPENROUTER_API_KEY`. El nombre
+del equipo sale de la base de datos y `TEAM_PROFILE` describe su estilo (ciudad, colores, tono). Sin clave, el asistente
 responde 503 y el resto de la sección funciona igual. `OPENROUTER_MODEL` es opcional: por defecto es
 `openrouter/free`, que enruta a algún modelo gratuito disponible, así que no se rompe si retiran uno concreto. Los
 modelos gratuitos tienen límite de peticiones por minuto y por día; al superarlo se muestra un aviso para reintentar.
 
-## Cómo editar datos a mano
+## Datos y API
 
-Cancelar actividades, los resúmenes y las portadas todavía se hace en **Supabase → Table Editor**
-(o con SQL). `supabase/seed.sql` es un ejemplo completo y se puede ejecutar varias veces sin duplicar filas:
-`npx supabase db query --linked -f supabase/seed.sql`.
-
-1. **Equipos** (`teams`): un registro con `is_own_team = true` (Coyotes) y uno por rival. `short_name` (3 letras)
-   se usa como escudo cuando no hay `logo_url`.
-2. **Actividades** (`weekly_activities`): una fila por actividad con `activity_date` (día), `start_time`/`end_time`
-   (hora local, opcionales), `activity_type` (`entrenamiento`, `partido`, `amistoso`, `torneo`, `fisico`,
-   `video_analisis`, `reunion`, `otro`), `location`, `description`, `opponent_team_id` (rival, opcional) e
-   `is_cancelled`. Las canceladas y las que ya empezaron no se muestran.
-3. **Partidos** (`matches`): `slug` único en kebab-case (p.ej. `2026-09-06-vs-onas`; es la URL
-   `dashboard.<dominio>/matches/<slug>` y la carpeta del bucket), `played_on`, `start_time`, `opponent_team_id`, `is_home`,
-   `location`, `competition_id` (fila de `competitions`), `phase`, `sets_won`, `sets_lost` y `set_scores` con los parciales:
-   `[{"us":25,"them":20},{"us":22,"them":25}]`. `summary` admite saltos de línea y `cover_image_url` es la portada
-   del carrusel (sin ella se muestran los escudos). Solo aparecen los partidos con `played_on <= hoy`.
-4. **Videos** (`videos`): los del bucket los crea el cron (abajo). Para enlaces externos crea una fila con
-   `source = 'external'`, `url` (YouTube se incrusta; el resto abre en pestaña nueva), `match_id`, `set_number`
-   (opcional) y `status = 'ready'`. Los videos con `status = 'archived'` no se muestran.
-
-### Convención del bucket de videos
-
-El formulario de alta sube los videos a esta ruta. También se pueden subir por fuera (consola de R2, rclone,
-Cyberduck…) siguiendo la misma convención:
-
-```
-<S3_VIDEO_PREFIX>games/<slug-del-partido>/<archivo>.mp4   → se vincula al partido con ese slug
-<S3_VIDEO_PREFIX><cualquier-otra-ruta>.mp4               → queda sin partido (status "pending")
-
-games/2026-09-06-vs-onas/set-1.mp4      → partido 2026-09-06-vs-onas, "Set 1"
-games/2026-09-06-vs-onas/resumen.mp4    → mismo partido, sin set
-```
-
-Si el archivo empieza por `set-N` se rellena `set_number`. El cron `GET /api/cron/sync-videos` se ejecuta a diario
-desde Vercel y es idempotente: crea filas nuevas, refresca tamaño y URL de las existentes, vincula las que aún no tienen
-partido y **nunca** pisa el título, la categoría o el set editados a mano. Los archivos borrados del bucket solo se
-cuentan (`missing_in_bucket`); las filas se borran a mano. Para lanzarlo al momento:
-
-```bash
-curl -H "Authorization: Bearer $CRON_SECRET" https://<dominio>/api/cron/sync-videos
-# → {"scanned":3,"created":3,"updated":0,"linked_to_match":3,"missing_in_bucket":0}
-```
-
-Después del sync, cambia el título y el set de cada video desde **Editar partido → Videos** (o `sort_order` en el Table
-Editor).
-
-## API
-
-| Método | Ruta | Respuesta |
-|---|---|---|
-| GET | `/api/lookups/teams` | Rivales por nombre (sin caché) |
-| GET | `/api/lookups/competitions` | Competiciones con su número de partidos y sus temporadas de CourtTrack (sin caché) |
-| GET | `/api/lookups/players` | Plantel: activos primero, por número y nombre (sin caché) |
-| GET | `/api/lookups/lineups` | Formaciones con sus jugadores en cancha (`slots` con `x`/`y` de 0 a 1), la editada más recientemente primero (sin caché) |
-| GET | `/api/activities?from=YYYY-MM-DD&limit=30` | Próximas actividades no canceladas, de la más cercana a la más lejana, con el rival embebido |
-| GET | `/api/matches?until=YYYY-MM-DD&limit=50&competition_id=&courtrack_league_id=` | Partidos jugados hasta la fecha, del más reciente al más antiguo; opcionalmente de una competición y de una temporada |
-| GET | `/api/matches/:slug` | Detalle con parciales, videos ordenados y `courtrack_id` (404 si no existe) |
-| GET | `/api/matches/:slug?view=stats` | `MatchStats` desde CourtTrack: por set, progresión punto a punto, tiempos, cambios, acciones de cada equipo y formación inicial propia; totales y estadísticas de cada jugador propio; MVP y duración real. Visto desde el equipo propio (`us`/`them`). 404 `no_stats` si el partido no vino del sync, 503 si el microservicio no está configurado. Caché de una hora |
-| GET | `/api/videos/:id/playback` | URL de reproducción (pública o firmada temporal) |
-| GET | `/api/cron/sync-videos` | Sincroniza el bucket; requiere `Authorization: Bearer <CRON_SECRET>` |
-
-Escritura: todas requieren la cabecera `x-admin-safeword` con `ADMIN_SAFEWORD` codificada con `encodeURIComponent`.
-
-| Método | Ruta | Respuesta |
-|---|---|---|
-| POST | `/api/admin/verify` | `{ ok: true }` o 401 |
-| POST | `/api/admin/activities` | 201 Activity: crea la actividad y, si se pide, el rival (409 si el nombre ya existe) |
-| POST | `/api/admin/activity-update` | Activity: edita la actividad `id` con los campos del alta |
-| POST | `/api/admin/activity-delete` | `{ ok: true }`: borra la actividad |
-| POST | `/api/admin/matches` | 201 `{ id, slug, opponent }`: crea el partido y, si se pide, el rival (409 si el nombre ya existe) |
-| POST | `/api/admin/match-update` | `{ id, slug, opponent }`: edita el partido `id` con los campos del alta; el slug no cambia |
-| POST | `/api/admin/match-delete` | `{ ok: true }`: borra el partido, sus videos y sus archivos del bucket |
-| POST | `/api/admin/courtrack-status` | `CourtrackSyncStatus`: cupo, temporadas configuradas (abiertas y finalizadas) con su último sync y últimas ejecuciones (proxy a courtrack-service; 503 sin configurar) |
-| POST | `/api/admin/courtrack-sync` | `{ league_id?, dry_run? }`: con `league_id`, `CourtrackSyncResult` de esa temporada; sin él, `CourtrackSyncAllResult` de todas las ligas activas (un cupo). 429 `quota_exceeded` si se agotó el cupo |
-| POST | `/api/admin/courtrack-catalog` | Catálogo de CourtTrack: `{ resource: 'clientes' }`, `{ resource: 'ligas', id_cliente }`, `{ resource: 'equipos', id_cliente, liga_id }` o `{ resource: 'descubrir', id_cliente }` (ligas donde juega el equipo propio) |
-| POST | `/api/admin/leagues` | `CourtrackLeague[]`: temporadas configuradas |
-| POST | `/api/admin/league-create` | 201 `CourtrackLeague`: alta de una liga (`{ id_cliente, cliente_name, liga_id, team_name, competition }`; 409 si ya tiene temporada abierta) |
-| POST | `/api/admin/league-update` | `CourtrackLeague`: cambia `team_name` (400 si la temporada ya finalizó) |
-| POST | `/api/admin/league-delete` | `{ ok: true }`: quita la temporada; partidos y competición se conservan |
-| POST | `/api/admin/league-snapshot` | `CourtrackLeagueSnapshot`: clasificación y fixture guardados en el último sync de la temporada |
-| POST | `/api/admin/team-link-create` | `{ ok: true }`: vincula un nombre de CourtTrack a un rival (`{ courtrack_name, team_id }`) |
-| POST | `/api/admin/player-create` | 201 Player: `{ name, jersey_number?, primary_position, secondary_position? }` (409 si el número ya lo usa un activo) |
-| POST | `/api/admin/player-update` | Player: los campos del alta más `id` e `is_active` |
-| POST | `/api/admin/player-delete` | `{ ok: true }`: borra el jugador y lo quita de todas las formaciones |
-| POST | `/api/admin/lineup-save` | Lineup: sin `id` crea la formación; con `id` reemplaza nombre, notas y todos sus `slots` (máx. 7: 6 titulares y 1 líbero, jugadores activos; 409 si el nombre ya existe) |
-| POST | `/api/admin/lineup-delete` | `{ ok: true }`: borra la formación |
-| POST | `/api/admin/video-update` | Video: cambia `title` y `set_number` |
-| POST | `/api/admin/video-delete` | `{ ok: true }`: borra el archivo del bucket y la fila del video |
-| POST | `/api/admin/uploads/start` | Crea la subida multiparte y devuelve una URL firmada por trozo (6 h de validez) |
-| POST | `/api/admin/uploads/complete` | 201 Video: cierra la subida y registra el video en el partido |
-| POST | `/api/admin/uploads/abort` | Descarta los trozos de una subida cancelada o fallida |
-
-Flyers: `GET /api/flyers/library` es libre; los `POST` requieren la cabecera `x-flyers-safeword` con `FLYERS_SAFEWORD`
-codificada con `encodeURIComponent` (la de admin no sirve aquí, ni al revés).
-
-| Método | Ruta | Respuesta |
-|---|---|---|
-| GET | `/api/flyers/library` | `{ images, flyers }` del bucket con sus URLs de lectura |
-| POST | `/api/flyers/verify` | `{ ok: true }` o 401 |
-| POST | `/api/flyers/suggest` | `{ flyer, message, model }`: la IA reescribe el flyer (`{ prompt, flyer, today, assets: [{ id, name }] }`); 503 sin `OPENROUTER_API_KEY` |
-| POST | `/api/flyers/upload-url` | `{ id, url, headers }`: URL firmada para subir una imagen (`kind: "image"`, WebP o PNG) o el PNG de un flyer (`kind: "flyer"`) |
-| POST | `/api/flyers/image-save` | 201 imagen: registra la imagen subida con `{ id, contentType, name }` (409 si ya hay 20) |
-| POST | `/api/flyers/image-rename` | Imagen con el nuevo `name` |
-| POST | `/api/flyers/image-delete` | `{ ok: true }`: borra la imagen y su JSON |
-| POST | `/api/flyers/flyer-save` | 201 flyer: registra el PNG subido con `{ id, source, label, flyer }` (409 si ya hay 50) |
-| POST | `/api/flyers/flyer-delete` | `{ ok: true }`: borra el PNG y su JSON |
-
-Los contratos viven en `shared/schemas.ts`; el acceso a datos está centralizado en `api/_lib/` para poder añadir
-autenticación más adelante sin rehacer rutas.
-
-### Límite de 12 funciones (plan Hobby de Vercel)
-
-Vercel crea una Serverless Function por **cada archivo** de `api/` (salvo los que empiezan por `_`, como `api/_lib/`)
-y el plan Hobby rechaza el deploy con más de 12:
-`No more than 12 Serverless Functions can be added to a Deployment on the Hobby plan`.
-
-Por eso las rutas de escritura se agrupan en archivos con un segmento dinámico y una tabla de handlers (`routeFor`
-en `api/_lib/http.ts` responde 404 a lo que no esté en la tabla):
-
-| Archivo | Rutas |
-|---|---|
-| `api/lookups/[resource].ts` | `GET /api/lookups/teams`, `/competitions`, `/players`, `/lineups` |
-| `api/admin/[action].ts` | `/api/admin/verify`, `/activities`, `/activity-update`, `/activity-delete`, `/matches`, `/match-update`, `/match-delete`, `/video-update`, `/video-delete`, `/courtrack-status`, `/courtrack-sync`, `/courtrack-catalog`, `/leagues`, `/league-create`, `/league-update`, `/league-delete`, `/league-snapshot`, `/team-link-create`, `/player-create`, `/player-update`, `/player-delete`, `/lineup-save`, `/lineup-delete` |
-| `api/admin/uploads/[step].ts` | `/api/admin/uploads/start`, `/complete`, `/abort` |
-| `api/flyers/[action].ts` | `GET /api/flyers/library`; `POST /api/flyers/verify`, `/suggest`, `/upload-url`, `/image-save`, `/image-rename`, `/image-delete`, `/flyer-save`, `/flyer-delete` |
-
-Al añadir un endpoint:
-
-- **No crees un archivo nuevo** si puede ir en uno existente: una escritura de admin es una entrada más en
-  `api/admin/[action].ts`; una lectura nueva puede agruparse igual (p.ej. `api/[resource].ts`).
-- La lógica va en `api/_lib/`, que no cuenta como función.
-- `npm run build` (y por tanto el deploy) empieza con `npm run check:functions`, que falla si `api/` supera las 12
-  funciones y lista cuáles son.
+La edición de datos a mano (Supabase), la convención del bucket de videos, el cron de sincronización y la
+referencia de endpoints están en el README de [teamhub-api](https://github.com/DavehPino/teamhub-api).
+El cliente de la API es `src/lib/api.ts` (lecturas) y `src/dashboard/admin/adminApi.ts` (escrituras con palabra clave).

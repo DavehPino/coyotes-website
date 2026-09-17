@@ -12,7 +12,10 @@
       "permanent": true
     }
   ],
-  "rewrites": [{ "source": "/((?!api/|@)[^.]*)", "destination": "/index.html" }],
+  "rewrites": [
+    { "source": "/api/:path*", "destination": "https://teamhub-api.vercel.app/api/:path*" },
+    { "source": "/((?!api/|@)[^.]*)", "destination": "/index.html" }
+  ],
   "headers": [
     {
       "source": "/(.*)",
@@ -23,11 +26,5 @@
       "source": "/api/(.*)",
       "headers": [{ "key": "X-Robots-Tag", "value": "noindex, nofollow" }]
     }
-  ],
-  "functions": {
-    "api/admin/[action].ts": { "maxDuration": 60 },
-    "api/flyers/[action].ts": { "maxDuration": 60 },
-    "api/cron/sync-videos.ts": { "maxDuration": 60 }
-  },
-  "crons": [{ "path": "/api/cron/sync-videos", "schedule": "0 12 * * *" }]
+  ]
 }

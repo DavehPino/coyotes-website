@@ -37,7 +37,7 @@ export default defineConfig(({ mode }) => {
       },
     },
     server: {
-      // Opcional: `API_PROXY=http://localhost:3000 npm run dev` reenvía /api a otro servidor.
+      // `API_PROXY` (p.ej. http://localhost:3200, teamhub-api en local) reenvía /api a ese servidor.
       proxy: env.API_PROXY ? { '/api': { target: env.API_PROXY, changeOrigin: false } } : undefined,
     },
   }

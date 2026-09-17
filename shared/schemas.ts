@@ -1,4 +1,5 @@
 // Contratos de la API (validados en backend, tipos compartidos con el frontend).
+// Copia de teamhub-api/shared: el backend es la fuente. Cambia allí y copia aquí.
 // Lecturas públicas para el dashboard; las escrituras (/api/admin/*) exigen la palabra clave.
 import { z } from 'zod'
 import {
