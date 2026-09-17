@@ -23,13 +23,23 @@ export const LINEUP_IMAGE = { width: 1080, height: 1350 } as const
 const DISPLAY = "Teko, 'Arial Narrow', sans-serif"
 const SANS = 'Inter, system-ui, sans-serif'
 
-// Paleta Coyotes (misma que el flyer «brasa»).
+// Paleta Coyotes, leída de los tokens de index.css (`@theme static`) al dibujar; el hex es el respaldo.
 const INK = {
-  gold: '#f5b014',
-  orange: '#f07c13',
-  silver: '#e4e4e4',
-  ash: '#9a9a9a',
-  black: '#0a0a0a',
+  get gold() {
+    return readCssColor('--color-coyote-gold', '#f5b014')
+  },
+  get orange() {
+    return readCssColor('--color-coyote-orange', '#f07c13')
+  },
+  get silver() {
+    return readCssColor('--color-coyote-silver', '#e4e4e4')
+  },
+  get ash() {
+    return readCssColor('--color-coyote-ash', '#9a9a9a')
+  },
+  get black() {
+    return readCssColor('--color-coyote-black', '#0a0a0a')
+  },
   white: '#ffffff',
 }
 

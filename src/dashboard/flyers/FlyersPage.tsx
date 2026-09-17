@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react'
 import { FLYER_FORMAT_SIZES, FLYER_TEMPLATE_LABELS, type FlyerContent } from '@shared/flyers'
-import { Button, Card, FormError, PageHeader } from '../ui'
+import { Button, Card, FormError, PageHeader, TabList, TabPanel, Tabs, type TabItem } from '../ui'
 import { BookmarkIcon, UndoIcon } from '../ui/icons'
 import { useFlyersAccess } from './access'
 import { AiPanel } from './AiPanel'
@@ -125,69 +125,72 @@ export function FlyersPage() {
           )}
         </Card>
 
-        <div className="flex min-w-0 flex-col gap-4">
-          <TabSwitch value={tab} onChange={setTab} savedCount={saved.items.length} />
-          {saved.error && tab !== 'saved' && <FormError>{saved.error}</FormError>}
-          {tab === 'templates' && <TemplatesPanel flyer={flyer} onApply={replace} />}
-          {tab === 'saved' && (
-            <SavedPanel saved={saved} current={flyer} onOpen={replace} />
-          )}
-          {tab === 'editor' && (
-            <EditorPanel
-              flyer={flyer}
-              onChange={edit}
-              photoUrl={photoUrl}
-              onPhotoChange={setPhotoUrl}
-              library={library}
-              onRemoveImage={removeImage}
-            />
-          )}
-          {/* Se mantiene montado para no perder el pedido ni la última respuesta al cambiar de pestaña. */}
-          <div hidden={tab !== 'ai'}>
-            <AiPanel
-              flyer={flyer}
-              onApply={replace}
-              canUndo={past.length > 0}
-              onUndo={undo}
-              library={library}
-              onRemoveImage={removeImage}
-              onSave={(result, prompt) => saved.save(result, 'ia', prompt, assets)}
-              run={access.run}
-            />
+        <Tabs value={tab} onChange={setTab}>
+          <div className="flex min-w-0 flex-col gap-4">
+            <TabSwitch savedCount={saved.items.length} />
+            {saved.error && tab !== 'saved' && <FormError>{saved.error}</FormError>}
+            {tab === 'templates' && (
+              <TabPanel value="templates">
+                <TemplatesPanel flyer={flyer} onApply={replace} />
+              </TabPanel>
+            )}
+            {tab === 'saved' && (
+              <TabPanel value="saved">
+                <SavedPanel saved={saved} current={flyer} onOpen={replace} />
+              </TabPanel>
+            )}
+            {tab === 'editor' && (
+              <TabPanel value="editor">
+                <EditorPanel
+                  flyer={flyer}
+                  onChange={edit}
+                  photoUrl={photoUrl}
+                  onPhotoChange={setPhotoUrl}
+                  library={library}
+                  onRemoveImage={removeImage}
+                />
+              </TabPanel>
+            )}
+            {/* Se mantiene montado para no perder el pedido ni la última respuesta al cambiar de pestaña. */}
+            <TabPanel value="ai" hidden={tab !== 'ai'}>
+              <AiPanel
+                flyer={flyer}
+                onApply={replace}
+                canUndo={past.length > 0}
+                onUndo={undo}
+                library={library}
+                onRemoveImage={removeImage}
+                onSave={(result, prompt) => saved.save(result, 'ia', prompt, assets)}
+                run={access.run}
+              />
+            </TabPanel>
           </div>
-        </div>
+        </Tabs>
       </div>
       {access.dialog}
     </section>
   )
 }
 
-function TabSwitch({ value, onChange, savedCount }: { value: Tab; onChange: (tab: Tab) => void; savedCount: number }) {
+function TabSwitch({ savedCount }: { savedCount: number }) {
+  const items: TabItem<Tab>[] = (Object.keys(TAB_LABELS) as Tab[]).map((tab) => ({
+    value: tab,
+    children: (
+      <>
+        {TAB_LABELS[tab]}
+        {tab === 'saved' && savedCount > 0 && (
+          <span className="hidden text-xs text-coyote-ash tabular-nums sm:inline">{savedCount}</span>
+        )}
+      </>
+    ),
+  }))
   return (
     // Radio exterior 12 px = interior 8 px + 4 px de padding
-    <div role="tablist" aria-label="Herramientas" className="grid grid-cols-4 gap-1 rounded-xl bg-coyote-black p-1 shadow-border">
-      {(Object.keys(TAB_LABELS) as Tab[]).map((tab) => {
-        const selected = tab === value
-        return (
-          <button
-            key={tab}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            onClick={() => onChange(tab)}
-            className={[
-              'flex min-h-11 items-center justify-center gap-1.5 rounded-lg px-1 text-sm font-medium select-none md:min-h-10',
-              'transition-[background-color,color] duration-150 ease-out',
-              selected ? 'bg-coyote-ember text-coyote-gold' : 'text-coyote-ash hover:text-coyote-silver',
-            ].join(' ')}
-          >
-            {TAB_LABELS[tab]}
-            {tab === 'saved' && savedCount > 0 && (
-              <span className="hidden text-xs text-coyote-ash tabular-nums sm:inline">{savedCount}</span>
-            )}
-          </button>
-        )
-      })}
-    </div>
+    <TabList
+      label="Herramientas"
+      items={items}
+      className="grid grid-cols-4 gap-1 rounded-xl bg-coyote-black p-1 shadow-border"
+      tabClassName="gap-1.5 px-1"
+    />
   )
 }

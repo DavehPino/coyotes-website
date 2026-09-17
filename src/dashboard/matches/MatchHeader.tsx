@@ -33,16 +33,16 @@ export function MatchHeader({ match }: MatchHeaderProps) {
         )}
       </div>
 
-      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 md:gap-6">
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-2 sm:gap-3 md:gap-6">
         <TeamBlock name={homeName}>
           <TeamLogo team={match.is_home ? null : match.opponent} size="xl" loading="eager" />
         </TeamBlock>
         <p
           aria-label={`Marcador de sets: ${left} a ${right}`}
-          className="font-display text-7xl leading-none text-coyote-gold tabular-nums md:text-8xl"
+          className="font-display text-6xl leading-none text-coyote-gold tabular-nums sm:text-7xl md:text-8xl"
         >
           {left}
-          <span className="mx-2 text-coyote-rust md:mx-3">–</span>
+          <span className="mx-1.5 text-coyote-rust sm:mx-2 md:mx-3">–</span>
           {right}
         </p>
         <TeamBlock name={awayName}>

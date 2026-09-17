@@ -582,8 +582,8 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
               key={notice.seq}
               role={notice.tone === 'error' ? 'alert' : undefined}
               className={[
-                'pointer-events-none absolute top-3 left-1/2 z-30 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap shadow-[0_8px_24px_rgb(0_0_0/0.5)]',
-                'animate-rise motion-reduce:animate-none',
+                'pointer-events-none absolute top-3 left-1/2 z-30 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap shadow-lift',
+                'animate-rise',
                 notice.tone === 'error' ? 'bg-coyote-orange text-coyote-black' : 'bg-coyote-silver text-coyote-black',
               ].join(' ')}
             >

@@ -17,6 +17,9 @@ export function TeamStatBars({ us, them, usLabel, themLabel }: TeamStatBarsProps
     return <p className="text-sm text-coyote-ash">CourtTrack no registró estadísticas de este set.</p>
   }
   const max = Math.max(1, ...STAT_COLUMNS.flatMap(({ key }) => [us?.[key] ?? 0, them?.[key] ?? 0]))
+  // Ancho visible de cada barra en %, con un mínimo para que un valor pequeño no desaparezca. La barra ocupa toda
+  // la pista y se recorta con clip-path: la transición entre sets no relanza el layout.
+  const percent = (value: number) => (value > 0 ? Math.max((value / max) * 100, 3) : 0)
   const breakdown = { us: us && pointsBreakdown(us, them), them: them && pointsBreakdown(them, us) }
 
   return (
@@ -43,17 +46,17 @@ export function TeamStatBars({ us, them, usLabel, themLabel }: TeamStatBarsProps
               aria-label={`${label}: ${usLabel} ${left}, ${themLabel} ${right}`}
             >
               <span className="text-right font-semibold tabular-nums text-coyote-silver">{left}</span>
-              <span className="flex h-2.5 justify-end">
+              <span className="h-2.5">
                 <span
-                  className="h-full rounded-l-[4px] bg-coyote-gold transition-[width] duration-300 ease-out"
-                  style={{ width: `${(left / max) * 100}%`, minWidth: left > 0 ? 3 : 0 }}
+                  className="block h-full bg-coyote-gold transition-[clip-path] duration-300 ease-out"
+                  style={{ clipPath: `inset(0 0 0 ${100 - percent(left)}% round 4px 0 0 4px)` }}
                 />
               </span>
               <span className="text-center text-xs text-coyote-ash">{label}</span>
-              <span className="flex h-2.5">
+              <span className="h-2.5">
                 <span
-                  className="h-full rounded-r-[4px] bg-coyote-ash transition-[width] duration-300 ease-out"
-                  style={{ width: `${(right / max) * 100}%`, minWidth: right > 0 ? 3 : 0 }}
+                  className="block h-full bg-coyote-ash transition-[clip-path] duration-300 ease-out"
+                  style={{ clipPath: `inset(0 ${100 - percent(right)}% 0 0 round 0 4px 4px 0)` }}
                 />
               </span>
               <span className="font-semibold tabular-nums text-coyote-silver">{right}</span>

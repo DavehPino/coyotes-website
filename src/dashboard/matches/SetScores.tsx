@@ -66,8 +66,9 @@ export function SetScores({ match }: SetScoresProps) {
                   {content}
                 </button>
               ) : (
-                <div className={CHIP_CLASSES} aria-label={label}>
+                <div className={CHIP_CLASSES}>
                   {content}
+                  <span className="sr-only">, {winnerName}</span>
                 </div>
               )}
             </li>

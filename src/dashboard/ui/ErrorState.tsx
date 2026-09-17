@@ -31,7 +31,7 @@ export function ErrorState({
       <p className="max-w-sm text-sm text-coyote-ash">{message}</p>
       {onRetry && (
         <Button onClick={onRetry} disabled={retrying} className="mt-1 pr-4 pl-3.5">
-          <RefreshIcon className={retrying ? 'size-4 animate-spin' : 'size-4'} strokeWidth={2} />
+          <RefreshIcon className={retrying ? 'size-4 animate-spin motion-reduce:animate-none' : 'size-4'} strokeWidth={2} />
           Reintentar
         </Button>
       )}

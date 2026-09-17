@@ -694,7 +694,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
           {catalogError ? (
             <RetryError error={catalogError} onRetry={() => wizard.cliente && void discover(wizard.cliente)} />
           ) : discovering || !discovered ? (
-            <Callout tone="gold" icon={<RefreshIcon className="size-5 animate-spin" />}>
+            <Callout tone="gold" icon={<RefreshIcon className="size-5 animate-spin motion-reduce:animate-none" />}>
               Buscando a {TEAM_NAME} en las ligas de {wizard.cliente.nombre}…
             </Callout>
           ) : discovered.length === 0 ? (

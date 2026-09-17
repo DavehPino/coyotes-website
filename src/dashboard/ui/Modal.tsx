@@ -78,6 +78,8 @@ export function Modal({
         // Entrada y salida suaves: opacidad + desplazamiento corto, ease-out en ambas.
         'translate-y-2 opacity-0 transition-[opacity,translate,display,overlay] duration-200 ease-out transition-discrete',
         'open:translate-y-0 open:opacity-100 starting:open:translate-y-2 starting:open:opacity-0',
+        // Movimiento reducido: solo el fundido, sin desplazamiento.
+        'motion-reduce:translate-y-0 motion-reduce:starting:open:translate-y-0',
         'backdrop:opacity-0 backdrop:transition-opacity backdrop:duration-200 open:backdrop:opacity-100 starting:open:backdrop:opacity-0',
       ].join(' ')}
     >

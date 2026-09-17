@@ -90,7 +90,7 @@ export function PlayerStatsTable({ rows, matchColumns = false, emptyMessage }: P
               {STAT_COLUMNS.map(({ key }) => (
                 <td
                   key={key}
-                  className={`border-t border-coyote-steel/60 py-2 pl-2 text-right ${row[key] === 0 ? 'text-coyote-steel' : 'text-coyote-silver'}`}
+                  className={`border-t border-coyote-steel/60 py-2 pl-2 text-right ${row[key] === 0 ? 'text-coyote-ash' : 'text-coyote-silver'}`}
                 >
                   {row[key]}
                 </td>

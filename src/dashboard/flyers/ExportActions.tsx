@@ -2,7 +2,7 @@ import { useState, type RefObject } from 'react'
 import type { FlyerContent } from '@shared/flyers'
 import { canShareFiles, downloadFile, fileSlug, shareFile } from '@/lib/shareImage'
 import { errorMessage } from '../admin/adminApi'
-import { Button } from '../ui'
+import { Button, FormError } from '../ui'
 import { DownloadIcon, ShareIcon } from '../ui/icons'
 import { canvasToBlob } from './render'
 
@@ -19,6 +19,7 @@ function fileName(flyer: FlyerContent): string {
 /** Descarga el PNG y, en móviles que lo admiten, lo comparte directo (p.ej. a Instagram). */
 export function ExportActions({ canvasRef, flyer, disabled }: ExportActionsProps) {
   const [busy, setBusy] = useState(false)
+  const [error, setError] = useState<string | null>(null)
   const canShare = canShareFiles()
 
   async function toFile(): Promise<File | null> {
@@ -34,7 +35,7 @@ export function ExportActions({ canvasRef, flyer, disabled }: ExportActionsProps
       const file = await toFile()
       if (file) downloadFile(file)
     } catch (err) {
-      window.alert(errorMessage(err))
+      setError(errorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -47,7 +48,7 @@ export function ExportActions({ canvasRef, flyer, disabled }: ExportActionsProps
       // Cerrar la hoja de compartir no es un error (shareFile devuelve false).
       if (file) await shareFile(file)
     } catch (err) {
-      window.alert(errorMessage(err))
+      setError(errorMessage(err))
     } finally {
       setBusy(false)
     }
@@ -65,6 +66,7 @@ export function ExportActions({ canvasRef, flyer, disabled }: ExportActionsProps
         <DownloadIcon className="size-4" strokeWidth={2} />
         Descargar
       </Button>
+      {error && <FormError className="w-full">{error}</FormError>}
     </>
   )
 }

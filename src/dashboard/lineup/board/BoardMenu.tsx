@@ -73,9 +73,10 @@ export function BoardMenu({ items }: { items: BoardMenuItem[] }) {
           else if (menuRef.current?.contains(document.activeElement)) buttonRef.current?.focus()
         }}
         className={[
-          'fixed inset-auto m-0 min-w-56 rounded-xl bg-coyote-night p-1.5 text-coyote-silver shadow-[0_0_0_1px_oklch(1_0_0/0.1),0_16px_40px_rgb(0_0_0/0.6)]',
+          'fixed inset-auto m-0 min-w-56 rounded-xl bg-coyote-night p-1.5 text-coyote-silver shadow-float',
           'opacity-0 transition-[opacity,translate,display,overlay] duration-150 ease-out transition-discrete',
           '-translate-y-1 open:translate-y-0 open:opacity-100 starting:open:-translate-y-1 starting:open:opacity-0',
+          'motion-reduce:translate-y-0 motion-reduce:starting:open:translate-y-0',
         ].join(' ')}
       >
         {items.map((item) => (

@@ -13,7 +13,7 @@ import {
 const CONTROL = [
   'min-h-11 w-full rounded-lg bg-coyote-black px-3 text-base text-coyote-silver shadow-border md:min-h-10 md:text-sm',
   'transition-[box-shadow] duration-150 ease-out hover:shadow-border-hover',
-  'placeholder:text-coyote-ash/60 disabled:opacity-50',
+  'placeholder:text-coyote-ash/80 disabled:opacity-50',
   'aria-invalid:shadow-[0_0_0_1px_var(--color-coyote-orange)]',
 ].join(' ')
 
@@ -71,9 +71,9 @@ export function Field({ label, children, hint, error, optional, className = '' }
 }
 
 /** Error general de un paso del formulario (p.ej. respuesta de la API). */
-export function FormError({ children }: { children: ReactNode }) {
+export function FormError({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <p role="alert" className="rounded-lg bg-coyote-orange/12 px-3 py-2 text-sm text-coyote-orange">
+    <p role="alert" className={`rounded-lg bg-coyote-orange/12 px-3 py-2 text-sm text-coyote-orange ${className}`}>
       {children}
     </p>
   )

@@ -56,16 +56,36 @@ export function useBoardDrag({ canvasRef, courtRef, benchRef, onDrop }: UseBoard
   const [dragging, setDragging] = useState<{ playerId: string; origin: DragOrigin } | null>(null)
   const [overBench, setOverBench] = useState(false)
 
+  const finish = useCallback(() => {
+    pending.current = null
+    setDragging(null)
+    setOverBench(false)
+  }, [])
+
   // Mientras se arrastra, el navegador no debe interpretar el gesto como desplazamiento: si lo hace (p.ej. un arrastre
   // rápido en el banco, que admite pan-x), Chrome se come el siguiente toque. React registra touchmove como pasivo,
   // así que el listener va directo al documento.
+  // Si la ventana pierde el foco o la pestaña se oculta a mitad de un gesto, no llega `pointerup`: se suelta aquí
+  // para que la siguiente ficha responda sin recargar.
   useEffect(() => {
     const block = (event: TouchEvent) => {
       if (pending.current?.dragging && event.cancelable) event.preventDefault()
     }
+    const cancel = () => {
+      if (pending.current) finish()
+    }
+    const onVisibility = () => {
+      if (document.visibilityState === 'hidden') cancel()
+    }
     document.addEventListener('touchmove', block, { passive: false })
-    return () => document.removeEventListener('touchmove', block)
-  }, [])
+    window.addEventListener('blur', cancel)
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => {
+      document.removeEventListener('touchmove', block)
+      window.removeEventListener('blur', cancel)
+      document.removeEventListener('visibilitychange', onVisibility)
+    }
+  }, [finish])
 
   const placeGhost = (x: number, y: number) => {
     lastPoint.current = { x, y }
@@ -87,12 +107,6 @@ export function useBoardDrag({ canvasRef, courtRef, benchRef, onDrop }: UseBoard
     const bench = benchRef.current?.getBoundingClientRect()
     if (bench && inside(bench, x, y)) return { kind: 'bench' }
     return { kind: 'none' }
-  }
-
-  function finish() {
-    pending.current = null
-    setDragging(null)
-    setOverBench(false)
   }
 
   /** Manejadores para la ficha de un jugador. */
@@ -144,6 +158,10 @@ export function useBoardDrag({ canvasRef, courtRef, benchRef, onDrop }: UseBoard
         finish()
       },
       onPointerCancel(event: ReactPointerEvent<HTMLElement>) {
+        if (pending.current?.pointerId === event.pointerId) finish()
+      },
+      onLostPointerCapture(event: ReactPointerEvent<HTMLElement>) {
+        // Captura perdida sin `pointerup` (p.ej. la ficha se desmonta): mismo cierre que una cancelación.
         if (pending.current?.pointerId === event.pointerId) finish()
       },
       onClickCapture(event: ReactMouseEvent<HTMLElement>) {

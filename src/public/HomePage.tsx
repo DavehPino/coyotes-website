@@ -141,7 +141,7 @@ export function HomePage() {
       <footer className="border-t border-coyote-rust/40">
         <div className="mx-auto flex max-w-5xl items-center justify-between gap-4 px-4 py-6 text-sm text-coyote-ash md:px-6">
           <span>{footer.text}</span>
-          <span className="font-display text-xl leading-none text-coyote-rust uppercase">{hero.tagline}</span>
+          <span className="font-display text-xl leading-none text-coyote-orange uppercase">{hero.tagline}</span>
         </div>
       </footer>
     </div>

@@ -5,7 +5,7 @@ import { adminPost, errorMessage, isUnauthorized, safewordStore } from '../../ad
 import { RivalField } from '../../admin/RivalField'
 import { SafewordStep } from '../../admin/SafewordStep'
 import { useRivalTeams, type NewTeamDraft } from '../../admin/teams'
-import { Button, Chip, FormError, Modal } from '../../ui'
+import { Button, Chip, FormError, Modal , TabList, TabPanel, Tabs, type TabItem } from '../../ui'
 import { patchMatchDetail, refreshMatchData } from '../api'
 import { validateVideos, type Errors, type MatchDraft, type VideoDraft } from '../new/draft'
 import { MatchFields } from '../new/MatchStep'
@@ -211,123 +211,111 @@ export default function EditMatchDialog({ open, match, initialTab, onClose }: Ed
           }}
         />
       ) : (
-        <div className="flex flex-col gap-4">
-          <TabSwitch value={tab} onChange={setTab} disabled={busy} />
+        <Tabs value={tab} onChange={setTab}>
+          <div className="flex flex-col gap-4">
+            <TabSwitch value={tab} disabled={busy} />
+            <TabPanel value={tab} className="flex flex-col gap-4">
+              {tab === 'details' ? (
+                <form id={formId} onSubmit={handleSaveDetails} noValidate className="flex flex-col gap-4">
+                  <RivalField
+                    autoFocus
+                    value={draft.teamChoice}
+                    onChange={(teamChoice) => setDraft((prev) => ({ ...prev, teamChoice }))}
+                    newTeam={draft.newTeam}
+                    onNewTeamChange={patchNewTeam}
+                    errors={errors}
+                  />
+                  <MatchFields
+                    match={draft.match}
+                    rivalName={rivalNameOf(draft, rivals.data ?? [])}
+                    errors={errors}
+                    onChange={patchMatch}
+                  />
+                  <p className="text-xs text-coyote-ash">
+                    La dirección del partido y la carpeta de sus videos no cambian aunque cambies la fecha o el rival.
+                  </p>
+                  {saveError && <FormError>{saveError}</FormError>}
+                </form>
+              ) : (
+                <>
+                  <section aria-labelledby={`${formId}-saved`} className="flex flex-col gap-2">
+                    <h3 id={`${formId}-saved`} className="text-2xl leading-none text-coyote-silver">
+                      Subidos
+                    </h3>
+                    <MatchVideoList
+                      videos={match.videos}
+                      post={post}
+                      disabled={uploading}
+                      onBusyChange={(rowBusy) => setRowsBusy((count) => count + (rowBusy ? 1 : -1))}
+                      onUpdated={(video: Video) => {
+                        patchMatchDetail(queryClient, match.slug, (current) => ({
+                          ...current,
+                          videos: current.videos.map((item) => (item.id === video.id ? video : item)),
+                        }))
+                        void refresh()
+                      }}
+                      onDeleted={(videoId) => {
+                        patchMatchDetail(queryClient, match.slug, (current) => ({
+                          ...current,
+                          videos: current.videos.filter((item) => item.id !== videoId),
+                          video_count: Math.max(0, current.video_count - 1),
+                        }))
+                        void refresh()
+                      }}
+                    />
+                  </section>
 
-          {tab === 'details' ? (
-            <form id={formId} onSubmit={handleSaveDetails} noValidate className="flex flex-col gap-4">
-              <RivalField
-                autoFocus
-                value={draft.teamChoice}
-                onChange={(teamChoice) => setDraft((prev) => ({ ...prev, teamChoice }))}
-                newTeam={draft.newTeam}
-                onNewTeamChange={patchNewTeam}
-                errors={errors}
-              />
-              <MatchFields
-                match={draft.match}
-                rivalName={rivalNameOf(draft, rivals.data ?? [])}
-                errors={errors}
-                onChange={patchMatch}
-              />
-              <p className="text-xs text-coyote-ash">
-                La dirección del partido y la carpeta de sus videos no cambian aunque cambies la fecha o el rival.
-              </p>
-              {saveError && <FormError>{saveError}</FormError>}
-            </form>
-          ) : (
-            <>
-              <section aria-labelledby={`${formId}-saved`} className="flex flex-col gap-2">
-                <h3 id={`${formId}-saved`} className="text-2xl leading-none text-coyote-silver">
-                  Subidos
-                </h3>
-                <MatchVideoList
-                  videos={match.videos}
-                  post={post}
-                  disabled={uploading}
-                  onBusyChange={(rowBusy) => setRowsBusy((count) => count + (rowBusy ? 1 : -1))}
-                  onUpdated={(video: Video) => {
-                    patchMatchDetail(queryClient, match.slug, (current) => ({
-                      ...current,
-                      videos: current.videos.map((item) => (item.id === video.id ? video : item)),
-                    }))
-                    void refresh()
-                  }}
-                  onDeleted={(videoId) => {
-                    patchMatchDetail(queryClient, match.slug, (current) => ({
-                      ...current,
-                      videos: current.videos.filter((item) => item.id !== videoId),
-                      video_count: Math.max(0, current.video_count - 1),
-                    }))
-                    void refresh()
-                  }}
-                />
-              </section>
-
-              <form
-                id={formId}
-                onSubmit={handleUpload}
-                noValidate
-                aria-labelledby={`${formId}-new`}
-                className="flex flex-col gap-3"
-              >
-                <h3 id={`${formId}-new`} className="pt-1 text-2xl leading-none text-coyote-silver">
-                  Añadir videos
-                </h3>
-                {uploading ? (
-                  <ol className="flex flex-col gap-2" aria-live="polite">
-                    <VideoUploadRows videos={batch} uploads={uploads} canRetry={false} onRetryVideo={() => undefined} />
-                  </ol>
-                ) : (
-                  <>
-                    {uploadedCount > 0 && pending.length === 0 && (
-                      <p role="status" className="text-sm text-coyote-gold">
-                        {uploadedCount === 1 ? 'Video subido.' : `${uploadedCount} videos subidos.`}
-                      </p>
+                  <form
+                    id={formId}
+                    onSubmit={handleUpload}
+                    noValidate
+                    aria-labelledby={`${formId}-new`}
+                    className="flex flex-col gap-3"
+                  >
+                    <h3 id={`${formId}-new`} className="pt-1 text-2xl leading-none text-coyote-silver">
+                      Añadir videos
+                    </h3>
+                    {uploading ? (
+                      <ol className="flex flex-col gap-2" aria-live="polite">
+                        <VideoUploadRows videos={batch} uploads={uploads} canRetry={false} onRetryVideo={() => undefined} />
+                      </ol>
+                    ) : (
+                      <>
+                        {uploadedCount > 0 && pending.length === 0 && (
+                          <p role="status" className="text-sm text-coyote-gold">
+                            {uploadedCount === 1 ? 'Video subido.' : `${uploadedCount} videos subidos.`}
+                          </p>
+                        )}
+                        <VideoPicker onAdd={(added) => setPending((prev) => [...prev, ...added])} />
+                        <VideoDraftList videos={pending} errors={videoErrors} notes={uploadNotes} onChange={setPending} />
+                        {pending.length > 0 && (
+                          <p className="text-xs text-coyote-ash">
+                            Se suben directamente al almacenamiento del equipo. Mantén esta ventana abierta hasta que
+                            terminen.
+                          </p>
+                        )}
+                      </>
                     )}
-                    <VideoPicker onAdd={(added) => setPending((prev) => [...prev, ...added])} />
-                    <VideoDraftList videos={pending} errors={videoErrors} notes={uploadNotes} onChange={setPending} />
-                    {pending.length > 0 && (
-                      <p className="text-xs text-coyote-ash">
-                        Se suben directamente al almacenamiento del equipo. Mantén esta ventana abierta hasta que
-                        terminen.
-                      </p>
-                    )}
-                  </>
-                )}
-              </form>
-            </>
-          )}
-        </div>
+                  </form>
+                </>
+              )}
+            </TabPanel>
+          </div>
+        </Tabs>
       )}
     </Modal>
   )
 }
 
-function TabSwitch({ value, onChange, disabled }: { value: EditTab; onChange: (tab: EditTab) => void; disabled: boolean }) {
+function TabSwitch({ value, disabled }: { value: EditTab; disabled: boolean }) {
+  const items: TabItem<EditTab>[] = (Object.keys(TAB_LABELS) as EditTab[]).map((tab) => ({
+    value: tab,
+    children: TAB_LABELS[tab],
+    // Mientras se guarda o se sube no se cambia de pestaña; la activa sigue enfocable.
+    disabled: disabled && tab !== value,
+  }))
   return (
     // Radio exterior 12 px = interior 8 px + 4 px de padding
-    <div role="tablist" aria-label="Qué editar" className="grid grid-cols-2 gap-1 rounded-xl bg-coyote-black p-1 shadow-border">
-      {(Object.keys(TAB_LABELS) as EditTab[]).map((tab) => {
-        const selected = tab === value
-        return (
-          <button
-            key={tab}
-            type="button"
-            role="tab"
-            aria-selected={selected}
-            disabled={disabled && !selected}
-            onClick={() => onChange(tab)}
-            className={[
-              'flex min-h-11 items-center justify-center rounded-lg px-3 text-sm font-medium select-none md:min-h-10',
-              'transition-[background-color,color] duration-150 ease-out disabled:opacity-50',
-              selected ? 'bg-coyote-ember text-coyote-gold' : 'text-coyote-ash hover:text-coyote-silver',
-            ].join(' ')}
-          >
-            {TAB_LABELS[tab]}
-          </button>
-        )
-      })}
-    </div>
+    <TabList label="Qué editar" items={items} className="grid grid-cols-2 gap-1 rounded-xl bg-coyote-black p-1 shadow-border" />
   )
 }

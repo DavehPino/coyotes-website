@@ -27,6 +27,12 @@ export function DashboardLayout() {
 
   return (
     <div className="min-h-dvh md:grid md:grid-cols-[15rem_1fr]">
+      <a
+        href="#contenido"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-50 focus:rounded-lg focus:bg-coyote-gold focus:px-4 focus:py-2 focus:text-coyote-black"
+      >
+        Saltar al contenido
+      </a>
       {/* Cabecera compacta en móvil (la navegación va en la barra inferior) */}
       <header className="flex items-center gap-2.5 px-4 pt-4 md:hidden">
         <img src={LOGO_SRC} alt="" className="size-8 rounded-full" />
@@ -75,7 +81,7 @@ export function DashboardLayout() {
         </nav>
       </aside>
 
-      <main className="min-w-0 px-4 pt-5 pb-28 md:px-8 md:pt-8 md:pb-10">
+      <main id="contenido" className="min-w-0 px-4 pt-5 pb-28 md:px-8 md:pt-8 md:pb-10">
         <Outlet />
       </main>
     </div>

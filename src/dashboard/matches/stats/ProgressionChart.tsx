@@ -66,7 +66,8 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
 
   const hovered = hover !== null ? points[hover - 1] : undefined
 
-  const onPointerMove = (event: React.PointerEvent<SVGSVGElement>) => {
+  /** Punto bajo el puntero: con ratón sigue al cursor; con el dedo, un toque lo fija hasta el siguiente. */
+  const locate = (event: React.PointerEvent<SVGSVGElement>) => {
     if (total === 0 || plotWidth === 0) return
     const rect = event.currentTarget.getBoundingClientRect()
     const ratio = (event.clientX - rect.left - PAD.left) / plotWidth
@@ -104,8 +105,12 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
             width={width}
             height={HEIGHT}
             className="block"
-            onPointerMove={onPointerMove}
-            onPointerLeave={() => setHover(null)}
+            onPointerDown={locate}
+            onPointerMove={locate}
+            onPointerLeave={(event) => {
+              // El dedo siempre "sale" al levantarse: el punto fijado se queda hasta el siguiente toque.
+              if (event.pointerType === 'mouse') setHover(null)
+            }}
           >
             <defs>
               <clipPath id={`${clipId}-above`}>
@@ -177,8 +182,9 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
         )}
 
         {hover !== null && hovered && (
+          // Detalle visual del punto: el gráfico es una imagen y el punto a punto de abajo es su versión accesible.
           <div
-            role="status"
+            aria-hidden
             className="pointer-events-none absolute top-0 z-10 w-max max-w-[14rem] rounded-lg bg-coyote-black px-2.5 py-1.5 text-xs text-coyote-silver shadow-border-hover"
             style={x(hover) > width / 2 ? { right: width - x(hover) + 8 } : { left: x(hover) + 8 }}
           >

@@ -117,7 +117,7 @@ export function Court({
                   aria-keyshortcuts="ArrowUp ArrowDown ArrowLeft ArrowRight Delete"
                   className={[
                     'pointer-events-auto absolute top-0 left-0 -translate-x-1/2 -translate-y-[26px]',
-                    moved?.kind === 'drag' ? 'animate-token-drop motion-reduce:animate-none' : '',
+                    moved?.kind === 'drag' ? 'animate-token-drop' : '',
                   ].join(' ')}
                   {...bind(player.id, 'court')}
                   onClick={(event) => onTokenClick(player.id, event)}

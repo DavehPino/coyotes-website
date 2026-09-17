@@ -3,7 +3,7 @@ import { TEAM_NAME } from '@/config'
 import { ApiError } from '@/lib/api'
 import { formatDateFull } from '@/lib/dates'
 import type { MatchDetail, MatchSetEvent, MatchSetStats, MatchStats } from '@shared/schemas'
-import { Chip, EmptyState, ErrorState, Modal, Skeleton } from '../../ui'
+import { Chip, EmptyState, ErrorState, Modal, Skeleton, TabList, TabPanel, Tabs, type TabItem } from '../../ui'
 import { useMatchStats } from '../api'
 import { matchTitle, opponentLabel } from '../matchLabels'
 import { PlayerStatsTable, type PlayerStatsRow } from './PlayerStatsTable'
@@ -52,60 +52,61 @@ export default function SetStatsDialog({ open, match, initialSet, onClose }: Set
       }
       scrollResetKey={String(tab)}
     >
-      <div className="flex flex-col gap-5">
-        <TabBar tabs={tabs} value={tab} onChange={setTab} />
-
-        {query.isPending ? (
-          <StatsSkeleton />
-        ) : query.isError ? (
-          <StatsError error={query.error} onRetry={() => void query.refetch()} retrying={query.isFetching} />
-        ) : tab === 'match' ? (
-          <MatchPanel stats={stats!} themLabel={themLabel} />
-        ) : currentSet ? (
-          <SetPanel set={currentSet} themLabel={themLabel} />
-        ) : (
-          <EmptyState title="Sin datos de este set" description="CourtTrack no tiene registrado este set del partido." />
-        )}
-      </div>
+      <Tabs value={tab} onChange={setTab}>
+        <div className="flex flex-col gap-5">
+          <TabBar tabs={tabs} />
+          <TabPanel value={tab} className="flex flex-col gap-5">
+            {query.isPending ? (
+              <StatsSkeleton />
+            ) : query.isError ? (
+              <StatsError error={query.error} onRetry={() => void query.refetch()} retrying={query.isFetching} />
+            ) : tab === 'match' ? (
+              <MatchPanel stats={stats!} themLabel={themLabel} />
+            ) : currentSet ? (
+              <SetPanel set={currentSet} themLabel={themLabel} />
+            ) : (
+              <EmptyState title="Sin datos de este set" description="CourtTrack no tiene registrado este set del partido." />
+            )}
+          </TabPanel>
+        </div>
+      </Tabs>
     </Modal>
   )
 }
 
-function TabBar({
-  tabs,
-  value,
-  onChange,
-}: {
-  tabs: { number: number; us: number; them: number }[]
-  value: Tab
-  onChange: (tab: Tab) => void
-}) {
-  const tabClasses = (selected: boolean) =>
-    [
-      'flex min-h-11 min-w-[4.5rem] shrink-0 flex-col items-center justify-center rounded-lg px-3 py-1 select-none',
-      'transition-[background-color,color] duration-150 ease-out',
-      selected ? 'bg-coyote-ember text-coyote-gold' : 'text-coyote-ash hover:text-coyote-silver',
-    ].join(' ')
-  return (
-    // Radio exterior 12 px = interior 8 px + 4 px de padding
-    <div role="tablist" aria-label="Set" className="-mx-5 flex gap-1 overflow-x-auto px-5">
-      <div className="flex gap-1 rounded-xl bg-coyote-black p-1 shadow-border">
-        {tabs.map((set) => {
-          const selected = value === set.number
-          return (
-            <button key={set.number} type="button" role="tab" aria-selected={selected} onClick={() => onChange(set.number)} className={tabClasses(selected)}>
-              <span className="text-[10px] font-medium tracking-wide uppercase">Set {set.number}</span>
-              <span className="font-display text-xl leading-none tabular-nums">
-                {set.us}-{set.them}
-              </span>
-            </button>
-          )
-        })}
-        <button type="button" role="tab" aria-selected={value === 'match'} onClick={() => onChange('match')} className={tabClasses(value === 'match')}>
+function TabBar({ tabs }: { tabs: { number: number; us: number; them: number }[] }) {
+  const items: TabItem<Tab>[] = [
+    ...tabs.map((set) => ({
+      value: set.number,
+      children: (
+        <>
+          <span className="text-[10px] font-medium tracking-wide uppercase">Set {set.number}</span>
+          <span className="font-display text-xl leading-none tabular-nums">
+            {set.us}-{set.them}
+          </span>
+        </>
+      ),
+    })),
+    {
+      value: 'match',
+      children: (
+        <>
           <span className="text-[10px] font-medium tracking-wide uppercase">Partido</span>
           <span className="text-sm leading-5">Totales</span>
-        </button>
-      </div>
+        </>
+      ),
+    },
+  ]
+  return (
+    // Radio exterior 12 px = interior 8 px + 4 px de padding. scroll-px: al enfocar una pestaña con el teclado,
+    // la tira la trae a la vista conservando el margen lateral.
+    <div className="-mx-5 flex scroll-px-6 overflow-x-auto px-5">
+      <TabList
+        label="Set"
+        items={items}
+        className="flex shrink-0 gap-1 rounded-xl bg-coyote-black p-1 shadow-border"
+        tabClassName="min-w-[4.5rem] shrink-0 flex-col px-3 py-1"
+      />
     </div>
   )
 }

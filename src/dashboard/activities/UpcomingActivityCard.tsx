@@ -16,6 +16,10 @@ const CARD_CLASSES = 'flex h-full min-h-72 w-full flex-col gap-4 rounded-2xl p-5
 /**
  * Tarjeta del carrusel. Dos variantes: general (superficie neutra, sin etiqueta) y
  * Liga Podio (celeste, etiqueta PODIO y logo). Clic o Enter abren el detalle.
+ *
+ * Es un `<article>` con el título como botón cuya zona de pulsación se extiende a toda la tarjeta: así el
+ * encabezado y los párrafos siguen siendo contenido de verdad (no puede haber bloques dentro de un botón) y el
+ * lector de pantalla lee la tarjeta entera en orden.
  */
 export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivityCardProps) {
   const podio = activity.category === 'podio'
@@ -24,14 +28,11 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
   const muted = podio ? 'text-podio-mist' : 'text-coyote-ash'
 
   return (
-    <button
-      type="button"
-      onClick={() => onOpen(activity)}
-      aria-haspopup="dialog"
-      aria-label={`${podio ? 'Liga Podio. ' : ''}${activity.title}, ${date}${time ? `, ${time}` : ''}. Ver detalle`}
+    <article
       className={[
         CARD_CLASSES,
-        'transition-[box-shadow,filter,scale] duration-150 ease-out active:scale-[0.96]',
+        'relative transition-[box-shadow,filter,scale] duration-150 ease-out active:scale-[0.96]',
+        'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-coyote-gold',
         podio
           ? 'bg-podio-fade text-white shadow-[0_0_0_1px_oklch(1_0_0/0.16)] hover:brightness-110'
           : 'bg-coyote-night text-coyote-silver shadow-border hover:shadow-border-hover',
@@ -68,7 +69,17 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
             {ACTIVITY_TYPE_LABELS[activity.activity_type]}
           </p>
         )}
-        <h3 className="text-3xl leading-none md:text-4xl">{activity.title}</h3>
+        <h3 className="text-3xl leading-none md:text-4xl">
+          <button
+            type="button"
+            onClick={() => onOpen(activity)}
+            aria-haspopup="dialog"
+            className="text-left after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none"
+          >
+            {activity.title}
+            <span className="sr-only">. Ver detalle</span>
+          </button>
+        </h3>
       </div>
 
       {activity.description && (
@@ -91,7 +102,7 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
           )}
         </div>
       )}
-    </button>
+    </article>
   )
 }
 

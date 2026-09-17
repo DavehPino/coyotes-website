@@ -34,7 +34,7 @@ function StatusIcon({ tone }: { tone: Tone }) {
   if (tone === 'busy') {
     return (
       <span className={`${base} bg-coyote-ember text-coyote-gold`}>
-        <RefreshIcon className="size-5 animate-spin" />
+        <RefreshIcon className="size-5 animate-spin motion-reduce:animate-none" />
       </span>
     )
   }

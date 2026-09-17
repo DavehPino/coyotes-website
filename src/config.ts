@@ -1,6 +1,9 @@
-import logoUrl from '@assets/coyotes-logo.png'
+import logoUrl from '@assets/coyotes-logo.webp'
 
-/** Escudo (assets/coyotes-logo.png). Vite lo sirve con hash; en index.html se referencia por ruta. */
+/**
+ * Escudo: assets/coyotes-logo.webp, a 640 px, derivado del PNG maestro (assets/coyotes-logo.png, que no se sirve).
+ * Vite lo sirve con hash. Los favicons y la imagen de Open Graph van aparte, referenciados desde index.html.
+ */
 export const LOGO_SRC = logoUrl
 export const TEAM_NAME = 'Coyotes'
 

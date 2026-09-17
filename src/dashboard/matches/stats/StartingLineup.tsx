@@ -28,8 +28,11 @@ export function StartingLineup({ lineup }: StartingLineupProps) {
               <div
                 key={zone}
                 className="relative flex min-h-16 flex-col items-center justify-center rounded-lg bg-coyote-black/45 px-1 py-2 text-center"
-                aria-label={player ? `Zona ${zone}: ${player.name}${player.serving ? ', saca primero' : ''}` : `Zona ${zone}: vacía`}
               >
+                <span className="sr-only">
+                  Zona {zone}
+                  {player ? ':' : ', vacía'}
+                </span>
                 <span aria-hidden className="absolute top-1 left-1.5 text-[10px] text-court-line/50 tabular-nums">
                   {zone}
                 </span>
@@ -40,11 +43,16 @@ export function StartingLineup({ lineup }: StartingLineupProps) {
                     </span>
                     <span className="mt-0.5 line-clamp-1 text-[11px] text-coyote-silver">{player.short_name}</span>
                     {player.serving && (
-                      <BallIcon className="absolute top-1 right-1 size-3.5 text-coyote-yellow" strokeWidth={2} filled />
+                      <>
+                        <BallIcon className="absolute top-1 right-1 size-3.5 text-coyote-yellow" strokeWidth={2} filled />
+                        <span className="sr-only">, saca primero</span>
+                      </>
                     )}
                   </>
                 ) : (
-                  <span className="text-xs text-court-line/40">–</span>
+                  <span aria-hidden className="text-xs text-court-line/40">
+                    –
+                  </span>
                 )}
               </div>
             )

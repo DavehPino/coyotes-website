@@ -46,6 +46,8 @@ export function LineupPicker({ lineups, currentId, currentName, dirty, onChange 
       />
       {dirty && (
         <span
+          role="img"
+          aria-label="Cambios sin guardar"
           title="Cambios sin guardar"
           className="pointer-events-none absolute top-1.5 right-8 size-2 rounded-full bg-coyote-orange"
         />

@@ -645,7 +645,7 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
         />
       )}
       {step === 'running' && (
-        <Callout tone="gold" icon={<RefreshIcon className="size-5 animate-spin" />}>
+        <Callout tone="gold" icon={<RefreshIcon className="size-5 animate-spin motion-reduce:animate-none" />}>
           <span aria-live="polite">
             {lastDryRun ? 'Consultando los partidos en CourtTrack…' : 'Importando los partidos de tus ligas…'}
           </span>

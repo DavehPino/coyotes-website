@@ -27,7 +27,7 @@ export function TokenFace({ player, selected = false, lifted = false }: TokenFac
           primary.bg,
           primary.text,
           secondary ? `ring-[3px] ring-offset-2 ring-offset-coyote-black ${secondary.ring}` : '',
-          lifted ? 'scale-110 shadow-[0_10px_24px_rgb(0_0_0/0.55)]' : 'shadow-[0_2px_6px_rgb(0_0_0/0.45)]',
+          lifted ? 'scale-110 shadow-lift' : 'shadow-token',
         ].join(' ')}
       >
         <span
