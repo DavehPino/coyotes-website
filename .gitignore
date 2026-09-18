@@ -23,3 +23,10 @@ Thumbs.db
 
 # Claude Code (skills y configuración local)
 .claude/
+
+.env*
+
+# Herramientas y notas locales (no versionar)
+.impeccable/
+skills-lock.json
+PLAN-REDISENO.md
