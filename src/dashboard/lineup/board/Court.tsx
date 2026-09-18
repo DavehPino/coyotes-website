@@ -141,9 +141,9 @@ function CourtDrawing() {
     <svg
       viewBox={`0 0 ${CANVAS_WIDTH} ${CANVAS_HEIGHT}`}
       aria-hidden
-      className="absolute inset-0 size-full rounded-2xl"
+      className="absolute inset-0 size-full rounded-sm shadow-[0_0_0_2px_var(--color-ink)]"
     >
-      <rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} rx={0.35} fill="var(--color-court-free)" />
+      <rect width={CANVAS_WIDTH} height={CANVAS_HEIGHT} fill="var(--color-court-free)" />
       <rect x={court.x} y={court.y} width={COURT.size} height={COURT.size} fill="var(--color-court)" />
 
       {/* Líneas de 5 cm */}

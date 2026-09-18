@@ -330,22 +330,23 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
   }
 
   const counter = (
-    <p className="flex items-center gap-2 text-sm text-coyote-ash tabular-nums">
+    <p className="flex items-center gap-2 text-sm text-ink-soft tabular-nums">
       <span>
         Titulares{' '}
-        <strong className={roles.starters === MAX_STARTERS ? 'text-coyote-gold' : 'text-coyote-silver'}>
+        <strong className={roles.starters === MAX_STARTERS ? 'font-extrabold text-ink' : 'font-bold text-ink-soft'}>
           {roles.starters}/{MAX_STARTERS}
+          {roles.starters === MAX_STARTERS && <span aria-hidden> ✓</span>}
         </strong>
       </span>
       <span aria-hidden>·</span>
       <span>
         Líbero{' '}
-        <strong className={roles.libero > 0 ? 'text-coyote-gold' : 'text-coyote-silver'}>
+        <strong className={roles.libero > 0 ? 'font-extrabold text-ink' : 'font-bold text-ink-soft'}>
           <span aria-hidden>{roles.libero > 0 ? '✓' : '—'}</span>
           <span className="sr-only">{roles.libero > 0 ? 'sí' : 'no'}</span>
         </strong>
       </span>
-      {dirty && <span className="ml-1 text-xs text-coyote-orange">Sin guardar</span>}
+      {dirty && <span className="ml-1 rounded-sm bg-paper-deep px-1.5 py-0.5 text-xs font-bold text-ink">Sin guardar</span>}
     </p>
   )
 
@@ -387,7 +388,7 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
           />
         </Field>
         {mode === 'rename' && dirty && (
-          <p className="text-xs text-coyote-ash">Solo cambia el nombre: los movimientos en cancha siguen sin guardar.</p>
+          <p className="text-xs text-ink-soft">Solo cambia el nombre: los movimientos en cancha siguen sin guardar.</p>
         )}
       </ActionSheet>
     )
@@ -403,7 +404,7 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
         onConfirm={(safeword) => (safeword ? saveExisting(safeword) : undefined)}
         onCancel={closeSheet}
       >
-        <p className="text-sm text-coyote-silver">
+        <p className="text-sm text-ink">
           Se reemplaza la formación «{current.name}» con lo que hay ahora en la cancha.
         </p>
       </ActionSheet>
@@ -421,7 +422,7 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
         onConfirm={(safeword) => (safeword ? removeLineup(safeword) : undefined)}
         onCancel={closeSheet}
       >
-        <p className="text-sm text-coyote-silver">
+        <p className="text-sm text-ink">
           «{current.name}» se borra para siempre. Los jugadores siguen en el plantel.
         </p>
       </ActionSheet>
@@ -442,7 +443,7 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
         }}
         onCancel={closeSheet}
       >
-        <p className="text-sm text-coyote-silver">{message}</p>
+        <p className="text-sm text-ink">{message}</p>
       </ActionSheet>
     )
   }
@@ -474,7 +475,7 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
       </h2>
 
       {/* ─── Barra superior ─────────────────────────────────────────── */}
-      <header className="flex items-center gap-1.5 border-b border-coyote-rust/50 bg-coyote-night px-2 py-2 md:gap-2 md:px-4">
+      <header className="on-surface flex items-center gap-1.5 border-b-[6px] border-[color:var(--section-line,var(--color-line))] bg-surface px-2 py-2 text-ink md:gap-2 md:px-4">
         <Button variant="ghost" size="icon" aria-label="Cerrar la cancha" data-autofocus onClick={requestClose}>
           <CloseIcon strokeWidth={2} />
         </Button>
@@ -546,9 +547,9 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
         {counter}
         {selected && (
           <div className="flex items-center gap-2 text-sm">
-            <span className="text-coyote-silver">
+            <span className="text-ink-soft">
               {selectedOnCourt ? 'Toca la cancha para moverlo' : 'Toca la cancha para ubicar a'}{' '}
-              {!selectedOnCourt && <strong className="font-semibold">{selected.name}</strong>}
+              {!selectedOnCourt && <strong className="font-bold text-ink">{selected.name}</strong>}
             </span>
             {!selectedOnCourt && (
               <Button size="sm" variant="secondary" onClick={placeSelectedInFreeZone} className="min-h-9 md:min-h-9">
@@ -582,9 +583,9 @@ export default function LineupBoard({ open, initialLineupId, players, lineups, o
               key={notice.seq}
               role={notice.tone === 'error' ? 'alert' : undefined}
               className={[
-                'pointer-events-none absolute top-3 left-1/2 z-30 -translate-x-1/2 rounded-full px-4 py-2 text-sm font-semibold whitespace-nowrap shadow-lift',
+                'pointer-events-none absolute top-3 left-1/2 z-30 -translate-x-1/2 rounded-sm px-4 py-2 text-sm font-bold whitespace-nowrap shadow-dialog',
                 'animate-rise',
-                notice.tone === 'error' ? 'bg-coyote-orange text-coyote-black' : 'bg-coyote-silver text-coyote-black',
+                notice.tone === 'error' ? 'bg-danger text-white' : 'bg-ink text-paper',
               ].join(' ')}
             >
               {notice.text}

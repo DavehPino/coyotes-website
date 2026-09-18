@@ -26,7 +26,7 @@ export function TokenFace({ player, selected = false, lifted = false }: TokenFac
           'relative flex size-12 shrink-0 flex-col items-center justify-center rounded-full border-2 border-white/85',
           primary.bg,
           primary.text,
-          secondary ? `ring-[3px] ring-offset-2 ring-offset-coyote-black ${secondary.ring}` : '',
+          secondary ? `ring-[3px] ring-offset-2 ring-offset-transparent ${secondary.ring}` : '',
           lifted ? 'scale-110 shadow-lift' : 'shadow-token',
         ].join(' ')}
       >
@@ -45,7 +45,7 @@ export function TokenFace({ player, selected = false, lifted = false }: TokenFac
           <span
             aria-hidden
             className={[
-              'pointer-events-none absolute rounded-full border-[3px] border-coyote-gold',
+              'pointer-events-none absolute rounded-full border-[3px] border-club shadow-[0_0_0_2px_var(--color-ink)]',
               secondary ? '-inset-[9px]' : '-inset-[6px]',
             ].join(' ')}
           />
@@ -54,7 +54,7 @@ export function TokenFace({ player, selected = false, lifted = false }: TokenFac
       <span
         className={[
           'mt-1 max-w-[5.5rem] truncate rounded px-1 text-[11px] leading-4 font-semibold',
-          selected ? 'bg-coyote-gold text-coyote-black' : 'bg-coyote-black/75 text-coyote-silver',
+          selected ? 'bg-club text-ink' : 'bg-ink/85 text-white',
         ].join(' ')}
       >
         {shortName(player.name)}

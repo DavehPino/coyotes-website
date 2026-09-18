@@ -1,6 +1,7 @@
 import { useEffect, useRef, type KeyboardEvent, type MouseEvent, type RefObject } from 'react'
 import { PLAYER_POSITION_LABELS, type PlayerPosition } from '@shared/domain'
 import type { Player } from '@shared/schemas'
+import { Button } from '../../ui'
 import { PositionFilter } from '../PositionFilter'
 import { positionsLabel } from '../positions'
 import { PlayerToken } from './PlayerToken'
@@ -61,30 +62,25 @@ export function Bench({
         if (event.detail !== 0 && !(event.target as Element).closest('[data-token], button')) onTap()
       }}
       className={[
-        'flex min-h-0 shrink-0 flex-col gap-2 border-t border-coyote-rust/50 bg-coyote-night pt-2 pb-2',
+        'on-surface flex min-h-0 shrink-0 flex-col gap-2 border-t-[6px] border-[color:var(--section-line,var(--color-line))] bg-surface pt-2 pb-2 text-ink',
         'transition-[background-color,box-shadow] duration-150 ease-out',
-        'wide:w-60 wide:border-t-0 wide:border-l wide:pt-3 lg:w-72',
-        highlighted ? 'bg-coyote-ember shadow-[inset_0_0_0_2px_var(--color-coyote-gold)]' : '',
+        'wide:w-60 wide:border-t-0 wide:border-l-[6px] wide:pt-3 lg:w-72',
+        highlighted ? 'bg-paper-deep shadow-[inset_0_0_0_3px_var(--color-ink)]' : '',
       ].join(' ')}
     >
-      <div className="flex items-baseline justify-between gap-2 px-3">
-        <h3 className="text-2xl leading-none text-coyote-silver">
-          Banco <span className="font-sans text-sm font-medium text-coyote-ash tabular-nums">({total})</span>
+      <div className="flex items-center justify-between gap-2 px-3">
+        <h3 className="text-2xl leading-none text-ink">
+          Banco <span className="text-sm font-medium text-ink-soft tabular-nums">({total})</span>
         </h3>
         {canReceive && (
-          <button
-            type="button"
-            onClick={onTap}
-            className="min-h-9 rounded-lg px-2 text-xs font-semibold text-coyote-gold hover:bg-coyote-ember"
-          >
+          <Button size="sm" variant="secondary" onClick={onTap} className="min-h-9 px-2.5 text-xs md:min-h-9">
             Devolver al banco
-          </button>
+          </Button>
         )}
       </div>
 
       <PositionFilter
         compact
-        onBoard
         label="Filtrar el banco por posición"
         value={filter}
         onChange={onFilterChange}
@@ -92,7 +88,7 @@ export function Bench({
       />
 
       {players.length === 0 ? (
-        <p className="px-3 py-3 text-sm text-coyote-ash wide:py-6">
+        <p className="px-3 py-3 text-sm text-ink-soft wide:py-6">
           {total === 0 ? 'Todos los jugadores activos están en cancha.' : 'Nadie en el banco con esa posición.'}
         </p>
       ) : (

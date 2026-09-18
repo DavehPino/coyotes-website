@@ -50,8 +50,8 @@ export function FullscreenDialog({ open, onRequestClose, labelledBy, children }:
         onRequestClose()
       }}
       className={[
-        'fixed inset-0 m-0 h-dvh max-h-none w-dvw max-w-none overflow-hidden bg-coyote-black p-0 text-coyote-silver',
-        'backdrop:bg-coyote-black',
+        'fixed inset-0 m-0 h-dvh max-h-none w-dvw max-w-none overflow-hidden bg-sheet p-0 text-ink',
+        'backdrop:bg-scrim',
         'opacity-0 transition-[opacity,display,overlay] duration-150 ease-out transition-discrete',
         'open:opacity-100 starting:open:opacity-0',
       ].join(' ')}

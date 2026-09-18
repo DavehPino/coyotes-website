@@ -7,8 +7,6 @@ type PositionFilterProps = {
   label: string
   /** Abreviaturas en vez de nombres (banco de la cancha). */
   compact?: boolean
-  /** Dentro de la cancha (fondo oscuro): conserva la paleta del tablero, que no se rediseña. */
-  onBoard?: boolean
   className?: string
 }
 
@@ -17,15 +15,9 @@ const CHIP_BASE = 'btn btn-static min-h-10 gap-1.5 px-3 text-xs whitespace-nowra
 /** Teclas sobre la hoja; el marcado pasa a tecla del club (negro con letras doradas). */
 const CHIP_FLOOR = 'btn-secondary aria-pressed:bg-key aria-pressed:text-on-key'
 
-/** Sobre la cancha oscura: la paleta del tablero. */
-const CHIP_BOARD = [
-  'rounded-full aria-pressed:bg-coyote-ember aria-pressed:text-coyote-gold aria-pressed:shadow-gold',
-  'bg-coyote-black text-coyote-ash shadow-border hover:text-coyote-silver hover:shadow-border-hover',
-].join(' ')
-
 /** Rótulos de filtro por posición («Todas» + las 6). Uno activo a la vez. El punto lleva el color de la posición. */
-export function PositionFilter({ value, onChange, label, compact = false, onBoard = false, className = '' }: PositionFilterProps) {
-  const chip = `${CHIP_BASE} ${onBoard ? CHIP_BOARD : CHIP_FLOOR}`
+export function PositionFilter({ value, onChange, label, compact = false, className = '' }: PositionFilterProps) {
+  const chip = `${CHIP_BASE} ${CHIP_FLOOR}`
   return (
     <div role="group" aria-label={label} className={['flex gap-2', className].join(' ')}>
       <button type="button" aria-pressed={value === null} onClick={() => onChange(null)} className={chip}>

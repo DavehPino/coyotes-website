@@ -73,7 +73,7 @@ export function BoardMenu({ items }: { items: BoardMenuItem[] }) {
           else if (menuRef.current?.contains(document.activeElement)) buttonRef.current?.focus()
         }}
         className={[
-          'fixed inset-auto m-0 min-w-56 rounded-xl bg-coyote-night p-1.5 text-coyote-silver shadow-float',
+          'on-surface fixed inset-auto m-0 min-w-56 rounded-sm border-2 border-ink bg-surface p-1.5 text-ink shadow-dialog',
           'opacity-0 transition-[opacity,translate,display,overlay] duration-150 ease-out transition-discrete',
           '-translate-y-1 open:translate-y-0 open:opacity-100 starting:open:-translate-y-1 starting:open:opacity-0',
           'motion-reduce:translate-y-0 motion-reduce:starting:open:translate-y-0',
@@ -90,10 +90,10 @@ export function BoardMenu({ items }: { items: BoardMenuItem[] }) {
               item.onSelect()
             }}
             className={[
-              'flex min-h-11 w-full items-center gap-3 rounded-lg px-3 text-left text-sm font-medium md:min-h-10',
-              'transition-colors duration-150 ease-out hover:bg-coyote-ember focus-visible:bg-coyote-ember focus-visible:outline-none',
+              'flex min-h-11 w-full items-center gap-3 rounded-sm px-3 text-left text-sm font-bold md:min-h-10',
+              'transition-colors duration-150 ease-out hover:bg-paper focus-visible:bg-paper focus-visible:outline-none',
               'disabled:pointer-events-none disabled:opacity-40',
-              item.danger ? 'text-coyote-orange' : '',
+              item.danger ? 'text-danger-deep' : '',
             ].join(' ')}
           >
             {item.icon}
