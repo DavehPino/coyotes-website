@@ -1,7 +1,7 @@
 import { Link } from 'react-router'
 import type { MatchSummary } from '@shared/schemas'
 import { formatDateShort } from '@/lib/dates'
-import { Chip, TeamLogo } from '../ui'
+import { Chip, Cue, TeamLogo } from '../ui'
 import { FilmIcon } from '../ui/icons'
 import { matchTitle, OUTCOME_LABELS, OUTCOME_TONES, scoreParts, videoCountLabel } from './matchLabels'
 
@@ -12,9 +12,9 @@ type MatchCoverCardProps = {
 }
 
 /**
- * Portada del partido: un rectángulo pintado sobre el suelo con los escudos (o la foto del partido) en la
- * franja central y el marcador en stencil de tinta debajo. Sin tarjeta oscura ni degradado: es el mismo
- * suelo con sus líneas. Toda la portada enlaza al detalle.
+ * Un partido en el carrusel: una zona de la hoja, abierta por su regla de tinta como las de Actividades, con
+ * el marcador en cifras grandes entre los dos escudos. Sin marco ni tarjeta. Si el partido tiene foto, va
+ * encima como franja. Toda la zona enlaza al detalle.
  */
 export function MatchCoverCard({ match, eager }: MatchCoverCardProps) {
   const [left, right] = scoreParts(match)
@@ -28,39 +28,39 @@ export function MatchCoverCard({ match, eager }: MatchCoverCardProps) {
       to={`/matches/${match.slug}`}
       aria-label={`${matchTitle(match)}, ${OUTCOME_LABELS[match.outcome]} ${left} a ${right}, ${meta}`}
       className={[
-        'group flex h-full flex-col gap-3 rounded-sm bg-line/25 p-3 shadow-tape',
-        'transition-[box-shadow,scale] duration-150 ease-out hover:shadow-tape-hover active:scale-[0.97]',
+        'group flex h-full flex-col gap-3 border-t-[6px] border-line pt-3 pr-3 pb-1',
+        'transition-[background-color,scale] duration-150 ease-out hover:bg-surface/40 active:scale-[0.98]',
       ].join(' ')}
     >
       <div className="flex items-start justify-between gap-2">
         <Chip tone={OUTCOME_TONES[match.outcome]}>{OUTCOME_LABELS[match.outcome]}</Chip>
         {match.video_count > 0 && (
-          <Chip tone="silver">
+          <Chip tone="ash">
             <FilmIcon className="size-3" strokeWidth={2} />
             {videoCountLabel(match.video_count)}
           </Chip>
         )}
       </div>
 
-      {match.cover_image_url ? (
-        <img src={match.cover_image_url} alt="" loading={loading} className="aspect-[16/7] w-full rounded-[2px] object-cover" />
-      ) : (
-        <div className="flex aspect-[16/7] items-center justify-center gap-4 rounded-[2px] bg-floor-deep/60 md:gap-6">
-          <TeamLogo team={homeTeam} size="cover" loading={loading} />
-          <span className="text-xl font-black text-ink/60 uppercase md:text-2xl">vs</span>
-          <TeamLogo team={awayTeam} size="cover" loading={loading} />
-        </div>
+      {match.cover_image_url && (
+        <img src={match.cover_image_url} alt="" loading={loading} className="aspect-[16/7] w-full object-cover" />
       )}
 
-      <div className="flex flex-col gap-0.5">
-        <h3 className="truncate text-lg leading-tight sm:text-xl">{matchTitle(match)}</h3>
-        <p className="font-stencil text-4xl leading-none font-black text-ink sm:text-5xl">
+      <div className="grid grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3">
+        <TeamLogo team={homeTeam} size="cover" loading={loading} />
+        <p className="text-center font-figures text-6xl leading-none font-black text-ink sm:text-7xl">
           {left}
           <span className="mx-1 text-ink-soft">–</span>
           {right}
         </p>
+        <TeamLogo team={awayTeam} size="cover" loading={loading} />
+      </div>
+
+      <div className="flex flex-col gap-0.5">
+        <h3 className="truncate text-lg leading-tight sm:text-xl">{matchTitle(match)}</h3>
         <p className="truncate text-xs text-ink-soft">{meta}</p>
       </div>
+      <Cue className="mt-auto">Ver partido</Cue>
     </Link>
   )
 }

@@ -1,24 +1,24 @@
 import type { HTMLAttributes } from 'react'
 
 /**
- * Cintas de suelo. Los nombres se conservan de la paleta anterior para no tocar cada uso;
- * el material es el mismo en todos: un rectángulo de cinta con el texto en mayúsculas.
- * - gold / gold-solid: vinilo negro con letras del club (victoria, lo principal)
- * - orange / yellow: cinta naranja del club (hoy, derrota, avisos)
- * - podio: cinta azul de Liga Podio
- * - silver / ash / steel / rust: cinta blanca pintada, texto negro (neutros)
+ * Etiquetas. Los nombres se conservan de la paleta anterior para no tocar cada uso;
+ * el material es el mismo en todos: un rectángulo con el texto en mayúsculas.
+ * - gold / gold-solid: tecla del club (negro con letras doradas) (victoria, lo principal)
+ * - orange / yellow: acento naranja del club (hoy, avisos); nunca el resultado de un partido
+ * - podio: etiqueta azul de Liga Podio
+ * - silver / ash / steel / rust: etiqueta blanca, texto negro (neutros)
  */
 export type ChipTone = 'gold' | 'gold-solid' | 'orange' | 'yellow' | 'rust' | 'silver' | 'ash' | 'steel' | 'podio'
 
 const TONES: Record<ChipTone, string> = {
-  gold: 'bg-ink text-club',
-  'gold-solid': 'bg-ink text-club',
-  orange: 'bg-tape text-ink',
-  yellow: 'bg-tape text-ink',
-  rust: 'bg-line text-ink-soft',
-  silver: 'bg-line text-ink',
-  ash: 'bg-line text-ink-soft',
-  steel: 'bg-line text-ink',
+  gold: 'bg-key text-on-key',
+  'gold-solid': 'bg-key text-on-key',
+  orange: 'bg-accent text-on-accent',
+  yellow: 'bg-accent text-on-accent',
+  rust: 'bg-surface text-ink-soft shadow-[inset_0_0_0_1.5px_var(--color-ink-soft)]',
+  silver: 'bg-surface text-ink shadow-[inset_0_0_0_1.5px_var(--color-ink)]',
+  ash: 'bg-surface text-ink-soft shadow-[inset_0_0_0_1.5px_var(--color-ink-soft)]',
+  steel: 'bg-surface text-ink shadow-[inset_0_0_0_1.5px_var(--color-ink)]',
   podio: 'bg-podio text-white',
 }
 

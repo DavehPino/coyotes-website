@@ -9,10 +9,10 @@ type PlayerListProps = {
   onSelect: (player: Player) => void
 }
 
-/** Plantel en filas de cinta: activos primero (el orden lo da la API), los inactivos en gris al final. */
+/** Plantel en filas con filete: activos primero (el orden lo da la API), los inactivos en gris al final. */
 export function PlayerList({ players, onSelect }: PlayerListProps) {
   return (
-    <ul className="divide-tape tape-rule">
+    <ul className="divide-hairline hairline">
       {players.map((player) => (
         <li key={player.id}>
           <button
@@ -21,7 +21,7 @@ export function PlayerList({ players, onSelect }: PlayerListProps) {
             aria-label={`Editar a ${player.name}${player.jersey_number === null ? '' : `, número ${player.jersey_number}`}, ${positionsLabel(player)}${player.is_active ? '' : ', inactivo'}`}
             className={[
               'flex min-h-16 w-full items-center gap-3 px-1 py-2.5 text-left',
-              'transition-colors duration-150 ease-out hover:bg-line/50 focus-visible:-outline-offset-2',
+              'transition-colors duration-150 ease-out hover:bg-surface/50 focus-visible:-outline-offset-2',
               player.is_active ? '' : 'opacity-60 grayscale',
             ].join(' ')}
           >
@@ -33,7 +33,9 @@ export function PlayerList({ players, onSelect }: PlayerListProps) {
               </span>
               <PlayerPositions player={player} />
             </span>
-            <PencilIcon aria-hidden className="size-4 shrink-0 text-ink-soft" />
+            <span aria-hidden className="btn btn-secondary btn-static size-10 shrink-0">
+              <PencilIcon className="size-4" strokeWidth={2} />
+            </span>
           </button>
         </li>
       ))}
@@ -43,7 +45,7 @@ export function PlayerList({ players, onSelect }: PlayerListProps) {
 
 export function PlayerListSkeleton() {
   return (
-    <div className="divide-tape tape-rule" aria-hidden>
+    <div className="divide-hairline hairline" aria-hidden>
       {[0, 1, 2, 3, 4].map((i) => (
         <div key={i} className="flex min-h-16 items-center gap-3 px-1">
           <Skeleton className="size-10 rounded-full" />

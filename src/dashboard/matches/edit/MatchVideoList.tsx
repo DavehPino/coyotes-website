@@ -22,7 +22,7 @@ type MatchVideoListProps = {
 /** Videos ya subidos del partido: cambiar título y set, o eliminarlos (también del bucket). */
 export function MatchVideoList({ videos, post, onUpdated, onDeleted, onBusyChange, disabled }: MatchVideoListProps) {
   if (videos.length === 0) {
-    return <p className="rounded-md bg-floor-deep/30 p-3 text-sm text-ink-soft shadow-tape">Todavía no hay videos.</p>
+    return <p className="rounded-md bg-paper-deep/30 p-3 text-sm text-ink-soft shadow-outline">Todavía no hay videos.</p>
   }
   return (
     <ol className="flex flex-col gap-2" aria-label="Videos del partido">
@@ -104,9 +104,9 @@ function VideoRow({ video, post, onUpdated, onDeleted, onBusyChange, disabled }:
   const locked = disabled || busy
 
   return (
-    <li className="flex flex-col gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+    <li className="flex flex-col gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink-soft">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-paper-deep text-ink-soft">
           <FilmIcon className="size-4.5" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
@@ -159,7 +159,7 @@ function VideoRow({ video, post, onUpdated, onDeleted, onBusyChange, disabled }:
       )}
 
       {mode === 'confirm-delete' && (
-        <div className="flex flex-col gap-3 rounded-sm bg-antenna/12 p-3">
+        <div className="flex flex-col gap-3 rounded-sm bg-danger/12 p-3">
           <p className="text-sm text-ink">
             {isBucket
               ? 'Se borra el video del partido y su archivo del almacenamiento. No se puede deshacer.'
@@ -177,7 +177,7 @@ function VideoRow({ video, post, onUpdated, onDeleted, onBusyChange, disabled }:
       )}
 
       {error && (
-        <p role="alert" className="text-xs text-antenna-deep">
+        <p role="alert" className="text-xs text-danger-deep">
           {error}
         </p>
       )}

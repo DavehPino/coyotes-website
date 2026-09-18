@@ -5,7 +5,7 @@ import type { TeamSummary } from '@shared/schemas'
 type Size = 'sm' | 'md' | 'lg' | 'xl' | 'cover'
 
 const SIZES: Record<Size, string> = {
-  sm: 'size-6 text-xs',
+  sm: 'size-6 text-[9px] tracking-tight',
   md: 'size-9 text-sm',
   lg: 'size-14 text-xl',
   xl: 'size-16 text-2xl sm:size-20 sm:text-3xl md:size-28 md:text-4xl',
@@ -31,7 +31,7 @@ function initials(team: TeamSummary): string {
     .toUpperCase()
 }
 
-/** Escudo circular; si el rival no tiene logo, o no carga, se muestran sus iniciales en vinilo negro. */
+/** Escudo circular; si el rival no tiene logo, o no carga, se muestran sus iniciales en tinta. */
 export function TeamLogo({ team, size = 'md', className = '', loading = 'lazy' }: TeamLogoProps) {
   const name = team?.name ?? TEAM_NAME
   const src = team ? team.logo_url : LOGO_SRC
@@ -45,7 +45,7 @@ export function TeamLogo({ team, size = 'md', className = '', loading = 'lazy' }
         alt={`Escudo de ${name}`}
         loading={loading}
         onError={() => setFailedSrc(src)}
-        className={`${classes} bg-ink object-cover`}
+        className={`${classes} bg-black object-cover`}
       />
     )
   }
@@ -53,7 +53,7 @@ export function TeamLogo({ team, size = 'md', className = '', loading = 'lazy' }
     <span
       role="img"
       aria-label={`Escudo de ${name}`}
-      className={`${classes} inline-flex items-center justify-center bg-ink font-extrabold text-club`}
+      className={`${classes} inline-flex items-center justify-center bg-key font-extrabold text-on-key`}
     >
       {team ? initials(team) : 'COY'}
     </span>

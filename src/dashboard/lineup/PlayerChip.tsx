@@ -46,7 +46,7 @@ export function JerseyBadge({ player, className = '' }: { player: Player; classN
     <span
       aria-hidden
       className={[
-        'flex size-10 shrink-0 items-center justify-center rounded-full bg-ink font-bold text-2xl leading-none text-club tabular-nums',
+        'flex size-10 shrink-0 items-center justify-center rounded-full bg-key font-bold text-2xl leading-none text-on-key tabular-nums',
         className,
       ].join(' ')}
     >

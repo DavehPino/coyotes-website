@@ -3,7 +3,7 @@ import { Link } from 'react-router'
 import { ArrowRightIcon } from './icons'
 
 type ZoneProps = {
-  /** Rótulo de la zona, pintado justo bajo la línea. */
+  /** Rótulo de la zona, justo bajo la regla. */
   label: string
   /** Id del rótulo, para que la sección lo referencie con `aria-labelledby`. */
   id: string
@@ -12,21 +12,21 @@ type ZoneProps = {
   /** Controles a la derecha del rótulo (en lugar del enlace). */
   actions?: ReactNode
   /** Color de la línea superior; por defecto, pintura blanca. */
-  line?: 'line' | 'tape' | 'podio' | 'ink'
+  line?: 'line' | 'accent' | 'podio' | 'ink'
   className?: string
   children: ReactNode
 }
 
 const LINES = {
   line: 'border-line',
-  tape: 'border-tape',
+  accent: 'border-accent',
   podio: 'border-podio',
   ink: 'border-ink',
 } as const
 
 /**
- * Zona del suelo: una línea pintada de 6 px arriba y el rótulo en vinilo pegado a ella. Sustituye a la
- * tarjeta: el contenido queda sobre el parquet y las zonas se separan por líneas, no por cajas.
+ * Zona de la hoja: una regla de 6 px arriba y el rótulo en tinta pegado a ella. Sustituye a la
+ * tarjeta: el contenido queda sobre la hoja y las zonas se separan por líneas, no por cajas.
  */
 export function Zone({ label, id, more, actions, line = 'line', className = '', children }: ZoneProps) {
   return (
@@ -38,10 +38,7 @@ export function Zone({ label, id, more, actions, line = 'line', className = '', 
         {more ? (
           <Link
             to={more.to}
-            className={[
-              'group -mr-2 inline-flex min-h-11 shrink-0 items-center gap-1 rounded-sm px-2 text-sm font-bold tracking-wide uppercase',
-              'text-ink-soft transition-colors duration-150 ease-out hover:text-ink md:min-h-9',
-            ].join(' ')}
+            className="btn btn-ghost group min-h-11 gap-1 px-3 text-sm md:min-h-9"
           >
             {more.label}
             <ArrowRightIcon

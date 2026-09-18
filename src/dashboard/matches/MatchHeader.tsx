@@ -1,7 +1,7 @@
 import { TEAM_NAME } from '@/config'
 import type { MatchDetail } from '@shared/schemas'
 import { formatDateFull, shortTime } from '@/lib/dates'
-import { Chip, TeamLogo } from '../ui'
+import { Chip, MetaLine, TeamLogo } from '../ui'
 import { OUTCOME_LABELS, OUTCOME_TONES, scoreParts } from './matchLabels'
 
 type MatchHeaderProps = { match: MatchDetail }
@@ -15,7 +15,7 @@ function TeamBlock({ name, children }: { name: string; children: React.ReactNode
   )
 }
 
-/** Cabecera del detalle: el marcador de pared en stencil y, bajo una regla de cinta, los datos del partido. */
+/** Cabecera del detalle: el marcador en cifras condensadas y, bajo una filete, los datos del partido. */
 export function MatchHeader({ match }: MatchHeaderProps) {
   const [left, right] = scoreParts(match)
   const time = shortTime(match.start_time)
@@ -29,7 +29,7 @@ export function MatchHeader({ match }: MatchHeaderProps) {
           {OUTCOME_LABELS[match.outcome]}
         </Chip>
         {(match.competition || match.phase) && (
-          <span className="text-ink-soft">{[match.competition?.name, match.phase].filter(Boolean).join(' · ')}</span>
+          <MetaLine className="text-ink-soft" parts={[match.competition?.name, match.phase]} />
         )}
       </div>
 
@@ -39,7 +39,7 @@ export function MatchHeader({ match }: MatchHeaderProps) {
         </TeamBlock>
         <p
           aria-label={`Marcador de sets: ${left} a ${right}`}
-          className="font-stencil text-7xl leading-none font-black text-ink sm:text-8xl md:text-[7.5rem]"
+          className="font-figures text-7xl leading-none font-black text-ink sm:text-8xl md:text-[7.5rem]"
         >
           {left}
           <span className="mx-1 text-ink-soft sm:mx-2">–</span>
@@ -50,7 +50,7 @@ export function MatchHeader({ match }: MatchHeaderProps) {
         </TeamBlock>
       </div>
 
-      <dl className="tape-rule mt-5 grid grid-cols-1 gap-x-6 gap-y-3 pt-4 sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="hairline mt-5 grid grid-cols-1 gap-x-6 gap-y-3 pt-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
           <dt className="text-xs font-bold tracking-wider text-ink-soft uppercase">Fecha</dt>
           <dd className="font-bold text-ink">
@@ -69,7 +69,7 @@ export function MatchHeader({ match }: MatchHeaderProps) {
         <div>
           <dt className="text-xs font-bold tracking-wider text-ink-soft uppercase">Competición</dt>
           <dd className="font-bold text-ink">
-            {[match.competition?.name, match.phase].filter(Boolean).join(' · ') || 'Sin especificar'}
+            {match.competition || match.phase ? <MetaLine parts={[match.competition?.name, match.phase]} /> : 'Sin especificar'}
           </dd>
         </div>
       </dl>

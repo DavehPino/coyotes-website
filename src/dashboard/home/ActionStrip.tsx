@@ -4,22 +4,26 @@ import { BallIcon, CalendarIcon, ImageIcon } from '../ui/icons'
 
 type ActionStripProps = {
   onNewActivity: () => void
-  onNewMatch: () => void
 }
 
-/** Lo que se hace desde el dashboard, como rótulos de vinilo en el pasillo: cargar partido es el principal. */
-export function ActionStrip({ onNewActivity, onNewMatch }: ActionStripProps) {
+const ACTION = 'min-h-12 pr-5 pl-4 sm:min-h-11'
+
+/**
+ * Lo que se hace desde Inicio, como teclas en fila. Partidos es la principal y solo navega: cargar un partido
+ * se hace desde su sección, no desde aquí.
+ */
+export function ActionStrip({ onNewActivity }: ActionStripProps) {
   return (
     <nav aria-label="Acciones" className="line-top flex flex-col gap-2 pt-4 sm:flex-row sm:flex-wrap">
-      <Button variant="primary" onClick={onNewMatch} className="min-h-12 pr-5 pl-4 sm:min-h-11">
+      <Link to="/matches" className={buttonClasses({ variant: 'primary', className: ACTION })}>
         <BallIcon className="size-5" strokeWidth={2} />
-        Cargar partido
-      </Button>
-      <Button onClick={onNewActivity} className="min-h-12 pr-5 pl-4 sm:min-h-11">
+        Partidos
+      </Link>
+      <Button onClick={onNewActivity} className={ACTION}>
         <CalendarIcon className="size-5" strokeWidth={2} />
         Cargar actividad
       </Button>
-      <Link to="/flyers" className={buttonClasses({ className: 'min-h-12 pr-5 pl-4 sm:min-h-11' })}>
+      <Link to="/flyers" className={buttonClasses({ className: ACTION })}>
         <ImageIcon className="size-5" strokeWidth={2} />
         Diseñar flyer
       </Link>

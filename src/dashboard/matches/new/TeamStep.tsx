@@ -20,7 +20,7 @@ function ModeOption({ checked, onSelect, children }: { checked: boolean; onSelec
         'flex min-h-11 cursor-pointer items-center justify-center rounded-sm px-3 text-sm font-medium select-none md:min-h-10',
         'transition-[background-color,color] duration-150 ease-out',
         'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink',
-        checked ? 'bg-floor-deep text-ink' : 'text-ink-soft hover:text-ink',
+        checked ? 'bg-key font-bold text-on-key' : 'text-ink-soft hover:bg-ink/8 hover:text-ink',
       ].join(' ')}
     >
       <input type="radio" name="team-mode" checked={checked} onChange={onSelect} className="sr-only" />
@@ -70,7 +70,7 @@ export function TeamStep({ formId, team, errors, onChange, onSubmit }: TeamStepP
         <fieldset>
           <legend className="sr-only">Contra quién se jugó</legend>
           {/* Radio exterior 12 px = interior 8 px + 4 px de padding */}
-          <div className="grid grid-cols-2 gap-1 rounded-md bg-line/40 p-1 shadow-tape">
+          <div className="grid grid-cols-2 gap-1 rounded-md bg-surface/40 p-1 shadow-outline">
             <ModeOption checked={mode === 'new'} onSelect={() => onChange({ mode: 'new' })}>
               Equipo nuevo
             </ModeOption>
@@ -94,7 +94,7 @@ export function TeamStep({ formId, team, errors, onChange, onSubmit }: TeamStepP
             </Select>
           </Field>
           {selected && (
-            <div className="flex items-center gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+            <div className="flex items-center gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
               <TeamLogo team={selected} size="lg" />
               <span className="font-medium text-ink">{selected.name}</span>
             </div>

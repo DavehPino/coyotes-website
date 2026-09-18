@@ -75,7 +75,7 @@ export function MatchDetailPage() {
                 <PencilIcon className="size-4" strokeWidth={2} />
                 Editar partido
               </Button>
-              <Button onClick={dialog.openDelete} className="pr-4 pl-3.5">
+              <Button variant="danger" onClick={dialog.openDelete} className="pr-4 pl-3.5">
                 <TrashIcon className="size-4" strokeWidth={2} />
                 Eliminar
               </Button>

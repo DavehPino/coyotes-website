@@ -4,6 +4,7 @@ import { ApiError } from '@/lib/api'
 import { formatDateFull } from '@/lib/dates'
 import type { MatchDetail, MatchSetEvent, MatchSetStats, MatchStats } from '@shared/schemas'
 import { Chip, EmptyState, ErrorState, Modal, Skeleton, TabList, TabPanel, Tabs, type TabItem } from '../../ui'
+import { ChevronDownIcon } from '../../ui/icons'
 import { useMatchStats } from '../api'
 import { matchTitle, opponentLabel } from '../matchLabels'
 import { PlayerStatsTable, type PlayerStatsRow } from './PlayerStatsTable'
@@ -81,7 +82,7 @@ function TabBar({ tabs }: { tabs: { number: number; us: number; them: number }[]
       children: (
         <>
           <span className="text-[10px] font-medium tracking-wide uppercase">Set {set.number}</span>
-          <span className="font-bold text-xl leading-none tabular-nums">
+          <span className="font-figures text-2xl leading-none font-black">
             {set.us}-{set.them}
           </span>
         </>
@@ -98,13 +99,13 @@ function TabBar({ tabs }: { tabs: { number: number; us: number; them: number }[]
     },
   ]
   return (
-    // Radio exterior 12 px = interior 8 px + 4 px de padding. scroll-px: al enfocar una pestaña con el teclado,
-    // la tira la trae a la vista conservando el margen lateral.
-    <div className="-mx-5 flex scroll-px-6 overflow-x-auto px-5">
+    // scroll-px: al enfocar una pestaña con el teclado, la tira la trae a la vista conservando el margen lateral.
+    // py-1: deja sitio al contorno de la tira, que el scroll horizontal recortaría.
+    <div className="-mx-5 flex scroll-px-6 overflow-x-auto px-5 py-1">
       <TabList
         label="Set"
         items={items}
-        className="flex shrink-0 gap-1 rounded-md bg-line/40 p-1 shadow-tape"
+        className="flex shrink-0 gap-1 rounded-md bg-surface/40 p-1 shadow-outline"
         tabClassName="min-w-[4.5rem] shrink-0 flex-col px-3 py-1"
       />
     </div>
@@ -120,10 +121,10 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
   )
 }
 
-/** Un dato del set como fila sobre una regla de cinta: rótulo a la izquierda, valor a la derecha. */
+/** Un dato del set como fila sobre una filete: rótulo a la izquierda, valor a la derecha. */
 function Fact({ label, children }: { label: string; children: ReactNode }) {
   return (
-    <div className="tape-rule flex items-baseline justify-between gap-3 py-1.5">
+    <div className="hairline flex items-baseline justify-between gap-3 py-1.5">
       <dt className="text-[11px] font-bold tracking-wider text-ink-soft uppercase">{label}</dt>
       <dd className="text-right text-sm font-bold text-ink">{children}</dd>
     </div>
@@ -139,9 +140,9 @@ function SetPanel({ set, themLabel }: { set: MatchSetStats; themLabel: string })
     <>
       <header className="flex flex-wrap items-end justify-between gap-x-4 gap-y-2">
         <p className="flex items-baseline gap-2">
-          <span className="font-bold text-5xl leading-none text-ink tabular-nums">{set.score.us}</span>
-          <span className="font-bold text-3xl leading-none text-ink-soft">–</span>
-          <span className="font-bold text-5xl leading-none text-ink tabular-nums">{set.score.them}</span>
+          <span className="font-figures text-6xl leading-none font-black text-ink">{set.score.us}</span>
+          <span className="font-figures text-4xl leading-none font-black text-ink-soft">–</span>
+          <span className="font-figures text-6xl leading-none font-black text-ink">{set.score.them}</span>
         </p>
         <p className="text-xs text-ink-soft">
           {TEAM_NAME} / {themLabel}
@@ -201,12 +202,13 @@ function SetPanel({ set, themLabel }: { set: MatchSetStats; themLabel: string })
 function PointByPoint({ events, themLabel }: { events: MatchSetEvent[]; themLabel: string }) {
   let point = 0
   return (
-    <details className="group rounded-md bg-floor-deep/40">
-      <summary className="cursor-pointer list-none px-3 py-2 text-sm text-ink-soft select-none hover:text-ink">
+    <details className="group">
+      <summary className="btn btn-secondary btn-static min-h-11 w-fit cursor-pointer list-none gap-1.5 pr-3 pl-3.5 text-sm [&::-webkit-details-marker]:hidden">
         <span className="group-open:hidden">Ver punto a punto</span>
         <span className="hidden group-open:inline">Ocultar punto a punto</span>
+        <ChevronDownIcon aria-hidden className="size-4 transition-transform duration-150 ease-out group-open:rotate-180" strokeWidth={2} />
       </summary>
-      <ol className="max-h-72 overflow-y-auto px-3 pb-3 text-sm">
+      <ol className="hairline mt-3 max-h-72 overflow-y-auto pt-2 text-sm">
         {events.map((event, index) => {
           const scoring = isPoint(event)
           if (scoring) point += 1

@@ -2,7 +2,7 @@ import podioLogoUrl from '@assets/podio-logo.png'
 import { ACTIVITY_TYPE_LABELS } from '@shared/domain'
 import type { Activity } from '@shared/schemas'
 import { formatDayMonth, formatDaysFromToday, formatTimeRange, formatWeekdayShort } from '@/lib/dates'
-import { Chip, Skeleton, TeamLogo } from '../ui'
+import { Chip, Cue, Skeleton, TeamLogo } from '../ui'
 import { ClockIcon, MapPinIcon } from '../ui/icons'
 
 type UpcomingActivityCardProps = {
@@ -14,7 +14,7 @@ type UpcomingActivityCardProps = {
 const SLIDE_CLASSES = 'flex h-full min-h-72 w-full flex-col gap-3 pt-3 pr-3 pb-4 text-left'
 
 /**
- * Diapositiva del carrusel: una zona del suelo con su línea pintada arriba (blanca en general, azul en
+ * Diapositiva del carrusel: una zona de la hoja con su regla arriba (de tinta en general, azul en
  * Liga Podio) y la fecha a escala de número de cancha. Clic o Enter abren el detalle.
  *
  * Es un `<article>` con el título como botón cuya zona de pulsación se extiende a toda la zona: así el
@@ -29,7 +29,7 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
     <article
       className={[
         SLIDE_CLASSES,
-        'relative border-t-[6px] transition-[background-color,scale] duration-150 ease-out hover:bg-line/40 active:scale-[0.98]',
+        'group relative border-t-[6px] transition-[background-color,scale] duration-150 ease-out hover:bg-surface/40 active:scale-[0.98]',
         'has-focus-visible:outline-2 has-focus-visible:outline-offset-4 has-focus-visible:outline-ink',
         podio ? 'border-podio' : 'border-line',
       ].join(' ')}
@@ -50,7 +50,7 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
         )}
       </div>
 
-      <p className="font-stencil leading-none text-ink uppercase">
+      <p className="font-figures leading-none text-ink uppercase">
         <span className="block text-[3.5rem] font-black md:text-[4rem]">
           {`${formatWeekdayShort(activity.activity_date)} ${formatDayMonth(activity.activity_date)}`.replace(/\./g, '')}
         </span>
@@ -61,7 +61,8 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
       </p>
 
       <div className="flex flex-col gap-1">
-        <h3 className="text-3xl leading-none md:text-[2.25rem]">
+        {/* El título lo escribe el equipo: va tal cual, sin pasar a mayúsculas. */}
+        <h3 className="text-3xl leading-none normal-case md:text-[2.25rem]">
           <button
             type="button"
             onClick={() => onOpen(activity)}
@@ -72,7 +73,7 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
             <span className="sr-only">. Ver detalle</span>
           </button>
         </h3>
-        {/* El tipo va bajo el título, como cinta; las actividades cargadas desde el dashboard no tienen tipo ('otro'). */}
+        {/* El tipo va bajo el título, como etiqueta; las actividades cargadas desde el dashboard no tienen tipo ('otro'). */}
         {activity.activity_type !== 'otro' && (
           <p className="text-xs font-bold tracking-wider text-ink-soft uppercase">{ACTIVITY_TYPE_LABELS[activity.activity_type]}</p>
         )}
@@ -99,6 +100,7 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
           )}
         </div>
       )}
+      <Cue className={activity.location || activity.opponent ? 'mt-2' : 'mt-auto'}>Ver detalle</Cue>
     </article>
   )
 }

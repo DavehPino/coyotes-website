@@ -76,7 +76,7 @@ export function Carousel<T>({ items, label, getKey, renderSlide, slideClassName 
       onKeyDown={onKeyDown}
       className="rounded-md outline-offset-4"
     >
-      <div ref={viewportRef} className="overflow-hidden">
+      <div ref={viewportRef} className="-my-1 overflow-hidden py-1">
         <div className={`${CAROUSEL_TRACK_CLASSES} touch-pan-y`}>
           {items.map((item, index) => (
             <div

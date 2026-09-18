@@ -9,7 +9,7 @@ type ErrorStateProps = {
   className?: string
 }
 
-/** Aviso con la antena a rayas en el borde: algo no se pudo cargar. */
+/** Aviso con una regla roja arriba: algo no se pudo cargar. */
 export function ErrorState({
   title = 'No se pudo cargar',
   message = 'Comprueba la conexión e inténtalo de nuevo.',
@@ -20,11 +20,11 @@ export function ErrorState({
   return (
     <div
       role="alert"
-      className={['overflow-hidden rounded-md bg-line shadow-tape', className].join(' ')}
+      className={['overflow-hidden rounded-md bg-surface shadow-outline', className].join(' ')}
     >
-      <div aria-hidden className="bg-antenna-stripes h-2.5" />
+      <div aria-hidden className="bg-danger h-1" />
       <div className="flex flex-col items-center justify-center gap-3 px-6 py-10 text-center">
-        <span className="text-antenna-deep">
+        <span className="text-danger-deep">
           <AlertIcon className="size-8" />
         </span>
         <p className="text-lg font-bold text-ink uppercase">{title}</p>

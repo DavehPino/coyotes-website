@@ -49,8 +49,8 @@ export function SafewordStep({
 
   return (
     <form id={formId} onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      <div className="flex items-start gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink">
+      <div className="flex items-start gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-paper-deep text-ink">
           <LockIcon />
         </span>
         <p className="text-sm text-ink-soft">{description}</p>

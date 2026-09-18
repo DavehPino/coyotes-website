@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from 'react'
 import { FLYER_FORMAT_SIZES, FLYER_TEMPLATE_LABELS, type FlyerContent } from '@shared/flyers'
-import { Button, Card, FormError, PageHeader, TabList, TabPanel, Tabs, type TabItem } from '../ui'
-import { BookmarkIcon, UndoIcon } from '../ui/icons'
+import { ActionMenu, Button, Card, FormError, PageHeader, TabList, TabPanel, Tabs, type TabItem } from '../ui'
+import { BookmarkIcon, DownloadIcon, ShareIcon, UndoIcon } from '../ui/icons'
 import { useFlyersAccess } from './access'
 import { AiPanel } from './AiPanel'
 import { useImageLibrary } from './assetLibrary'
 import { EditorPanel } from './EditorPanel'
-import { ExportActions } from './ExportActions'
+import { useExportActions } from './ExportActions'
 import { FlyerCanvas, useFlyerAssets } from './FlyerCanvas'
 import { SavedPanel } from './SavedPanel'
 import { useSavedFlyers } from './savedFlyers'
@@ -72,49 +72,78 @@ export function FlyersPage() {
 
   const size = FLYER_FORMAT_SIZES[flyer.format]
   const isSaved = saved.isSaved(flyer)
+  const exporter = useExportActions(canvasRef, flyer)
+  // Pestañas en las que se cambia el flyer: en móvil conviene tener la vista previa a la vista.
+  const editing = tab === 'editor' || tab === 'ai'
+  const exportDisabled = !ready || exporter.busy
+  const saveDisabled = isSaved || saved.saving || saved.loading || !ready
+  const saveLabel = saved.saving ? 'Guardando…' : isSaved ? 'Guardado' : 'Guardar'
+  const save = () => void saved.save(flyer, 'manual', flyer.title, assets)
 
   return (
     <section>
       <PageHeader
         title="Flyers"
-        description="Posteos para Instagram con los colores de la manada."
+        description="Posteos para Instagram con los colores del club."
         actions={
           <>
-            <Button
-              variant="ghost"
-              onClick={undo}
-              disabled={past.length === 0}
-              aria-label="Deshacer"
-              className="px-3 sm:pr-4 sm:pl-3.5"
-            >
+            {/* Deshacer siempre a mano; el resto, botones en escritorio y un menú en móvil. */}
+            <Button variant="ghost" onClick={undo} disabled={past.length === 0} className="pr-4 pl-3.5">
               <UndoIcon className="size-4" strokeWidth={2} />
-              <span className="hidden sm:inline">Deshacer</span>
+              Deshacer
             </Button>
-            <Button
-              onClick={() => void saved.save(flyer, 'manual', flyer.title, assets)}
-              disabled={isSaved || saved.saving || saved.loading || !ready}
-              aria-label={isSaved ? 'Guardado' : 'Guardar'}
-              className="px-3 sm:pr-4 sm:pl-3.5"
-            >
-              <BookmarkIcon className="size-4" strokeWidth={2} filled={isSaved} />
-              <span className="hidden sm:inline">{saved.saving ? 'Guardando…' : isSaved ? 'Guardado' : 'Guardar'}</span>
-            </Button>
-            <ExportActions canvasRef={canvasRef} flyer={flyer} disabled={!ready} />
+            <div className="hidden items-center gap-2 md:flex">
+              <Button onClick={save} disabled={saveDisabled} className="pr-4 pl-3.5">
+                <BookmarkIcon className="size-4" strokeWidth={2} filled={isSaved} />
+                {saveLabel}
+              </Button>
+              {exporter.canShare && (
+                <Button onClick={exporter.share} disabled={exportDisabled} className="pr-4 pl-3.5">
+                  <ShareIcon className="size-4" strokeWidth={2} />
+                  Compartir
+                </Button>
+              )}
+              <Button variant="primary" onClick={exporter.download} disabled={exportDisabled} className="pr-4 pl-3.5">
+                <DownloadIcon className="size-4" strokeWidth={2} />
+                Descargar
+              </Button>
+            </div>
+            <ActionMenu
+              label="Acciones"
+              className="md:hidden"
+              items={[
+                { label: 'Descargar', icon: <DownloadIcon className="size-5" strokeWidth={2} />, disabled: exportDisabled, onSelect: exporter.download },
+                ...(exporter.canShare
+                  ? [{ label: 'Compartir', icon: <ShareIcon className="size-5" strokeWidth={2} />, disabled: exportDisabled, onSelect: exporter.share }]
+                  : []),
+                { label: saveLabel, icon: <BookmarkIcon className="size-5" strokeWidth={2} filled={isSaved} />, disabled: saveDisabled, onSelect: save },
+              ]}
+            />
+            {exporter.error && <FormError className="w-full">{exporter.error}</FormError>}
           </>
         }
       />
 
       <div className="grid gap-5 lg:grid-cols-[minmax(0,1fr)_minmax(22rem,28rem)] lg:items-start lg:gap-8">
-        <Card className="flex flex-col items-center gap-3 p-3 md:p-5 lg:sticky lg:top-8">
+        {/* En móvil, al editar o pedir a la IA, la vista previa queda fija arriba en pequeño para ver el resultado. */}
+        <Card
+          className={[
+            'flex flex-col items-center gap-3 p-3 md:p-5 lg:sticky lg:top-8',
+            editing ? 'max-lg:sticky max-lg:top-0 max-lg:z-10 max-lg:-mx-4 max-lg:rounded-none max-lg:bg-paper max-lg:py-2' : '',
+          ].join(' ')}
+        >
           <FlyerCanvas
             ref={canvasRef}
             flyer={flyer}
             assets={assets}
             ready={ready}
             label={`Vista previa del flyer: ${flyer.title || FLYER_TEMPLATE_LABELS[flyer.template]}`}
-            className="block h-auto max-h-[55svh] w-auto max-w-full rounded-sm shadow-tape lg:max-h-[calc(100svh-14rem)]"
+            className={[
+              'block h-auto w-auto max-w-full rounded-sm shadow-outline lg:max-h-[calc(100svh-14rem)]',
+              editing ? 'max-h-[32svh]' : 'max-h-[55svh]',
+            ].join(' ')}
           />
-          <p className="text-xs text-ink-soft tabular-nums">
+          <p className={`text-xs text-ink-soft tabular-nums ${editing ? 'max-lg:hidden' : ''}`}>
             {FLYER_TEMPLATE_LABELS[flyer.template]} · {size.label} · {size.width}×{size.height} px
           </p>
           {failedImages > 0 && (
@@ -189,8 +218,8 @@ function TabSwitch({ savedCount }: { savedCount: number }) {
     <TabList
       label="Herramientas"
       items={items}
-      className="grid grid-cols-4 gap-1 rounded-md bg-line/40 p-1 shadow-tape"
-      tabClassName="gap-1.5 px-1"
+      className="grid grid-cols-4 gap-1 rounded-md bg-surface/40 p-1 shadow-outline"
+      tabClassName="gap-1.5 px-1 text-xs tracking-normal sm:text-sm sm:tracking-wide"
     />
   )
 }

@@ -61,7 +61,7 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
               <OptionButton key={palette} selected={selected} onClick={() => onChange({ palette })}>
                 <span
                   aria-hidden
-                  className="flex size-5 shrink-0 items-center justify-center rounded-full shadow-tape"
+                  className="flex size-5 shrink-0 items-center justify-center rounded-full shadow-outline"
                   style={{ background: `linear-gradient(135deg, ${colors.background.join(', ')})` }}
                 >
                   <span className="size-2 rounded-full" style={{ background: colors.title }} />
@@ -79,8 +79,8 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
             <span
               aria-hidden
               className={[
-                'flex size-5 items-center justify-center rounded-md shadow-tape',
-                flyer.showLogo ? 'bg-ink text-club' : 'bg-line/40 text-ink shadow-tape',
+                'flex size-5 items-center justify-center rounded-md shadow-outline',
+                flyer.showLogo ? 'bg-key text-on-key' : 'bg-surface/40 text-ink shadow-outline',
               ].join(' ')}
             >
               {flyer.showLogo && <CheckIcon className="size-3.5" strokeWidth={2} />}
@@ -224,8 +224,8 @@ function OptionButton({ selected, onClick, children }: { selected: boolean; onCl
         'flex min-h-11 items-center gap-2 rounded-sm px-3 text-sm font-medium select-none md:min-h-10',
         'transition-[background-color,color,box-shadow] duration-150 ease-out',
         selected
-          ? 'bg-floor-deep text-ink shadow-tape-club'
-          : 'bg-line/40 text-ink shadow-tape hover:shadow-tape-hover',
+          ? 'bg-surface font-bold text-ink shadow-outline-selected'
+          : 'bg-surface/40 text-ink shadow-outline hover:shadow-outline-hover',
       ].join(' ')}
     >
       {children}

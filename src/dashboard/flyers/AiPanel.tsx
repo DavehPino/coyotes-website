@@ -3,7 +3,7 @@ import { todayIsoDate } from '@shared/dates'
 import { FLYER_PROMPT_MAX, type FlyerContent, type FlyerSuggestion } from '@shared/flyers'
 import { errorMessage, isAbort } from '../admin/adminApi'
 import { Button, Card, Field, FormError, Textarea } from '../ui'
-import { SparklesIcon, UndoIcon } from '../ui/icons'
+import { ChevronDownIcon, SparklesIcon, UndoIcon } from '../ui/icons'
 import { flyersPost } from './api'
 import { toAssetRefs, type ImageLibrary, type RunProtected } from './assetLibrary'
 import { ImageLibraryManager } from './ImageLibrary'
@@ -102,7 +102,7 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
 
       {reply && !loading && (
         <Card className="flex items-start gap-3 p-3" aria-live="polite">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-paper-deep text-ink">
             <SparklesIcon className="size-5" />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
@@ -120,12 +120,13 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
         </Card>
       )}
 
-      <details className="group rounded-md bg-line p-3 shadow-tape" open={library.images.length > 0}>
-        <summary className="flex min-h-8 cursor-pointer items-center justify-between gap-2 text-sm font-medium text-ink select-none">
+      <details className="group rounded-md bg-surface p-3 shadow-outline" open={library.images.length > 0}>
+        <summary className="flex min-h-8 cursor-pointer list-none items-center gap-2 text-sm font-bold text-ink select-none [&::-webkit-details-marker]:hidden">
           Imágenes para la IA
-          <span className="text-xs font-normal text-ink-soft tabular-nums">
+          <span className="ml-auto text-xs font-normal text-ink-soft tabular-nums">
             {library.images.length > 0 ? `${library.images.length} disponibles` : 'Logos de rivales, auspiciantes…'}
           </span>
+          <ChevronDownIcon aria-hidden className="size-4 shrink-0 transition-transform duration-150 ease-out group-open:rotate-180" strokeWidth={2} />
         </summary>
         <div className="mt-3 flex flex-col gap-3">
           <p className="text-xs text-ink-soft">
@@ -148,7 +149,7 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
                   setPrompt(example)
                   promptRef.current?.focus()
                 }}
-                className="min-h-11 rounded-sm bg-line/40 px-3 py-2 text-left text-sm text-ink shadow-tape transition-[color,box-shadow] duration-150 ease-out select-none hover:text-ink hover:shadow-tape-hover disabled:opacity-50 md:min-h-10"
+                className="min-h-11 rounded-sm bg-surface/40 px-3 py-2 text-left text-sm text-ink shadow-outline transition-[color,box-shadow] duration-150 ease-out select-none hover:text-ink hover:shadow-outline-hover disabled:opacity-50 md:min-h-10"
               >
                 {example}
               </button>

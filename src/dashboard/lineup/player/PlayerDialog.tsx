@@ -149,10 +149,10 @@ export default function PlayerDialog({ open, player, players, lineups, onClose, 
       <>
         {isEdit && (
           <Button
-            variant="ghost"
+            variant="danger"
             onClick={() => setStep('confirm-delete')}
             disabled={busy}
-            className="mr-auto pr-3 pl-2.5 text-antenna-deep hover:text-antenna-deep"
+            className="mr-auto pr-3.5 pl-3"
           >
             <TrashIcon className="size-4" strokeWidth={2} />
             Borrar jugador
@@ -255,8 +255,8 @@ export default function PlayerDialog({ open, player, players, lineups, onClose, 
 
       {!needsSafeword && step === 'done' && created && (
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-ink text-club">
+          <div className="flex items-center gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-key text-on-key">
               <CheckIcon className="size-5" strokeWidth={2} />
             </span>
             <PlayerSummary player={created} />
@@ -283,7 +283,7 @@ function PlayerSummary({ player }: { player: Player }) {
 function ActiveSwitch({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
   const id = useId()
   return (
-    <div className="flex items-center justify-between gap-4 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+    <div className="flex items-center justify-between gap-4 rounded-md bg-paper-deep/40 p-3 shadow-outline">
       <div className="flex min-w-0 flex-col">
         <span id={`${id}-label`} className="text-sm font-medium text-ink">
           Activo

@@ -8,8 +8,8 @@ type MatchCarouselProps = {
   label: string
 }
 
-// Más estrechas que antes: en móvil asoma la siguiente tarjeta y en escritorio caben tres.
-const SLIDE_WIDTH = 'basis-[82%] sm:basis-[58%] md:basis-[46%] xl:basis-[34%] 2xl:basis-[27%]'
+// En móvil asoma el siguiente partido para invitar a deslizar; en escritorio caben columnas completas (2, 3 o 4).
+const SLIDE_WIDTH = 'basis-[82%] sm:basis-[58%] md:basis-1/2 xl:basis-1/3 2xl:basis-1/4'
 
 export function MatchCarousel({ matches, label }: MatchCarouselProps) {
   return (

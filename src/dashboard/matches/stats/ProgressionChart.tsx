@@ -82,7 +82,7 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
     <div className="flex flex-col gap-2">
       <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft" aria-label="Leyenda">
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="size-2.5 rounded-sm bg-tape" />
+          <span aria-hidden className="size-2.5 rounded-sm bg-accent" />
           {usLabel} por delante
         </li>
         <li className="flex items-center gap-1.5">
@@ -139,9 +139,9 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
 
             {total > 0 && (
               <>
-                <path d={area} className="fill-tape/25" clipPath={`url(#${clipId}-above)`} />
+                <path d={area} className="fill-accent/25" clipPath={`url(#${clipId}-above)`} />
                 <path d={area} className="fill-ink/15" clipPath={`url(#${clipId}-below)`} />
-                <path d={path} fill="none" className="stroke-tape" strokeWidth={2} strokeLinejoin="round" clipPath={`url(#${clipId}-above)`} />
+                <path d={path} fill="none" className="stroke-accent" strokeWidth={2} strokeLinejoin="round" clipPath={`url(#${clipId}-above)`} />
                 <path d={path} fill="none" className="stroke-ink-soft" strokeWidth={2} strokeLinejoin="round" clipPath={`url(#${clipId}-below)`} />
               </>
             )}
@@ -152,7 +152,7 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
                 cx={x(timeout.after)}
                 cy={timeout.team === 'us' ? PAD.top - 6 : HEIGHT - PAD.bottom + 6}
                 r={4}
-                className="fill-line stroke-ink"
+                className="fill-surface stroke-ink"
                 strokeWidth={2}
               >
                 <title>{`Tiempo técnico de ${timeout.team === 'us' ? usLabel : themLabel} tras ${timeout.after} puntos`}</title>
@@ -173,7 +173,7 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
                   cx={x(hover)}
                   cy={y(diffs[hover - 1] ?? 0)}
                   r={5}
-                  className={`${scorer(hovered) === 'us' ? 'fill-tape' : 'fill-ink-soft'} stroke-line`}
+                  className={`${scorer(hovered) === 'us' ? 'fill-accent' : 'fill-ink-soft'} stroke-line`}
                   strokeWidth={2}
                 />
               </g>
@@ -185,7 +185,7 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
           // Detalle visual del punto: el gráfico es una imagen y el punto a punto de abajo es su versión accesible.
           <div
             aria-hidden
-            className="pointer-events-none absolute top-0 z-10 w-max max-w-[14rem] rounded-sm bg-ink px-2.5 py-1.5 text-xs text-line"
+            className="pointer-events-none absolute top-0 z-10 w-max max-w-[14rem] rounded-sm bg-ink px-2.5 py-1.5 text-xs text-surface"
             style={x(hover) > width / 2 ? { right: width - x(hover) + 8 } : { left: x(hover) + 8 }}
           >
             <p className="font-bold text-xl leading-none tabular-nums">

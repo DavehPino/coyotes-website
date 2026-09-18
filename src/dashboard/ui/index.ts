@@ -1,5 +1,8 @@
 export { Button, buttonClasses } from './Button'
+export { ActionMenu, type ActionMenuItem } from './ActionMenu'
 export { Card } from './Card'
+export { Cue } from './Cue'
+export { MetaLine } from './MetaLine'
 export { Zone } from './Zone'
 export { Carousel } from './Carousel'
 export { Chip, type ChipTone } from './Chip'

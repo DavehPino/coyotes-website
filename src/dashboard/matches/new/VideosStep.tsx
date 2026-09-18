@@ -129,9 +129,9 @@ export function VideoDraftList({ videos, errors, onChange, notes = {} }: VideoDr
   return (
     <ol className="flex flex-col gap-2" aria-label="Videos elegidos">
       {videos.map((video, index) => (
-        <li key={video.key} className="flex flex-col gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+        <li key={video.key} className="flex flex-col gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
           <div className="flex items-center gap-3">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink-soft">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-paper-deep text-ink-soft">
               <FilmIcon className="size-4.5" />
             </span>
             <div className="flex min-w-0 flex-1 flex-col">
@@ -148,7 +148,7 @@ export function VideoDraftList({ videos, errors, onChange, notes = {} }: VideoDr
               <TrashIcon className="size-4.5" />
             </Button>
           </div>
-          {notes[video.key] && <p className="text-xs text-antenna-deep">{notes[video.key]}</p>}
+          {notes[video.key] && <p className="text-xs text-danger-deep">{notes[video.key]}</p>}
           <div className="grid grid-cols-1 gap-3 sm:grid-cols-[minmax(0,1fr)_10rem]">
             <Field label={`Título del video ${index + 1}`} error={errors[video.key]}>
               <Input

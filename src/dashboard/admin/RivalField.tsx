@@ -39,7 +39,7 @@ export function RivalField({ value, onChange, newTeam, onNewTeamChange, errors, 
       </Field>
 
       {value === NEW_TEAM && (
-        <div className="rounded-md bg-floor-deep/30 p-3 shadow-tape">
+        <div className="rounded-md bg-paper-deep/30 p-3 shadow-outline">
           <NewTeamFields autoFocus team={newTeam} errors={errors} onChange={onNewTeamChange} />
         </div>
       )}

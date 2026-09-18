@@ -51,7 +51,7 @@ function Logo({ src, fallback }: { src: string | null; fallback: ReactNode }) {
   return src ? (
     <img src={src} alt="" loading="lazy" className="size-9 shrink-0 rounded-sm bg-white/90 object-contain p-0.5 outline-1 outline-white/10" />
   ) : (
-    <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink">{fallback}</span>
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-paper-deep text-ink">{fallback}</span>
   )
 }
 
@@ -130,7 +130,7 @@ function PickList<T>({
                   onClick={() => onPick(item)}
                   className={[
                     'flex min-h-14 w-full items-center gap-3 rounded-md p-2.5 pr-3 text-left transition-[background-color,box-shadow] duration-150 ease-out',
-                    selected ? 'bg-floor-deep shadow-tape-club' : 'bg-floor-deep/40 shadow-tape hover:bg-ink/8 hover:shadow-tape-hover',
+                    selected ? 'bg-paper-deep shadow-outline-selected' : 'bg-paper-deep/40 shadow-outline hover:bg-ink/8 hover:shadow-outline-hover',
                   ].join(' ')}
                 >
                   {render(item)}
@@ -156,7 +156,7 @@ type LeagueRowProps = {
 function LeagueRow({ league, busy, onSync, onDelete, onStandings }: LeagueRowProps) {
   const archived = league.archived_at !== null
   return (
-    <li className="flex flex-col gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+    <li className="flex flex-col gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
       <div className="flex items-start gap-3">
         <Logo src={league.team_logo_url} fallback={<TrophyIcon className="size-5" />} />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
@@ -186,7 +186,7 @@ function LeagueRow({ league, busy, onSync, onDelete, onStandings }: LeagueRowPro
             Clasificación
           </Button>
         )}
-        <Button size="sm" variant="ghost" onClick={onDelete} disabled={busy} className="ml-auto text-antenna-deep">
+        <Button size="sm" variant="ghost" onClick={onDelete} disabled={busy} className="ml-auto text-danger-deep">
           Quitar
         </Button>
       </div>
@@ -221,7 +221,7 @@ function StandingsView({ snapshot, teamName }: { snapshot: CourtrackLeagueSnapsh
       {tables.map((table) => (
         <section key={table.label} className="flex flex-col gap-2">
           <h3 className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{table.label}</h3>
-          <div className="overflow-x-auto rounded-md bg-floor-deep/40 shadow-tape">
+          <div className="overflow-x-auto rounded-md bg-paper-deep/40 shadow-outline">
             <table className="w-full text-sm tabular-nums">
               <thead>
                 <tr className="text-left text-xs text-ink-soft">
@@ -712,7 +712,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
                     <label
                       className={[
                         'flex min-h-14 cursor-pointer items-center gap-3 rounded-md p-2.5 pr-3 transition-[background-color,box-shadow] duration-150 ease-out',
-                        already ? 'bg-floor-deep/30 opacity-60' : checked ? 'bg-floor-deep shadow-tape-club' : 'bg-floor-deep/40 shadow-tape hover:bg-ink/8',
+                        already ? 'bg-paper-deep/30 opacity-60' : checked ? 'bg-paper-deep shadow-outline-selected' : 'bg-paper-deep/40 shadow-outline hover:bg-ink/8',
                       ].join(' ')}
                     >
                       <input

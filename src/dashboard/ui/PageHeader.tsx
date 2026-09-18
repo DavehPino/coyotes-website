@@ -10,18 +10,20 @@ type PageHeaderProps = {
   back?: { to: string; label: string }
   /** Controles a la derecha del título (en móvil pasan debajo). */
   actions?: ReactNode
+  /** Título a tamaño de rótulo: para Inicio, donde la cifra grande es la del próximo partido. */
+  compact?: boolean
 }
 
 /**
- * La banda de la red: una franja blanca de lado a lado con el título en vinilo negro. Debajo lleva la línea
- * pintada del color de la sección (`--section-line`, que fija el layout según la ruta). En móvil la banda
- * también lleva el escudo y el nombre del club, porque ahí no hay pasillo lateral.
+ * La banda de cabecera: una franja blanca de lado a lado con el título en tinta. Debajo lleva la regla
+ * del color de la sección (`--section-line`, que fija el layout según la ruta). En móvil la banda
+ * también lleva el escudo y el nombre del club, porque ahí no hay menú lateral.
  */
-export function PageHeader({ title, description, back, actions }: PageHeaderProps) {
+export function PageHeader({ title, description, back, actions, compact = false }: PageHeaderProps) {
   return (
     <header
       className={[
-        'on-line -mx-4 mb-6 flex flex-col gap-3 bg-line px-4 pt-3 pb-4 text-ink md:-mx-8 md:mb-8 md:px-8 md:pt-6 md:pb-5',
+        'on-surface -mx-4 mb-6 flex flex-col gap-3 bg-surface px-4 pt-3 pb-4 text-ink md:-mx-8 md:mb-8 md:px-8 md:pt-6 md:pb-5',
         'border-b-[6px] border-[color:var(--section-line,var(--color-line))]',
       ].join(' ')}
     >
@@ -40,7 +42,7 @@ export function PageHeader({ title, description, back, actions }: PageHeaderProp
       )}
       <div className="flex flex-wrap items-end justify-between gap-x-6 gap-y-3">
         <div className="min-w-0">
-          <h1 className="text-[2.75rem] leading-[0.9] md:text-6xl">{title}</h1>
+          <h1 className={compact ? 'text-2xl leading-none md:text-3xl' : 'text-[2.75rem] leading-[0.9] md:text-6xl'}>{title}</h1>
           {description && <p className="mt-1.5 text-ink-soft">{description}</p>}
         </div>
         {actions && <div className="flex w-full flex-wrap items-center gap-2 md:w-auto">{actions}</div>}

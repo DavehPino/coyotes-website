@@ -60,7 +60,7 @@ export function NewTeamFields({ team, errors, onChange, autoFocus }: NewTeamFiel
           />
         </Field>
       </div>
-      <div className="flex items-center gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+      <div className="flex items-center gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
         {/* key: si cambia la URL se vuelve a intentar cargar el logo */}
         <TeamLogo key={preview.logo_url ?? ''} team={preview} size="lg" />
         <div className="flex min-w-0 flex-col">

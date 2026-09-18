@@ -316,6 +316,6 @@ function TabSwitch({ value, disabled }: { value: EditTab; disabled: boolean }) {
   }))
   return (
     // Radio exterior 12 px = interior 8 px + 4 px de padding
-    <TabList label="Qué editar" items={items} className="grid grid-cols-2 gap-1 rounded-md bg-line/40 p-1 shadow-tape" />
+    <TabList label="Qué editar" items={items} className="grid grid-cols-2 gap-1 rounded-md bg-surface/40 p-1 shadow-outline" />
   )
 }

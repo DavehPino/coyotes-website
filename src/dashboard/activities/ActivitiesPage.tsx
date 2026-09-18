@@ -14,7 +14,7 @@ import { orderUpcoming } from './upcoming'
 const NewActivityDialog = lazy(() => import('./new/NewActivityDialog'))
 
 // En móvil asoma la siguiente tarjeta para invitar a deslizar.
-const SLIDE_WIDTH = 'basis-[88%] sm:basis-[62%] lg:basis-[44%] xl:basis-[34%]'
+const SLIDE_WIDTH = 'basis-[88%] sm:basis-[62%] lg:basis-1/2 xl:basis-1/3'
 
 /** Carrusel informativo con las próximas actividades; la primera es la de Liga Podio más cercana. */
 export function ActivitiesPage() {

@@ -159,8 +159,8 @@ function CreatedSummary({ activity }: { activity: Activity }) {
   const time = formatTimeRange(activity.start_time, activity.end_time)
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-start gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-ink text-club">
+      <div className="flex items-start gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-key text-on-key">
           <CheckIcon className="size-5" strokeWidth={2} />
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">

@@ -9,7 +9,7 @@ type EmptyStateProps = {
   className?: string
 }
 
-/** Zona sin marcar todavía: un rectángulo de cinta discontinua sobre el suelo. */
+/** Zona sin marcar todavía: un recuadro de trazo discontinuo sobre la hoja. */
 export function EmptyState({ title, description, icon, action, className = '' }: EmptyStateProps) {
   return (
     <div

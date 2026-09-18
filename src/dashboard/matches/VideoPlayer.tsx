@@ -82,7 +82,7 @@ export function VideoPlayer({ video }: VideoPlayerProps) {
         refreshesRef.current = 0
       }}
       aria-label={video.title}
-      className="aspect-video w-full rounded-md bg-ink shadow-tape"
+      className="aspect-video w-full rounded-md bg-black shadow-outline"
     />
   )
 }

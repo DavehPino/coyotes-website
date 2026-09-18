@@ -19,27 +19,27 @@ function StatusIcon({ tone }: { tone: Tone }) {
   const base = 'flex size-9 shrink-0 items-center justify-center rounded-sm'
   if (tone === 'done') {
     return (
-      <span className={`${base} bg-ink text-club`}>
+      <span className={`${base} bg-key text-on-key`}>
         <CheckIcon className="size-5" strokeWidth={2} />
       </span>
     )
   }
   if (tone === 'error') {
     return (
-      <span className={`${base} bg-antenna/12 text-antenna-deep`}>
+      <span className={`${base} bg-danger/12 text-danger-deep`}>
         <AlertIcon className="size-5" />
       </span>
     )
   }
   if (tone === 'busy') {
     return (
-      <span className={`${base} bg-floor-deep text-ink`}>
+      <span className={`${base} bg-paper-deep text-ink`}>
         <RefreshIcon className="size-5 animate-spin motion-reduce:animate-none" />
       </span>
     )
   }
   return (
-    <span className={`${base} bg-line text-ink-soft`}>
+    <span className={`${base} bg-surface text-ink-soft`}>
       <CloseIcon className="size-4.5" />
     </span>
   )
@@ -47,7 +47,7 @@ function StatusIcon({ tone }: { tone: Tone }) {
 
 function Row({ tone, title, detail, children }: { tone: Tone; title: string; detail: ReactNode; children?: ReactNode }) {
   return (
-    <li className="flex flex-col gap-2.5 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+    <li className="flex flex-col gap-2.5 rounded-md bg-paper-deep/40 p-3 shadow-outline">
       <div className="flex items-center gap-3">
         <StatusIcon tone={tone} />
         <div className="flex min-w-0 flex-1 flex-col">
@@ -129,7 +129,7 @@ export function VideoUploadRows({ videos, uploads, canRetry, onRetryVideo }: Vid
             />
           </div>
         )}
-        {upload.error && <p className="text-xs text-antenna-deep">{upload.error}</p>}
+        {upload.error && <p className="text-xs text-danger-deep">{upload.error}</p>}
         {retryable && (
           <Button size="sm" className="self-start pr-3.5 pl-3" onClick={() => onRetryVideo(video.key)}>
             <RefreshIcon className="size-4" strokeWidth={2} />

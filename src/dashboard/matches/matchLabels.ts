@@ -12,7 +12,7 @@ export const OUTCOME_LABELS: Record<MatchOutcome, string> = {
 
 export const OUTCOME_TONES: Record<MatchOutcome, ChipTone> = {
   win: 'gold',
-  loss: 'orange',
+  loss: 'steel',
   pending: 'ash',
 }
 

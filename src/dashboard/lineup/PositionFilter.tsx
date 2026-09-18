@@ -12,13 +12,10 @@ type PositionFilterProps = {
   className?: string
 }
 
-const CHIP_BASE = [
-  'inline-flex min-h-10 shrink-0 items-center gap-1.5 rounded-sm px-3 text-xs font-bold tracking-wide whitespace-nowrap uppercase select-none',
-  'transition-[background-color,color,box-shadow] duration-150 ease-out',
-].join(' ')
+const CHIP_BASE = 'btn btn-static min-h-10 gap-1.5 px-3 text-xs whitespace-nowrap'
 
-/** Rótulos pintados sobre el suelo; el marcado pasa a vinilo negro con letras del club. */
-const CHIP_FLOOR = 'aria-pressed:bg-ink aria-pressed:text-club bg-line/40 text-ink shadow-tape hover:bg-line/80'
+/** Teclas sobre la hoja; el marcado pasa a tecla del club (negro con letras doradas). */
+const CHIP_FLOOR = 'btn-secondary aria-pressed:bg-key aria-pressed:text-on-key'
 
 /** Sobre la cancha oscura: la paleta del tablero. */
 const CHIP_BOARD = [

@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useDialogSession } from '../admin/useDialogSession'
-import { Button, EmptyState, ErrorState, Field, PageHeader, Select, Zone } from '../ui'
+import { ActionMenu, Button, EmptyState, ErrorState, Field, PageHeader, Select, Zone } from '../ui'
 import { BallIcon, PlusIcon, RefreshIcon, TrophyIcon } from '../ui/icons'
 import { useMatches } from './api'
 import { CompetitionFilter } from './CompetitionFilter'
@@ -72,20 +72,32 @@ export function MatchesPage() {
     leaguesDialog.openDialog()
   }
 
+  // Botones en escritorio; en móvil, un solo menú para que la cabecera no ocupe tres filas.
   const actions = (
     <>
-      <Button onClick={leaguesDialog.openDialog} className="pr-4 pl-3.5">
-        <TrophyIcon className="size-4" strokeWidth={2} />
-        Ligas
-      </Button>
-      <Button onClick={openSync} className="pr-4 pl-3.5">
-        <RefreshIcon className="size-4" strokeWidth={2} />
-        Sincronizar
-      </Button>
-      <Button variant="primary" onClick={dialog.openDialog} className="pr-4 pl-3.5">
-        <PlusIcon className="size-4" strokeWidth={2} />
-        Cargar partido
-      </Button>
+      <div className="hidden items-center gap-2 md:flex">
+        <Button onClick={leaguesDialog.openDialog} className="pr-4 pl-3.5">
+          <TrophyIcon className="size-4" strokeWidth={2} />
+          Ligas
+        </Button>
+        <Button onClick={openSync} className="pr-4 pl-3.5">
+          <RefreshIcon className="size-4" strokeWidth={2} />
+          Sincronizar
+        </Button>
+        <Button variant="primary" onClick={dialog.openDialog} className="pr-4 pl-3.5">
+          <PlusIcon className="size-4" strokeWidth={2} />
+          Cargar partido
+        </Button>
+      </div>
+      <ActionMenu
+        label="Acciones"
+        className="md:hidden"
+        items={[
+          { label: 'Cargar partido', icon: <PlusIcon className="size-5" strokeWidth={2} />, onSelect: dialog.openDialog },
+          { label: 'Sincronizar', icon: <RefreshIcon className="size-5" strokeWidth={2} />, onSelect: openSync },
+          { label: 'Ligas', icon: <TrophyIcon className="size-5" strokeWidth={2} />, onSelect: leaguesDialog.openDialog },
+        ]}
+      />
     </>
   )
 

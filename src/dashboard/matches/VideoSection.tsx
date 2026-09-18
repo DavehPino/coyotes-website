@@ -1,7 +1,7 @@
 import { useSearchParams } from 'react-router'
 import type { Video } from '@shared/schemas'
 import { formatDuration } from '@/lib/dates'
-import { Button, Chip, EmptyState, Zone } from '../ui'
+import { Button, buttonClasses, Chip, EmptyState, Zone } from '../ui'
 import { ExternalLinkIcon, FilmIcon, PlayIcon, UploadIcon } from '../ui/icons'
 import { videoCountLabel, videoLabel } from './matchLabels'
 import { VideoPlayer } from './VideoPlayer'
@@ -26,19 +26,19 @@ function ExternalVideo({ video }: { video: Video }) {
         allow="accelerometer; encrypted-media; gyroscope; picture-in-picture; fullscreen"
         allowFullScreen
         loading="lazy"
-        className="aspect-video w-full rounded-sm bg-ink shadow-tape"
+        className="aspect-video w-full rounded-sm bg-black shadow-outline"
       />
     )
   }
   return (
-    <div className="flex aspect-video flex-col items-center justify-center gap-3 rounded-sm bg-floor-deep p-6 text-center shadow-tape">
+    <div className="flex aspect-video flex-col items-center justify-center gap-3 rounded-sm bg-paper-deep p-6 text-center shadow-outline">
       <FilmIcon className="size-10 text-ink-soft" />
       <p className="max-w-sm text-ink-soft">Este video está alojado fuera del equipo y se abre en una pestaña nueva.</p>
       <a
         href={video.url ?? '#'}
         target="_blank"
         rel="noopener noreferrer"
-        className="inline-flex min-h-11 items-center gap-2 rounded-sm bg-ink pr-3.5 pl-4 text-sm font-bold tracking-wide text-club uppercase transition-[background-color,scale] duration-150 ease-out hover:bg-ink/88 active:scale-[0.96]"
+        className={buttonClasses({ variant: 'primary', className: 'pr-3.5 pl-4' })}
       >
         Abrir video
         <ExternalLinkIcon className="size-4" strokeWidth={2} />
@@ -47,7 +47,7 @@ function ExternalVideo({ video }: { video: Video }) {
   )
 }
 
-/** Reproductor principal + lista de videos como filas de cinta. El video activo va en ?video=<id>. */
+/** Reproductor principal + lista de videos como filas con filete. El video activo va en ?video=<id>. */
 export function VideoSection({ videos, onManage }: VideoSectionProps) {
   const [params, setParams] = useSearchParams()
   const requestedId = params.get(VIDEO_PARAM)
@@ -90,7 +90,7 @@ export function VideoSection({ videos, onManage }: VideoSectionProps) {
         <>
           <span className="text-sm text-ink-soft">{videoCountLabel(videos.length)}</span>
           {onManage && (
-            <Button variant="ghost" size="sm" onClick={onManage} className="-mr-2">
+            <Button variant="ghost" size="sm" onClick={onManage}>
               Gestionar
             </Button>
           )}
@@ -109,7 +109,7 @@ export function VideoSection({ videos, onManage }: VideoSectionProps) {
           {active.description && <p className="px-1 text-ink-soft whitespace-pre-line">{active.description}</p>}
         </div>
 
-        <ol aria-label="Lista de videos" className="divide-tape tape-rule">
+        <ol aria-label="Lista de videos" className="divide-hairline hairline">
           {videos.map((video, index) => {
             const isActive = video.id === active.id
             const duration = formatDuration(video.duration_seconds)
@@ -122,13 +122,13 @@ export function VideoSection({ videos, onManage }: VideoSectionProps) {
                   className={[
                     'grid w-full min-h-14 grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-1 py-2 text-left',
                     'transition-[background-color,color] duration-150 ease-out',
-                    isActive ? 'text-ink' : 'text-ink-soft hover:bg-line/50 hover:text-ink',
+                    isActive ? 'text-ink' : 'text-ink-soft hover:bg-surface/50 hover:text-ink',
                   ].join(' ')}
                 >
                   <span
                     className={[
                       'flex size-9 items-center justify-center rounded-[2px] text-lg font-extrabold',
-                      isActive ? 'bg-ink text-club' : 'bg-line text-ink',
+                      isActive ? 'bg-key text-on-key' : 'bg-surface text-ink shadow-[inset_0_0_0_2px_var(--paint)]',
                     ].join(' ')}
                   >
                     {isActive ? <PlayIcon className="size-5" filled /> : index + 1}

@@ -1,4 +1,3 @@
-import { Link } from 'react-router'
 import type { MatchSummary } from '@shared/schemas'
 import { Skeleton } from '../ui'
 import { matchStats } from './stats'
@@ -8,11 +7,15 @@ type SeasonLineProps = {
   pending: boolean
 }
 
-/** Los números de temporada en una sola línea de fondo, como el rótulo de una cancha. */
+/**
+ * Los números de temporada al pie de Inicio. Es solo lectura: a Partidos ya se llega por la navegación, por la
+ * zona del último resultado y por la tecla principal. En móvil van en una rejilla de cuatro columnas iguales
+ * (cifra arriba, rótulo debajo) para que ninguna salte sola a otra línea; desde `sm` caben en una fila.
+ */
 export function SeasonLine({ matches, pending }: SeasonLineProps) {
   if (pending) {
     return (
-      <div className="tape-rule pt-3" aria-hidden>
+      <div className="hairline pt-3" aria-hidden>
         <Skeleton className="h-5 w-72 max-w-full" />
       </div>
     )
@@ -28,17 +31,19 @@ export function SeasonLine({ matches, pending }: SeasonLineProps) {
   ]
 
   return (
-    <Link
-      to="/matches"
-      className="tape-rule group flex flex-wrap items-baseline gap-x-5 gap-y-1 pt-3 text-ink-soft uppercase transition-colors hover:text-ink"
+    <section
+      aria-label="Temporada"
+      className="hairline flex flex-col gap-3 pt-3 text-ink-soft uppercase sm:flex-row sm:items-baseline sm:gap-x-5"
     >
-      <span className="text-xs font-bold tracking-[0.12em]">Temporada</span>
-      {items.map((item) => (
-        <span key={item.label} className="flex items-baseline gap-1">
-          <span className="text-2xl leading-none font-black text-ink">{item.value}</span>
-          <span className="text-xs font-bold tracking-wider">{item.label}</span>
-        </span>
-      ))}
-    </Link>
+      <h2 className="text-xs font-bold tracking-[0.12em] text-ink-soft">Temporada</h2>
+      <dl className="grid grid-cols-4 gap-x-3 sm:flex sm:gap-x-5">
+        {items.map((item) => (
+          <div key={item.label} className="flex min-w-0 flex-col-reverse gap-1 sm:flex-row-reverse sm:items-baseline">
+            <dt className="truncate text-xs font-bold tracking-wider">{item.label}</dt>
+            <dd className="text-3xl leading-none font-black text-ink sm:text-2xl">{item.value}</dd>
+          </div>
+        ))}
+      </dl>
+    </section>
   )
 }

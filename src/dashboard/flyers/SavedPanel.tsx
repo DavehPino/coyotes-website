@@ -52,8 +52,8 @@ export function SavedPanel({ saved, current, onOpen }: SavedPanelProps) {
             <li
               key={item.id}
               className={[
-                'flex flex-col gap-2 rounded-md bg-line p-2',
-                isCurrent ? 'shadow-tape-club-strong' : 'shadow-tape',
+                'flex flex-col gap-2 rounded-md bg-surface p-2',
+                isCurrent ? 'shadow-outline-selected' : 'shadow-outline',
               ].join(' ')}
             >
               <button

@@ -2,6 +2,7 @@ import { lazy, Suspense, useState } from 'react'
 import { TEAM_NAME } from '@/config'
 import type { MatchDetail } from '@shared/schemas'
 import { Zone } from '../ui'
+import { ChevronRightIcon } from '../ui/icons'
 import { setScoreParts, setWinner } from './matchLabels'
 
 // El diálogo de progresión y estadísticas solo se descarga la primera vez que se abre un set.
@@ -9,9 +10,9 @@ const SetStatsDialog = lazy(() => import('./stats/SetStatsDialog'))
 
 type SetScoresProps = { match: MatchDetail }
 
-/** Cada parcial es una marca apoyada sobre la línea lateral: el set ganado lleva cinta del club encima. */
+/** Cada parcial es una marca apoyada sobre la línea lateral: el set ganado lleva acento del club encima. */
 const WINNER_CLASSES = {
-  us: 'border-tape text-ink',
+  us: 'border-accent text-ink',
   them: 'border-transparent text-ink-soft',
   tie: 'border-transparent text-ink-soft',
 } as const
@@ -34,7 +35,7 @@ export function SetScores({ match }: SetScoresProps) {
 
   return (
     <Zone id="set-scores-title" label="Parciales" actions={<span className="text-sm text-ink-soft">{homeName} – {awayName}</span>}>
-      <ol className="tape-rule grid grid-cols-4 gap-x-2 sm:flex sm:gap-x-6">
+      <ol className={interactive ? 'grid grid-cols-4 gap-2 sm:flex sm:gap-3' : 'hairline grid grid-cols-4 gap-x-2 sm:flex sm:gap-x-6'}>
         {match.set_scores.map((set, index) => {
           const [left, right] = setScoreParts(match, set)
           const winner = setWinner(set)
@@ -42,10 +43,10 @@ export function SetScores({ match }: SetScoresProps) {
           const label = `Set ${index + 1}: ${left} a ${right}, ${winnerName}`
           const content = (
             <>
-              <span className="font-stencil text-3xl font-black sm:text-4xl">
+              <span className="font-figures text-3xl font-black sm:text-4xl">
                 {left}-{right}
               </span>
-              <span className="mt-1 text-[10px] font-bold tracking-wider uppercase opacity-80">Set {index + 1}</span>
+              <span className="mt-1 text-[11px] font-bold tracking-wider uppercase">Set {index + 1}</span>
             </>
           )
           return (
@@ -55,9 +56,13 @@ export function SetScores({ match }: SetScoresProps) {
                   type="button"
                   onClick={() => openSet(index + 1)}
                   aria-label={`${label}. Ver progresión y estadísticas`}
-                  className={`${MARK_CLASSES} ${WINNER_CLASSES[winner]} cursor-pointer transition-[background-color,scale] duration-150 ease-out hover:bg-line/50 active:scale-[0.96] sm:min-w-20`}
+                  className={`btn btn-secondary group w-full flex-col gap-0 border-t-4 px-3 pt-1.5 pb-2 leading-none sm:min-w-24 ${winner === 'us' ? 'border-accent' : 'border-transparent text-ink-soft'}`}
                 >
                   {content}
+                  <span aria-hidden className="mt-1.5 inline-flex items-center gap-0.5 text-[11px] font-bold tracking-wider text-ink">
+                    Ver
+                    <ChevronRightIcon className="size-3 transition-transform duration-150 ease-out group-hover:translate-x-0.5" strokeWidth={2} />
+                  </span>
                 </button>
               ) : (
                 <div className={`${MARK_CLASSES} ${WINNER_CLASSES[winner]}`}>
@@ -69,7 +74,7 @@ export function SetScores({ match }: SetScoresProps) {
           )
         })}
       </ol>
-      {interactive && <p className="mt-2 text-sm text-ink-soft">Toca un set para ver su progresión punto a punto y las estadísticas.</p>}
+      {interactive && <p className="mt-3 text-sm text-ink-soft">Cada set abre su progresión punto a punto y sus estadísticas.</p>}
 
       {dialog.mounted && (
         <Suspense fallback={null}>

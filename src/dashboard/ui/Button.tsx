@@ -6,20 +6,22 @@ type Size = 'md' | 'sm' | 'icon'
 export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant
   size?: Size
-  /** Desactiva el efecto de escala al pulsar (p.ej. controles que se pulsan muy seguido). */
+  /** Desactiva el hundimiento al pulsar (p.ej. controles que se pulsan muy seguido). */
   static?: boolean
 }
 
 /**
- * Rótulos de vinilo pegados al suelo: la acción principal es vinilo negro con las letras del club;
- * la secundaria, un rectángulo pintado (línea blanca de 2 px) con el texto en negro.
+ * El cuerpo del botón vive en `index.css` (`.btn`, `.btn-primary`…): relleno sólido, contorno y un canto
+ * desplazado que desaparece al pulsar. Los colores salen de los tokens del club (`key`, `on-key`), así que otro
+ * club cambia el botón sin tocar este componente. El fantasma es una celda con contorno y sin canto: tiene que leerse como botón, no como texto
+ * suelto. El gris plano queda solo para lo desactivado.
  */
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-ink text-club hover:bg-ink/88',
-  secondary: 'bg-line/40 text-ink shadow-tape hover:bg-line/80',
-  ghost: 'text-ink-soft hover:bg-ink/8 hover:text-ink',
+  primary: 'btn-primary',
+  secondary: 'btn-secondary',
+  ghost: 'btn-ghost',
   /** Acciones que borran datos. */
-  danger: 'bg-antenna text-white hover:bg-antenna/88',
+  danger: 'btn-danger',
 }
 
 // Área de pulsación mínima de 44 px en todos los tamaños (uso principal desde el móvil).
@@ -36,15 +38,7 @@ export function buttonClasses({
   static: isStatic = false,
   className = '',
 }: Pick<ButtonProps, 'variant' | 'size' | 'static' | 'className'> = {}) {
-  return [
-    'inline-flex shrink-0 items-center justify-center gap-2 rounded-sm font-bold tracking-wide uppercase select-none',
-    'transition-[background-color,color,box-shadow,scale] duration-150 ease-out',
-    'disabled:pointer-events-none disabled:opacity-50',
-    isStatic ? '' : 'active:scale-[0.96]',
-    VARIANTS[variant],
-    SIZES[size],
-    className,
-  ].join(' ')
+  return ['btn', isStatic ? 'btn-static' : '', VARIANTS[variant], SIZES[size], className].join(' ')
 }
 
 export function Button({ variant, size, static: isStatic, className, type = 'button', ...rest }: ButtonProps) {

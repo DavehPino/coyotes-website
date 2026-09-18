@@ -100,12 +100,12 @@ export function lastSyncLabel(entry: CourtrackSyncLogEntry, leagueId?: string): 
 
 export function Callout({ tone, icon, children }: { tone: 'gold' | 'orange' | 'ash'; icon: ReactNode; children: ReactNode }) {
   const iconTone = {
-    gold: 'bg-floor-deep text-ink',
-    orange: 'bg-antenna/12 text-antenna-deep',
-    ash: 'bg-line text-ink-soft',
+    gold: 'bg-paper-deep text-ink',
+    orange: 'bg-danger/12 text-danger-deep',
+    ash: 'bg-surface text-ink-soft',
   }[tone]
   return (
-    <div className="flex items-start gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+    <div className="flex items-start gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
       <span className={`flex size-9 shrink-0 items-center justify-center rounded-sm ${iconTone}`}>{icon}</span>
       <div className="min-w-0 flex-1 self-center text-sm text-ink-soft">{children}</div>
     </div>
@@ -214,7 +214,7 @@ function StatusView({ status, error, leagueId, onLeagueChange, onRetry, onManage
 
 function LeagueSummary({ league }: { league: CourtrackSyncLeague }) {
   return (
-    <div className="flex items-center gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+    <div className="flex items-center gap-3 rounded-md bg-paper-deep/40 p-3 shadow-outline">
       {league.team_logo_url ? (
         <img
           src={league.team_logo_url}
@@ -222,7 +222,7 @@ function LeagueSummary({ league }: { league: CourtrackSyncLeague }) {
           className="size-9 shrink-0 rounded-sm bg-white/90 object-contain p-0.5 outline-1 outline-white/10"
         />
       ) : (
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-paper-deep text-ink">
           <TrophyIcon className="size-5" />
         </span>
       )}
@@ -246,7 +246,7 @@ function Counters({ summary, dryRun }: { summary: CourtrackSyncSummary; dryRun: 
   return (
     <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {counters.map((counter) => (
-        <div key={counter.label} className="flex flex-col gap-0.5 rounded-md bg-floor-deep/40 px-3 py-2.5 shadow-tape">
+        <div key={counter.label} className="flex flex-col gap-0.5 rounded-md bg-paper-deep/40 px-3 py-2.5 shadow-outline">
           <dt className="text-xs text-ink-soft">{counter.label}</dt>
           <dd className="text-2xl leading-none text-ink tabular-nums">{counter.value}</dd>
         </div>
@@ -341,7 +341,7 @@ function MatchRow({ match, dryRun, onLinkRival }: MatchRowProps) {
   const showLink = !dryRun && match.slug && match.action !== 'skipped'
   const canLink = onLinkRival !== null && match.opponent?.created === true
   return (
-    <li className="flex flex-col gap-2.5 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+    <li className="flex flex-col gap-2.5 rounded-md bg-paper-deep/40 p-3 shadow-outline">
       <div className="flex items-center gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
           <span className="truncate text-sm font-medium text-ink">
@@ -545,9 +545,11 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
     step === 'safeword' ? (
       null
     ) : (
-      <Chip tone="gold" className="max-w-full truncate">
-        {scopeLabel ? `CourtTrack · ${scopeLabel}` : 'CourtTrack'}
-      </Chip>
+      <>
+        <Chip tone="podio">CourtTrack</Chip>
+        {/* El alcance va como texto que puede partir línea, no dentro de la etiqueta (en móvil se cortaba). */}
+        {scopeLabel && <span>{scopeLabel}</span>}
+      </>
     )
 
   let footer: ReactNode = null

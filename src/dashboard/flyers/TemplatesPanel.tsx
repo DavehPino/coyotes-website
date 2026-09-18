@@ -35,9 +35,9 @@ export function TemplatesPanel({ flyer, onApply }: TemplatesPanelProps) {
                 aria-pressed={selected}
                 onClick={() => onApply(sample)}
                 className={[
-                  'flex w-full flex-col gap-2 rounded-md bg-line p-2 text-left select-none',
+                  'flex w-full flex-col gap-2 rounded-md bg-surface p-2 text-left select-none',
                   'transition-[box-shadow,scale] duration-150 ease-out active:scale-[0.98]',
-                  selected ? 'shadow-tape-club-strong' : 'shadow-tape hover:shadow-tape-hover',
+                  selected ? 'shadow-outline-selected' : 'shadow-outline hover:shadow-outline-hover',
                 ].join(' ')}
               >
                 <FlyerCanvas

@@ -27,7 +27,7 @@ export function StartingLineup({ lineup }: StartingLineupProps) {
             return (
               <div
                 key={zone}
-                className="relative flex min-h-16 flex-col items-center justify-center rounded-sm bg-floor-deep/35 px-1 py-2 text-center"
+                className="relative flex min-h-16 flex-col items-center justify-center rounded-sm bg-paper-deep/35 px-1 py-2 text-center"
               >
                 <span className="sr-only">
                   Zona {zone}

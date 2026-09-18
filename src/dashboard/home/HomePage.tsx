@@ -15,9 +15,8 @@ import { NextMatchZone } from './NextMatchZone'
 import { SeasonLine } from './SeasonLine'
 import { useDialogSession } from '../admin/useDialogSession'
 
-// Los formularios de alta solo se descargan la primera vez que se abren.
+// El formulario de alta solo se descarga la primera vez que se abre. Los partidos se cargan desde su sección.
 const NewActivityDialog = lazy(() => import('../activities/new/NewActivityDialog'))
-const NewMatchDialog = lazy(() => import('../matches/new/NewMatchDialog'))
 
 /** "VIE 18 SEP": el día de hoy como número de cancha. */
 function todayLabel(today: string): string {
@@ -48,11 +47,10 @@ export function HomePage() {
   const upcoming = activitiesQuery.data ? filterUpcoming(activitiesQuery.data) : []
 
   const activityDialog = useDialogSession()
-  const matchDialog = useDialogSession()
 
   return (
     <section>
-      <PageHeader title={todayLabel(today)} description={weekLabel(today)} />
+      <PageHeader compact title={todayLabel(today)} description={weekLabel(today)} />
 
       <div className="flex flex-col gap-8 md:grid md:grid-cols-[minmax(0,1fr)_6px_minmax(0,1fr)] md:gap-x-8 md:gap-y-10">
         <NextMatchZone
@@ -64,10 +62,10 @@ export function HomePage() {
         />
         {/* Línea central: en escritorio separa las dos mitades de la pista. */}
         <div aria-hidden className="hidden bg-line md:block" />
-        <LastResultZone query={matchesQuery} onAdd={matchDialog.openDialog} />
+        <LastResultZone query={matchesQuery} />
 
         <div className="flex flex-col gap-8 md:col-span-3">
-          <ActionStrip onNewActivity={activityDialog.openDialog} onNewMatch={matchDialog.openDialog} />
+          <ActionStrip onNewActivity={activityDialog.openDialog} />
           <SeasonLine matches={matchesQuery.data ?? []} pending={matchesQuery.isPending} />
         </div>
       </div>
@@ -81,16 +79,6 @@ export function HomePage() {
             open={activityDialog.open}
             onClose={activityDialog.close}
             onRestart={activityDialog.restart}
-          />
-        </Suspense>
-      )}
-      {matchDialog.mounted && (
-        <Suspense fallback={null}>
-          <NewMatchDialog
-            key={matchDialog.session}
-            open={matchDialog.open}
-            onClose={matchDialog.close}
-            onRestart={matchDialog.restart}
           />
         </Suspense>
       )}

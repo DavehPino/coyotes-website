@@ -69,7 +69,7 @@ export function LineupPage() {
         }
       >
         {lineups.isPending || players.isPending ? (
-          <div className="divide-tape tape-rule" aria-busy aria-label="Cargando formaciones">
+          <div className="divide-hairline hairline" aria-busy aria-label="Cargando formaciones">
             {[0, 1].map((i) => (
               <div key={i} className="flex min-h-16 items-center gap-3 px-1">
                 <Skeleton className="h-5 w-32" />
@@ -178,7 +178,7 @@ type LineupListProps = {
 
 function LineupList({ lineups, players, byId, onOpen }: LineupListProps) {
   return (
-    <ul className="divide-tape tape-rule">
+    <ul className="divide-hairline hairline">
       {lineups.map((lineup) => {
         const edited = formatDistanceToNowStrict(new Date(lineup.updated_at), { locale: es, addSuffix: true })
         const summary = lineupSummary(lineup.slots, byId)
@@ -187,7 +187,7 @@ function LineupList({ lineups, players, byId, onOpen }: LineupListProps) {
             <button
               type="button"
               onClick={() => onOpen(lineup)}
-              className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pr-2 pl-1 text-left transition-colors duration-150 ease-out hover:bg-line/50 focus-visible:-outline-offset-2"
+              className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pr-2 pl-1 text-left transition-colors duration-150 ease-out hover:bg-surface/50 focus-visible:-outline-offset-2"
             >
               <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
                 <span className="truncate text-lg font-bold text-ink">{lineup.name}</span>

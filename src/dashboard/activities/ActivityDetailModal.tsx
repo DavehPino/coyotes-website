@@ -149,7 +149,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
     case 'view':
       footer = shown && (
         <>
-          <Button variant="ghost" onClick={() => enter('delete', shown)} className="mr-auto pr-3.5 pl-3">
+          <Button variant="danger" onClick={() => enter('delete', shown)} className="mr-auto pr-3.5 pl-3">
             <TrashIcon className="size-4" />
             Eliminar
           </Button>

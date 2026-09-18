@@ -185,7 +185,7 @@ export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: M
                     <TrashIcon className="size-4.5" />
                   </Button>
                 </div>
-                {error && <p className="pl-14 text-xs text-antenna-deep">{error}</p>}
+                {error && <p className="pl-14 text-xs text-danger-deep">{error}</p>}
               </li>
             )
           })}

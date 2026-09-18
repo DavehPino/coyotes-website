@@ -16,11 +16,11 @@ type PositionPickerProps = {
 }
 
 const OPTION = [
-  'relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm bg-line/40 px-2 py-1.5 text-sm text-ink shadow-tape select-none',
-  'transition-[box-shadow,background-color,opacity] duration-150 ease-out hover:shadow-tape-hover',
-  'has-checked:bg-ink/10 has-checked:shadow-tape-club-strong',
+  'relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm bg-surface/40 px-2 py-1.5 text-sm text-ink shadow-outline select-none',
+  'transition-[box-shadow,background-color,opacity] duration-150 ease-out hover:shadow-outline-hover',
+  'has-checked:bg-surface has-checked:font-bold has-checked:shadow-outline-selected',
   'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink',
-  'has-disabled:cursor-not-allowed has-disabled:opacity-35 has-disabled:hover:shadow-tape',
+  'has-disabled:cursor-not-allowed has-disabled:opacity-35 has-disabled:hover:shadow-outline',
 ].join(' ')
 
 /**
@@ -51,7 +51,7 @@ export function PositionPicker({
         aria-labelledby={`${id}-label`}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? true : undefined}
-        className={['grid grid-cols-2 gap-2 rounded-md sm:grid-cols-3', error ? 'p-1 shadow-[0_0_0_1px_var(--color-antenna)]' : ''].join(' ')}
+        className={['grid grid-cols-2 gap-2 rounded-md sm:grid-cols-3', error ? 'p-1 shadow-[0_0_0_1px_var(--color-danger)]' : ''].join(' ')}
       >
         {PLAYER_POSITIONS.map((position, index) => {
           const style = POSITION_STYLES[position]
@@ -96,7 +96,7 @@ export function PositionPicker({
         )}
       </div>
       {error && (
-        <p id={`${id}-error`} className="text-xs text-antenna-deep">
+        <p id={`${id}-error`} className="text-xs text-danger-deep">
           {error}
         </p>
       )}

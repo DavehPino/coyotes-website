@@ -73,8 +73,8 @@ export function Modal({
         if (dismissible && event.target === event.currentTarget) onClose()
       }}
       className={[
-        `m-auto w-[calc(100%-2rem)] ${SIZES[size]} on-line rounded-md bg-line p-0 text-ink shadow-lift-floor`,
-        'backdrop:bg-ink/70',
+        `m-auto w-[calc(100%-2rem)] ${SIZES[size]} on-surface rounded-md bg-surface p-0 text-ink shadow-dialog`,
+        'backdrop:bg-scrim/70',
         // Entrada y salida suaves: opacidad + desplazamiento corto, ease-out en ambas.
         'translate-y-2 opacity-0 transition-[opacity,translate,display,overlay] duration-200 ease-out transition-discrete',
         'open:translate-y-0 open:opacity-100 starting:open:translate-y-2 starting:open:opacity-0',
@@ -101,7 +101,17 @@ export function Modal({
           {children}
         </div>
         {footer && (
-          <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-ink/15 px-5 py-3">
+          // En móvil los botones se apilan a lo ancho con la acción principal arriba; desde `sm`, en fila a la derecha.
+          // La acción apartada a la izquierda (`mr-auto`, p.ej. «Eliminar» en un diálogo de lectura) no se estira: queda
+          // la última, compacta y separada, para que borrar no pese más que todo lo demás.
+          <footer
+            className={[
+              'flex shrink-0 flex-col-reverse gap-2 border-t border-ink/15 px-5 py-3',
+              'max-sm:[&>*]:mr-0 max-sm:[&>*]:w-full',
+              'max-sm:[&>.mr-auto]:mt-2 max-sm:[&>.mr-auto]:w-auto max-sm:[&>.mr-auto]:self-start',
+              'sm:flex-row sm:flex-wrap sm:items-center sm:justify-end',
+            ].join(' ')}
+          >
             {footer}
           </footer>
         )}

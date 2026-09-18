@@ -8,13 +8,13 @@ type CompetitionFilterProps = {
   onChange: (competitionIds: string[]) => void
 }
 
-/** Rótulos de vinilo: el marcado es vinilo negro con letras del club; el resto, rectángulos pintados. */
+/** Teclas de filtro: la marcada es la tecla del club (negro con letras doradas); el resto, celdas blancas. */
 const CHIP = [
-  'inline-flex min-h-11 shrink-0 items-center gap-1.5 rounded-sm px-3 text-sm font-bold tracking-wide uppercase select-none md:min-h-10',
-  'transition-[background-color,color,box-shadow,scale] duration-150 ease-out active:scale-[0.96]',
+  'btn min-h-11 gap-1.5 px-3 text-sm md:min-h-10',
+
 ].join(' ')
-const SELECTED = 'bg-ink text-club'
-const IDLE = 'bg-line/40 text-ink shadow-tape hover:bg-line/80'
+const SELECTED = 'btn-primary'
+const IDLE = 'btn-secondary'
 
 /** Fila de rótulos para quedarse solo con los partidos de las ligas marcadas (se pueden marcar varias). */
 export function CompetitionFilter({ competitions, value, onChange }: CompetitionFilterProps) {
