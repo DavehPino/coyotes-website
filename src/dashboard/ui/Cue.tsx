@@ -19,7 +19,10 @@ export function Cue({ children, tone = 'cell', className = '' }: CueProps) {
     <span
       aria-hidden
       className={[
-        'btn btn-static min-h-10 w-fit gap-1.5 pr-3 pl-3.5 text-sm',
+        // `pointer-events-none`: `.btn` la posiciona, y al ir después del control en el orden del documento
+        // taparía su zona de pulsación (p.ej. el `after:inset-0` del título de una actividad). Como es solo
+        // visual, el puntero la atraviesa y el clic llega siempre al bloque.
+        'btn btn-static pointer-events-none min-h-10 w-fit gap-1.5 pr-3 pl-3.5 text-sm',
         tone === 'key' ? 'btn-primary' : 'btn-secondary',
         className,
       ].join(' ')}
