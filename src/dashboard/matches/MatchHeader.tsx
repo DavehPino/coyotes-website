@@ -1,7 +1,7 @@
 import { TEAM_NAME } from '@/config'
 import type { MatchDetail } from '@shared/schemas'
 import { formatDateFull, shortTime } from '@/lib/dates'
-import { Card, Chip, TeamLogo } from '../ui'
+import { Chip, TeamLogo } from '../ui'
 import { OUTCOME_LABELS, OUTCOME_TONES, scoreParts } from './matchLabels'
 
 type MatchHeaderProps = { match: MatchDetail }
@@ -10,12 +10,12 @@ function TeamBlock({ name, children }: { name: string; children: React.ReactNode
   return (
     <div className="flex min-w-0 flex-col items-center gap-2 text-center">
       {children}
-      <span className="line-clamp-2 text-sm font-semibold text-coyote-silver md:text-base">{name}</span>
+      <span className="line-clamp-2 text-lg leading-tight font-extrabold text-ink uppercase md:text-xl">{name}</span>
     </div>
   )
 }
 
-/** Cabecera del detalle: equipos, marcador, resultado y datos del partido. */
+/** Cabecera del detalle: el marcador de pared en stencil y, bajo una regla de cinta, los datos del partido. */
 export function MatchHeader({ match }: MatchHeaderProps) {
   const [left, right] = scoreParts(match)
   const time = shortTime(match.start_time)
@@ -23,13 +23,13 @@ export function MatchHeader({ match }: MatchHeaderProps) {
   const awayName = match.is_home ? match.opponent.name : TEAM_NAME
 
   return (
-    <Card as="header" className="bg-ember-fade p-4 md:p-6">
+    <header className="line-top pt-4">
       <div className="mb-4 flex flex-wrap items-center gap-2">
         <Chip tone={OUTCOME_TONES[match.outcome]} size="md">
           {OUTCOME_LABELS[match.outcome]}
         </Chip>
         {(match.competition || match.phase) && (
-          <span className="text-sm text-coyote-ash">{[match.competition?.name, match.phase].filter(Boolean).join(' · ')}</span>
+          <span className="text-ink-soft">{[match.competition?.name, match.phase].filter(Boolean).join(' · ')}</span>
         )}
       </div>
 
@@ -39,10 +39,10 @@ export function MatchHeader({ match }: MatchHeaderProps) {
         </TeamBlock>
         <p
           aria-label={`Marcador de sets: ${left} a ${right}`}
-          className="font-display text-6xl leading-none text-coyote-gold tabular-nums sm:text-7xl md:text-8xl"
+          className="font-stencil text-7xl leading-none font-black text-ink sm:text-8xl md:text-[7.5rem]"
         >
           {left}
-          <span className="mx-1.5 text-coyote-rust sm:mx-2 md:mx-3">–</span>
+          <span className="mx-1 text-ink-soft sm:mx-2">–</span>
           {right}
         </p>
         <TeamBlock name={awayName}>
@@ -50,29 +50,29 @@ export function MatchHeader({ match }: MatchHeaderProps) {
         </TeamBlock>
       </div>
 
-      <dl className="mt-5 grid grid-cols-1 gap-x-6 gap-y-3 border-t border-coyote-rust/50 pt-4 text-sm sm:grid-cols-2 lg:grid-cols-4">
+      <dl className="tape-rule mt-5 grid grid-cols-1 gap-x-6 gap-y-3 pt-4 sm:grid-cols-2 lg:grid-cols-4">
         <div>
-          <dt className="text-xs font-medium tracking-wide text-coyote-ash uppercase">Fecha</dt>
-          <dd className="text-coyote-silver">
+          <dt className="text-xs font-bold tracking-wider text-ink-soft uppercase">Fecha</dt>
+          <dd className="font-bold text-ink">
             {formatDateFull(match.played_on)}
-            {time && <span className="tabular-nums"> · {time}</span>}
+            {time && <span> · {time}</span>}
           </dd>
         </div>
         <div>
-          <dt className="text-xs font-medium tracking-wide text-coyote-ash uppercase">Condición</dt>
-          <dd className="text-coyote-silver">{match.is_home ? 'Local' : 'Visitante'}</dd>
+          <dt className="text-xs font-bold tracking-wider text-ink-soft uppercase">Condición</dt>
+          <dd className="font-bold text-ink">{match.is_home ? 'Local' : 'Visitante'}</dd>
         </div>
         <div>
-          <dt className="text-xs font-medium tracking-wide text-coyote-ash uppercase">Lugar</dt>
-          <dd className="text-coyote-silver">{match.location ?? 'Sin especificar'}</dd>
+          <dt className="text-xs font-bold tracking-wider text-ink-soft uppercase">Lugar</dt>
+          <dd className="font-bold text-ink">{match.location ?? 'Sin especificar'}</dd>
         </div>
         <div>
-          <dt className="text-xs font-medium tracking-wide text-coyote-ash uppercase">Competición</dt>
-          <dd className="text-coyote-silver">
+          <dt className="text-xs font-bold tracking-wider text-ink-soft uppercase">Competición</dt>
+          <dd className="font-bold text-ink">
             {[match.competition?.name, match.phase].filter(Boolean).join(' · ') || 'Sin especificar'}
           </dd>
         </div>
       </dl>
-    </Card>
+    </header>
   )
 }

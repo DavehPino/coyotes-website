@@ -22,7 +22,7 @@ type MatchVideoListProps = {
 /** Videos ya subidos del partido: cambiar título y set, o eliminarlos (también del bucket). */
 export function MatchVideoList({ videos, post, onUpdated, onDeleted, onBusyChange, disabled }: MatchVideoListProps) {
   if (videos.length === 0) {
-    return <p className="rounded-xl bg-coyote-black/40 p-3 text-sm text-coyote-ash shadow-border">Todavía no hay videos.</p>
+    return <p className="rounded-md bg-floor-deep/30 p-3 text-sm text-ink-soft shadow-tape">Todavía no hay videos.</p>
   }
   return (
     <ol className="flex flex-col gap-2" aria-label="Videos del partido">
@@ -104,14 +104,14 @@ function VideoRow({ video, post, onUpdated, onDeleted, onBusyChange, disabled }:
   const locked = disabled || busy
 
   return (
-    <li className="flex flex-col gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+    <li className="flex flex-col gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
       <div className="flex items-center gap-3">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-ember text-coyote-ash">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink-soft">
           <FilmIcon className="size-4.5" />
         </span>
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-medium text-coyote-silver">{video.title}</span>
-          <span className="text-xs text-coyote-ash tabular-nums">{details.join(' · ')}</span>
+          <span className="truncate text-sm font-medium text-ink">{video.title}</span>
+          <span className="text-xs text-ink-soft tabular-nums">{details.join(' · ')}</span>
         </div>
         {mode === 'view' && (
           <div className="-mr-1 flex">
@@ -159,8 +159,8 @@ function VideoRow({ video, post, onUpdated, onDeleted, onBusyChange, disabled }:
       )}
 
       {mode === 'confirm-delete' && (
-        <div className="flex flex-col gap-3 rounded-lg bg-coyote-orange/10 p-3">
-          <p className="text-sm text-coyote-silver">
+        <div className="flex flex-col gap-3 rounded-sm bg-antenna/12 p-3">
+          <p className="text-sm text-ink">
             {isBucket
               ? 'Se borra el video del partido y su archivo del almacenamiento. No se puede deshacer.'
               : 'Se quita el enlace del partido. El video externo no se toca.'}
@@ -177,7 +177,7 @@ function VideoRow({ video, post, onUpdated, onDeleted, onBusyChange, disabled }:
       )}
 
       {error && (
-        <p role="alert" className="text-xs text-coyote-orange">
+        <p role="alert" className="text-xs text-antenna-deep">
           {error}
         </p>
       )}

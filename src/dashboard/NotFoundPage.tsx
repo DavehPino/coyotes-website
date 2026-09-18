@@ -16,11 +16,11 @@ export function NotFoundPage({
 }: NotFoundPageProps) {
   return (
     <section className="flex min-h-[60dvh] flex-col items-center justify-center gap-3 text-center">
-      <h1 className="text-7xl leading-none text-coyote-gold">{title}</h1>
-      <p className="text-coyote-ash">{message}</p>
+      <h1 className="text-7xl leading-none text-ink">{title}</h1>
+      <p className="text-ink-soft">{message}</p>
       <Link
         to={backTo}
-        className="inline-flex min-h-11 items-center rounded-lg px-3 font-medium text-coyote-orange underline-offset-4 hover:underline"
+        className="inline-flex min-h-11 items-center rounded-sm px-3 font-bold tracking-wide text-ink uppercase underline-offset-4 hover:underline"
       >
         {backLabel}
       </Link>

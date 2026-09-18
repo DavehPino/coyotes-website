@@ -102,12 +102,12 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
 
       {reply && !loading && (
         <Card className="flex items-start gap-3 p-3" aria-live="polite">
-          <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-ember text-coyote-gold">
+          <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink">
             <SparklesIcon className="size-5" />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <p className="text-sm text-coyote-silver">{reply.message}</p>
-            <p className="truncate text-xs text-coyote-ash">
+            <p className="text-sm text-ink">{reply.message}</p>
+            <p className="truncate text-xs text-ink-soft">
               {reply.saved === null ? 'Guardando…' : reply.saved ? 'Guardado en Guardados' : 'Sin guardar'} · {reply.model}
             </p>
           </div>
@@ -120,15 +120,15 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
         </Card>
       )}
 
-      <details className="group rounded-xl bg-coyote-night p-3 shadow-border" open={library.images.length > 0}>
-        <summary className="flex min-h-8 cursor-pointer items-center justify-between gap-2 text-sm font-medium text-coyote-silver select-none">
+      <details className="group rounded-md bg-line p-3 shadow-tape" open={library.images.length > 0}>
+        <summary className="flex min-h-8 cursor-pointer items-center justify-between gap-2 text-sm font-medium text-ink select-none">
           Imágenes para la IA
-          <span className="text-xs font-normal text-coyote-ash tabular-nums">
+          <span className="text-xs font-normal text-ink-soft tabular-nums">
             {library.images.length > 0 ? `${library.images.length} disponibles` : 'Logos de rivales, auspiciantes…'}
           </span>
         </summary>
         <div className="mt-3 flex flex-col gap-3">
-          <p className="text-xs text-coyote-ash">
+          <p className="text-xs text-ink-soft">
             La IA no ve las imágenes: recibe su nombre y decide dónde van (junto a nuestro escudo si es el rival, o en la
             fila de logos). Nómbralas como el equipo, p.ej. «Onas Vóley».
           </p>
@@ -137,7 +137,7 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
       </details>
 
       <div className="flex flex-col gap-2">
-        <p className="text-xs font-semibold tracking-wide text-coyote-ash uppercase">Ideas para pedir</p>
+        <p className="text-xs font-semibold tracking-wide text-ink-soft uppercase">Ideas para pedir</p>
         <ul className="flex flex-wrap gap-2">
           {EXAMPLE_PROMPTS.map((example) => (
             <li key={example}>
@@ -148,7 +148,7 @@ export function AiPanel({ flyer, onApply, canUndo, onUndo, library, onRemoveImag
                   setPrompt(example)
                   promptRef.current?.focus()
                 }}
-                className="min-h-11 rounded-lg bg-coyote-black px-3 py-2 text-left text-sm text-coyote-ash shadow-border transition-[color,box-shadow] duration-150 ease-out select-none hover:text-coyote-silver hover:shadow-border-hover disabled:opacity-50 md:min-h-10"
+                className="min-h-11 rounded-sm bg-line/40 px-3 py-2 text-left text-sm text-ink shadow-tape transition-[color,box-shadow] duration-150 ease-out select-none hover:text-ink hover:shadow-tape-hover disabled:opacity-50 md:min-h-10"
               >
                 {example}
               </button>

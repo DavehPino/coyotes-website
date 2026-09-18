@@ -112,9 +112,9 @@ export function FlyersPage() {
             assets={assets}
             ready={ready}
             label={`Vista previa del flyer: ${flyer.title || FLYER_TEMPLATE_LABELS[flyer.template]}`}
-            className="block h-auto max-h-[55svh] w-auto max-w-full rounded-lg shadow-border lg:max-h-[calc(100svh-14rem)]"
+            className="block h-auto max-h-[55svh] w-auto max-w-full rounded-sm shadow-tape lg:max-h-[calc(100svh-14rem)]"
           />
-          <p className="text-xs text-coyote-ash tabular-nums">
+          <p className="text-xs text-ink-soft tabular-nums">
             {FLYER_TEMPLATE_LABELS[flyer.template]} · {size.label} · {size.width}×{size.height} px
           </p>
           {failedImages > 0 && (
@@ -179,7 +179,7 @@ function TabSwitch({ savedCount }: { savedCount: number }) {
       <>
         {TAB_LABELS[tab]}
         {tab === 'saved' && savedCount > 0 && (
-          <span className="hidden text-xs text-coyote-ash tabular-nums sm:inline">{savedCount}</span>
+          <span className="hidden text-xs text-ink-soft tabular-nums sm:inline">{savedCount}</span>
         )}
       </>
     ),
@@ -189,7 +189,7 @@ function TabSwitch({ savedCount }: { savedCount: number }) {
     <TabList
       label="Herramientas"
       items={items}
-      className="grid grid-cols-4 gap-1 rounded-xl bg-coyote-black p-1 shadow-border"
+      className="grid grid-cols-4 gap-1 rounded-md bg-line/40 p-1 shadow-tape"
       tabClassName="gap-1.5 px-1"
     />
   )

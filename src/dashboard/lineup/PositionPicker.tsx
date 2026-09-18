@@ -16,11 +16,11 @@ type PositionPickerProps = {
 }
 
 const OPTION = [
-  'relative flex min-h-11 cursor-pointer items-center gap-2 rounded-lg bg-coyote-black px-2 py-1.5 text-sm text-coyote-silver shadow-border select-none',
-  'transition-[box-shadow,background-color,opacity] duration-150 ease-out hover:shadow-border-hover',
-  'has-checked:bg-coyote-ember has-checked:shadow-gold-strong',
-  'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-coyote-gold',
-  'has-disabled:cursor-not-allowed has-disabled:opacity-35 has-disabled:hover:shadow-border',
+  'relative flex min-h-11 cursor-pointer items-center gap-2 rounded-sm bg-line/40 px-2 py-1.5 text-sm text-ink shadow-tape select-none',
+  'transition-[box-shadow,background-color,opacity] duration-150 ease-out hover:shadow-tape-hover',
+  'has-checked:bg-ink/10 has-checked:shadow-tape-club-strong',
+  'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink',
+  'has-disabled:cursor-not-allowed has-disabled:opacity-35 has-disabled:hover:shadow-tape',
 ].join(' ')
 
 /**
@@ -42,16 +42,16 @@ export function PositionPicker({
 
   return (
     <div className="flex flex-col gap-1.5">
-      <span id={`${id}-label`} className="text-sm font-medium text-coyote-silver">
+      <span id={`${id}-label`} className="text-sm font-medium text-ink">
         {label}
-        {optional && <span className="ml-1.5 text-xs font-normal text-coyote-ash">Opcional</span>}
+        {optional && <span className="ml-1.5 text-xs font-normal text-ink-soft">Opcional</span>}
       </span>
       <div
         role="radiogroup"
         aria-labelledby={`${id}-label`}
         aria-describedby={error ? `${id}-error` : undefined}
         aria-invalid={error ? true : undefined}
-        className={['grid grid-cols-2 gap-2 rounded-xl sm:grid-cols-3', error ? 'p-1 shadow-[0_0_0_1px_var(--color-coyote-orange)]' : ''].join(' ')}
+        className={['grid grid-cols-2 gap-2 rounded-md sm:grid-cols-3', error ? 'p-1 shadow-[0_0_0_1px_var(--color-antenna)]' : ''].join(' ')}
       >
         {PLAYER_POSITIONS.map((position, index) => {
           const style = POSITION_STYLES[position]
@@ -96,7 +96,7 @@ export function PositionPicker({
         )}
       </div>
       {error && (
-        <p id={`${id}-error`} className="text-xs text-coyote-orange">
+        <p id={`${id}-error`} className="text-xs text-antenna-deep">
           {error}
         </p>
       )}

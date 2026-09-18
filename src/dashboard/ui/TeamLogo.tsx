@@ -31,7 +31,7 @@ function initials(team: TeamSummary): string {
     .toUpperCase()
 }
 
-/** Escudo circular; si el rival no tiene logo, o no carga, se muestran sus iniciales. */
+/** Escudo circular; si el rival no tiene logo, o no carga, se muestran sus iniciales en vinilo negro. */
 export function TeamLogo({ team, size = 'md', className = '', loading = 'lazy' }: TeamLogoProps) {
   const name = team?.name ?? TEAM_NAME
   const src = team ? team.logo_url : LOGO_SRC
@@ -45,7 +45,7 @@ export function TeamLogo({ team, size = 'md', className = '', loading = 'lazy' }
         alt={`Escudo de ${name}`}
         loading={loading}
         onError={() => setFailedSrc(src)}
-        className={`${classes} bg-coyote-black object-cover`}
+        className={`${classes} bg-ink object-cover`}
       />
     )
   }
@@ -53,7 +53,7 @@ export function TeamLogo({ team, size = 'md', className = '', loading = 'lazy' }
     <span
       role="img"
       aria-label={`Escudo de ${name}`}
-      className={`${classes} inline-flex items-center justify-center bg-coyote-ember font-display font-semibold text-coyote-gold shadow-border`}
+      className={`${classes} inline-flex items-center justify-center bg-ink font-extrabold text-club`}
     >
       {team ? initials(team) : 'COY'}
     </span>

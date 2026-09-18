@@ -87,7 +87,7 @@ export default function DeleteMatchDialog({ open, match, onClose }: DeleteMatchD
       open={open}
       onClose={handleClose}
       title="Eliminar partido"
-      eyebrow={askSafeword ? <Chip tone="ash">Acceso restringido</Chip> : <Chip tone="orange">No se puede deshacer</Chip>}
+      meta={askSafeword ? null : <Chip tone="orange">No se puede deshacer</Chip>}
       footer={footer}
       dismissible={!busy}
       scrollResetKey={askSafeword ? 'safeword' : 'confirm'}
@@ -105,7 +105,7 @@ export default function DeleteMatchDialog({ open, match, onClose }: DeleteMatchD
         />
       ) : (
         <div className="flex flex-col gap-3">
-          <p className="text-coyote-silver">
+          <p className="text-ink">
             Se elimina <span className="font-medium">{matchTitle(match)}</span> ({formatDateShort(match.played_on)})
             {videoCount > 0 ? (
               <>
@@ -117,7 +117,7 @@ export default function DeleteMatchDialog({ open, match, onClose }: DeleteMatchD
               '.'
             )}
           </p>
-          <p className="text-sm text-coyote-ash">El equipo rival se conserva.</p>
+          <p className="text-sm text-ink-soft">El equipo rival se conserva.</p>
           {error && <FormError>{error}</FormError>}
         </div>
       )}

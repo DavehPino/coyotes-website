@@ -48,7 +48,7 @@ export function VideoPlayer({ video }: VideoPlayerProps) {
   }
 
   if (playback.isPending) {
-    return <Skeleton className="aspect-video w-full rounded-2xl" />
+    return <Skeleton className="aspect-video w-full rounded-md" />
   }
 
   if (playback.isError || playbackFailed) {
@@ -82,7 +82,7 @@ export function VideoPlayer({ video }: VideoPlayerProps) {
         refreshesRef.current = 0
       }}
       aria-label={video.title}
-      className="aspect-video w-full rounded-2xl bg-coyote-black shadow-border"
+      className="aspect-video w-full rounded-md bg-ink shadow-tape"
     />
   )
 }

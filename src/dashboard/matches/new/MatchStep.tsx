@@ -20,7 +20,7 @@ type MatchStepProps = {
 /** Solo dígitos, como mucho dos: los marcadores de un set. */
 const onlyScore = (value: string) => value.replace(/\D/g, '').slice(0, 2)
 
-const SCORE_INPUT = 'text-center font-display text-2xl leading-none tabular-nums md:text-2xl'
+const SCORE_INPUT = 'text-center font-bold text-2xl leading-none tabular-nums md:text-2xl'
 
 function ResultPreview({ sets }: { sets: SetDraft[] }) {
   // Solo sets con los dos marcadores: uno a medio escribir no cuenta todavía.
@@ -127,7 +127,7 @@ export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: M
 
       <section aria-labelledby={setsId} className="flex flex-col gap-2 pt-1">
         <div className="flex min-h-8 items-center justify-between gap-3">
-          <h3 id={setsId} className="text-2xl leading-none text-coyote-silver">
+          <h3 id={setsId} className="text-2xl leading-none text-ink">
             Parciales
           </h3>
           <ResultPreview sets={match.sets} />
@@ -135,10 +135,10 @@ export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: M
 
         <div
           aria-hidden
-          className="grid grid-cols-[3rem_minmax(0,1fr)_0.75rem_minmax(0,1fr)_2.75rem] items-end gap-2 text-xs font-medium tracking-wide text-coyote-ash uppercase md:grid-cols-[3rem_minmax(0,1fr)_0.75rem_minmax(0,1fr)_2.5rem]"
+          className="grid grid-cols-[3rem_minmax(0,1fr)_0.75rem_minmax(0,1fr)_2.75rem] items-end gap-2 text-xs font-medium tracking-wide text-ink-soft uppercase md:grid-cols-[3rem_minmax(0,1fr)_0.75rem_minmax(0,1fr)_2.5rem]"
         >
           <span />
-          <span className="truncate text-center text-coyote-gold">{TEAM_NAME}</span>
+          <span className="truncate text-center text-ink">{TEAM_NAME}</span>
           <span />
           <span className="truncate text-center">{rivalName}</span>
           <span />
@@ -151,7 +151,7 @@ export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: M
             return (
               <li key={set.key} className="flex flex-col gap-1">
                 <div className="grid grid-cols-[3rem_minmax(0,1fr)_0.75rem_minmax(0,1fr)_2.75rem] items-center gap-2 md:grid-cols-[3rem_minmax(0,1fr)_0.75rem_minmax(0,1fr)_2.5rem]">
-                  <span className="text-sm font-medium text-coyote-ash">{setLabel}</span>
+                  <span className="text-sm font-medium text-ink-soft">{setLabel}</span>
                   <Input
                     inputMode="numeric"
                     pattern="[0-9]*"
@@ -162,7 +162,7 @@ export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: M
                     onChange={(event) => updateSet(set.key, { us: onlyScore(event.target.value) })}
                     className={SCORE_INPUT}
                   />
-                  <span aria-hidden className="text-center text-coyote-rust">
+                  <span aria-hidden className="text-center text-ink-soft">
                     –
                   </span>
                   <Input
@@ -185,7 +185,7 @@ export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: M
                     <TrashIcon className="size-4.5" />
                   </Button>
                 </div>
-                {error && <p className="pl-14 text-xs text-coyote-orange">{error}</p>}
+                {error && <p className="pl-14 text-xs text-antenna-deep">{error}</p>}
               </li>
             )
           })}
@@ -203,7 +203,7 @@ export function MatchFields({ match, rivalName, errors, onChange, autoFocus }: M
           <PlusIcon className="size-4" strokeWidth={2} />
           Añadir set
         </Button>
-        <p className="text-xs text-coyote-ash">Los sets vacíos no se guardan.</p>
+        <p className="text-xs text-ink-soft">Los sets vacíos no se guardan.</p>
       </section>
     </>
   )

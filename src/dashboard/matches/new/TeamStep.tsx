@@ -17,10 +17,10 @@ function ModeOption({ checked, onSelect, children }: { checked: boolean; onSelec
   return (
     <label
       className={[
-        'flex min-h-11 cursor-pointer items-center justify-center rounded-lg px-3 text-sm font-medium select-none md:min-h-10',
+        'flex min-h-11 cursor-pointer items-center justify-center rounded-sm px-3 text-sm font-medium select-none md:min-h-10',
         'transition-[background-color,color] duration-150 ease-out',
-        'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-coyote-gold',
-        checked ? 'bg-coyote-ember text-coyote-gold' : 'text-coyote-ash hover:text-coyote-silver',
+        'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-ink',
+        checked ? 'bg-floor-deep text-ink' : 'text-ink-soft hover:text-ink',
       ].join(' ')}
     >
       <input type="radio" name="team-mode" checked={checked} onChange={onSelect} className="sr-only" />
@@ -45,9 +45,9 @@ export function TeamStep({ formId, team, errors, onChange, onSubmit }: TeamStepP
   if (rivals.isPending) {
     return (
       <div className="flex flex-col gap-4" aria-busy aria-label="Cargando equipos">
-        <Skeleton className="h-12 rounded-xl" />
-        <Skeleton className="h-11 rounded-lg" />
-        <Skeleton className="h-20 rounded-xl" />
+        <Skeleton className="h-12 rounded-md" />
+        <Skeleton className="h-11 rounded-sm" />
+        <Skeleton className="h-20 rounded-md" />
       </div>
     )
   }
@@ -70,7 +70,7 @@ export function TeamStep({ formId, team, errors, onChange, onSubmit }: TeamStepP
         <fieldset>
           <legend className="sr-only">Contra quién se jugó</legend>
           {/* Radio exterior 12 px = interior 8 px + 4 px de padding */}
-          <div className="grid grid-cols-2 gap-1 rounded-xl bg-coyote-black p-1 shadow-border">
+          <div className="grid grid-cols-2 gap-1 rounded-md bg-line/40 p-1 shadow-tape">
             <ModeOption checked={mode === 'new'} onSelect={() => onChange({ mode: 'new' })}>
               Equipo nuevo
             </ModeOption>
@@ -94,9 +94,9 @@ export function TeamStep({ formId, team, errors, onChange, onSubmit }: TeamStepP
             </Select>
           </Field>
           {selected && (
-            <div className="flex items-center gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+            <div className="flex items-center gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
               <TeamLogo team={selected} size="lg" />
-              <span className="font-medium text-coyote-silver">{selected.name}</span>
+              <span className="font-medium text-ink">{selected.name}</span>
             </div>
           )}
         </>

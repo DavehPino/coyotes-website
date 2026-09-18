@@ -1,5 +1,6 @@
 export { Button, buttonClasses } from './Button'
 export { Card } from './Card'
+export { Zone } from './Zone'
 export { Carousel } from './Carousel'
 export { Chip, type ChipTone } from './Chip'
 export { EmptyState } from './EmptyState'

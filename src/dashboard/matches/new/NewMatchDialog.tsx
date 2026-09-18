@@ -116,12 +116,12 @@ export default function NewMatchDialog({ open, onClose, onRestart }: NewMatchDia
             : 'Guardando partido'
   }
 
-  const eyebrow = formStep ? (
+  const meta = formStep ? (
     <Chip tone="gold" className="tabular-nums">
       Paso {formStep.index} de 3
     </Chip>
   ) : step === 'safeword' ? (
-    <Chip tone="ash">Acceso restringido</Chip>
+    null
   ) : null
 
   const primary = (label: string, disabled = false) => (
@@ -218,7 +218,7 @@ export default function NewMatchDialog({ open, onClose, onRestart }: NewMatchDia
       open={open}
       onClose={handleClose}
       title={title}
-      eyebrow={eyebrow}
+      meta={meta}
       footer={footer}
       dismissible={dismissible}
       scrollResetKey={step}
@@ -280,9 +280,9 @@ export default function NewMatchDialog({ open, onClose, onRestart }: NewMatchDia
             onRetryVideo={(key) => safeword && void retryVideo(draft, key, safeword)}
           />
           {submission.phase === 'finished' && failedUploads > 0 && submission.match && (
-            <p className="mt-3 text-xs text-coyote-ash">
+            <p className="mt-3 text-xs text-ink-soft">
               El partido ya está guardado. Puedes reintentar ahora o subir los videos más tarde a la carpeta{' '}
-              <code className="text-coyote-silver">games/{submission.match.slug}/</code> del bucket.
+              <code className="text-ink">games/{submission.match.slug}/</code> del bucket.
             </p>
           )}
         </>

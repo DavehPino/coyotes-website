@@ -123,15 +123,15 @@ export function MatchDetailPage() {
 function MatchDetailSkeleton() {
   return (
     <div className="flex flex-col gap-6" aria-busy aria-label="Cargando partido">
-      <Skeleton className="h-64 rounded-2xl" />
+      <Skeleton className="h-64 rounded-md" />
       <div className="flex gap-2">
         {[0, 1, 2].map((i) => (
-          <Skeleton key={i} className="h-14 w-20 rounded-xl" />
+          <Skeleton key={i} className="h-14 w-20 rounded-md" />
         ))}
       </div>
       <div className="flex flex-col gap-4 lg:grid lg:grid-cols-[minmax(0,1fr)_20rem]">
-        <Skeleton className="aspect-video rounded-2xl" />
-        <Skeleton className="h-40 rounded-2xl" />
+        <Skeleton className="aspect-video rounded-md" />
+        <Skeleton className="h-40 rounded-md" />
       </div>
     </div>
   )

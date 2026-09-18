@@ -80,10 +80,10 @@ export default function NewActivityDialog({ open, onClose, onRestart }: NewActiv
   const handleClose = () => dismissible && onClose(created !== null)
 
   let title: ReactNode = 'Cargar actividad'
-  let eyebrow: ReactNode = null
+  let meta: ReactNode = null
   let footer: ReactNode = null
   if (step === 'safeword') {
-    eyebrow = <Chip tone="ash">Acceso restringido</Chip>
+    meta = null
     footer = (
       <>
         <Button variant="ghost" onClick={handleClose} disabled={verifying}>
@@ -124,7 +124,7 @@ export default function NewActivityDialog({ open, onClose, onRestart }: NewActiv
       open={open}
       onClose={handleClose}
       title={title}
-      eyebrow={eyebrow}
+      meta={meta}
       footer={footer}
       dismissible={dismissible}
       scrollResetKey={step}
@@ -159,18 +159,18 @@ function CreatedSummary({ activity }: { activity: Activity }) {
   const time = formatTimeRange(activity.start_time, activity.end_time)
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex items-start gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-gold text-coyote-black">
+      <div className="flex items-start gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-ink text-club">
           <CheckIcon className="size-5" strokeWidth={2} />
         </span>
         <div className="flex min-w-0 flex-col gap-0.5">
-          <span className="font-medium text-coyote-silver">{activity.title}</span>
-          <span className="text-sm text-coyote-ash tabular-nums">
+          <span className="font-medium text-ink">{activity.title}</span>
+          <span className="text-sm text-ink-soft tabular-nums">
             {formatDateFull(activity.activity_date)}
             {time && ` · ${time}`}
           </span>
           {activity.opponent && (
-            <span className="mt-1 flex items-center gap-2 text-sm text-coyote-silver">
+            <span className="mt-1 flex items-center gap-2 text-sm text-ink">
               <TeamLogo team={activity.opponent} size="sm" />
               vs {activity.opponent.name}
             </span>
@@ -182,7 +182,7 @@ function CreatedSummary({ activity }: { activity: Activity }) {
           </Chip>
         )}
       </div>
-      <p className="text-sm text-coyote-ash">Ya aparece en el carrusel de próximas actividades.</p>
+      <p className="text-sm text-ink-soft">Ya aparece en el carrusel de próximas actividades.</p>
     </div>
   )
 }

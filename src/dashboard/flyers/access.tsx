@@ -1,7 +1,7 @@
 import { useId, useRef, useState } from 'react'
 import { isAbort, isUnauthorized } from '../admin/adminApi'
 import { SafewordStep } from '../admin/SafewordStep'
-import { Button, Chip, Modal } from '../ui'
+import { Button, Modal } from '../ui'
 import { flyersPost, flyersSafewordStore } from './api'
 
 type Pending = { resolve: (safeword: string | null) => void; notice: string | null }
@@ -56,7 +56,7 @@ function FlyersAccessDialog({ pending, onDone }: { pending: Pending | null; onDo
       open={pending !== null}
       onClose={() => !verifying && onDone(null)}
       title="Flyers"
-      eyebrow={<Chip tone="ash">Acceso restringido</Chip>}
+      meta={null}
       dismissible={!verifying}
       footer={
         <>

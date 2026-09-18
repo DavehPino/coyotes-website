@@ -1,7 +1,7 @@
 import podioLogoUrl from '@assets/podio-logo.png'
 import { ACTIVITY_TYPE_LABELS } from '@shared/domain'
 import type { Activity } from '@shared/schemas'
-import { formatDateCompact, formatDaysFromToday, formatTimeRange } from '@/lib/dates'
+import { formatDayMonth, formatDaysFromToday, formatTimeRange, formatWeekdayShort } from '@/lib/dates'
 import { Chip, Skeleton, TeamLogo } from '../ui'
 import { ClockIcon, MapPinIcon } from '../ui/icons'
 
@@ -11,91 +11,88 @@ type UpcomingActivityCardProps = {
   onOpen: (activity: Activity) => void
 }
 
-const CARD_CLASSES = 'flex h-full min-h-72 w-full flex-col gap-4 rounded-2xl p-5 text-left md:p-6'
+const SLIDE_CLASSES = 'flex h-full min-h-72 w-full flex-col gap-3 pt-3 pr-3 pb-4 text-left'
 
 /**
- * Tarjeta del carrusel. Dos variantes: general (superficie neutra, sin etiqueta) y
- * Liga Podio (celeste, etiqueta PODIO y logo). Clic o Enter abren el detalle.
+ * Diapositiva del carrusel: una zona del suelo con su línea pintada arriba (blanca en general, azul en
+ * Liga Podio) y la fecha a escala de número de cancha. Clic o Enter abren el detalle.
  *
- * Es un `<article>` con el título como botón cuya zona de pulsación se extiende a toda la tarjeta: así el
- * encabezado y los párrafos siguen siendo contenido de verdad (no puede haber bloques dentro de un botón) y el
- * lector de pantalla lee la tarjeta entera en orden.
+ * Es un `<article>` con el título como botón cuya zona de pulsación se extiende a toda la zona: así el
+ * encabezado y los párrafos siguen siendo contenido de verdad y el lector de pantalla lee la zona en orden.
  */
 export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivityCardProps) {
   const podio = activity.category === 'podio'
+  const isToday = activity.activity_date === today
   const time = formatTimeRange(activity.start_time, activity.end_time)
-  const date = formatDateCompact(activity.activity_date)
-  const muted = podio ? 'text-podio-mist' : 'text-coyote-ash'
 
   return (
     <article
       className={[
-        CARD_CLASSES,
-        'relative transition-[box-shadow,filter,scale] duration-150 ease-out active:scale-[0.96]',
-        'has-focus-visible:outline-2 has-focus-visible:outline-offset-2 has-focus-visible:outline-coyote-gold',
-        podio
-          ? 'bg-podio-fade text-white shadow-[0_0_0_1px_oklch(1_0_0/0.16)] hover:brightness-110'
-          : 'bg-coyote-night text-coyote-silver shadow-border hover:shadow-border-hover',
+        SLIDE_CLASSES,
+        'relative border-t-[6px] transition-[background-color,scale] duration-150 ease-out hover:bg-line/40 active:scale-[0.98]',
+        'has-focus-visible:outline-2 has-focus-visible:outline-offset-4 has-focus-visible:outline-ink',
+        podio ? 'border-podio' : 'border-line',
       ].join(' ')}
     >
-      <div className="flex items-start justify-between gap-3">
-        <div className="min-w-0">
-          <p className="font-display text-3xl leading-none tracking-wide uppercase md:text-4xl">{date}</p>
-          <p className={`mt-1 flex flex-wrap items-center gap-x-1.5 text-sm tabular-nums ${muted}`}>
-            <span className="font-medium">{formatDaysFromToday(activity.activity_date, today)}</span>
-            <span aria-hidden>·</span>
-            <span className="inline-flex items-center gap-1">
-              <ClockIcon className="size-3.5" />
-              {time ?? 'Hora por confirmar'}
-            </span>
-          </p>
-        </div>
+      <div className="flex min-h-8 flex-wrap items-center gap-2">
+        {isToday ? (
+          <Chip tone="orange" size="md">Hoy</Chip>
+        ) : (
+          <span className="text-sm font-bold tracking-wide text-ink-soft uppercase">
+            {formatDaysFromToday(activity.activity_date, today)}
+          </span>
+        )}
         {podio && (
-          <div className="flex shrink-0 items-center gap-2">
-            <Chip tone="podio" size="md">
-              Podio
-            </Chip>
-            <span className="flex size-11 items-center justify-center rounded-xl bg-podio-mist">
-              <img src={podioLogoUrl} alt="" width={64} height={64} className="size-8 outline-none" />
-            </span>
-          </div>
+          <span className="ml-auto flex items-center gap-2">
+            <Chip tone="podio" size="md">Liga Podio</Chip>
+            <img src={podioLogoUrl} alt="" width={64} height={64} className="size-7 rounded-full bg-podio-mist p-0.5" />
+          </span>
         )}
       </div>
 
+      <p className="font-stencil leading-none text-ink uppercase">
+        <span className="block text-[3.5rem] font-black md:text-[4rem]">
+          {`${formatWeekdayShort(activity.activity_date)} ${formatDayMonth(activity.activity_date)}`.replace(/\./g, '')}
+        </span>
+        <span className="mt-1 flex items-center gap-1.5 text-[1.75rem] font-bold text-ink-soft">
+          <ClockIcon className="size-5" strokeWidth={2} />
+          {time ?? 'Hora por confirmar'}
+        </span>
+      </p>
+
       <div className="flex flex-col gap-1">
-        {/* Las actividades cargadas desde el dashboard no tienen tipo ('otro'): no se muestra etiqueta. */}
-        {activity.activity_type !== 'otro' && (
-          <p className={`text-xs font-medium tracking-wide uppercase ${muted}`}>
-            {ACTIVITY_TYPE_LABELS[activity.activity_type]}
-          </p>
-        )}
-        <h3 className="text-3xl leading-none md:text-4xl">
+        <h3 className="text-3xl leading-none md:text-[2.25rem]">
           <button
             type="button"
             onClick={() => onOpen(activity)}
             aria-haspopup="dialog"
-            className="text-left after:absolute after:inset-0 after:rounded-2xl focus-visible:outline-none"
+            className="text-left after:absolute after:inset-0 focus-visible:outline-none"
           >
             {activity.title}
             <span className="sr-only">. Ver detalle</span>
           </button>
         </h3>
+        {/* El tipo va bajo el título, como cinta; las actividades cargadas desde el dashboard no tienen tipo ('otro'). */}
+        {activity.activity_type !== 'otro' && (
+          <p className="text-xs font-bold tracking-wider text-ink-soft uppercase">{ACTIVITY_TYPE_LABELS[activity.activity_type]}</p>
+        )}
       </div>
 
-      {activity.description && (
-        <p className={`line-clamp-3 text-sm whitespace-pre-line ${muted}`}>{activity.description}</p>
-      )}
+      {activity.description && <p className="line-clamp-3 text-ink-soft whitespace-pre-line">{activity.description}</p>}
 
       {(activity.location || activity.opponent) && (
-        <div className="mt-auto flex flex-col gap-1.5 text-sm">
+        <div className="mt-auto flex flex-col gap-1.5">
           {activity.opponent && (
-            <p className="flex items-center gap-2">
+            <p className="flex items-center gap-2 font-bold text-ink">
               <TeamLogo team={activity.opponent} size="sm" />
-              <span className="min-w-0 truncate">vs {activity.opponent.name}</span>
+              {/* El título ya suele nombrar al rival: entonces solo va el escudo. */}
+              {!activity.title.toLocaleLowerCase().includes(activity.opponent.name.toLocaleLowerCase()) && (
+                <span className="min-w-0 truncate">vs {activity.opponent.name}</span>
+              )}
             </p>
           )}
           {activity.location && (
-            <p className={`flex items-center gap-2 ${muted}`}>
+            <p className="flex items-center gap-2 text-ink-soft">
               <MapPinIcon className="size-4 shrink-0" />
               <span className="min-w-0 truncate">{activity.location}</span>
             </p>
@@ -108,12 +105,12 @@ export function UpcomingActivityCard({ activity, today, onOpen }: UpcomingActivi
 
 export function UpcomingActivityCardSkeleton() {
   return (
-    <div className={`${CARD_CLASSES} bg-coyote-night shadow-border`}>
-      <Skeleton className="h-8 w-32" />
-      <Skeleton className="h-4 w-40" />
+    <div className={`${SLIDE_CLASSES} border-t-[6px] border-line`}>
+      <Skeleton className="h-5 w-24" />
+      <Skeleton className="h-14 w-4/5" />
+      <Skeleton className="h-7 w-32" />
       <Skeleton className="mt-2 h-9 w-3/4" />
-      <Skeleton className="h-4 w-full" />
-      <Skeleton className="mt-auto h-4 w-1/2" />
+      <Skeleton className="mt-auto h-5 w-1/2" />
     </div>
   )
 }

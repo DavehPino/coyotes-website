@@ -49,9 +49,9 @@ const normalize = (text: string) => slugify(text)
 
 function Logo({ src, fallback }: { src: string | null; fallback: ReactNode }) {
   return src ? (
-    <img src={src} alt="" loading="lazy" className="size-9 shrink-0 rounded-lg bg-white/90 object-contain p-0.5 outline-1 outline-white/10" />
+    <img src={src} alt="" loading="lazy" className="size-9 shrink-0 rounded-sm bg-white/90 object-contain p-0.5 outline-1 outline-white/10" />
   ) : (
-    <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-ember text-coyote-gold">{fallback}</span>
+    <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink">{fallback}</span>
   )
 }
 
@@ -113,11 +113,11 @@ function PickList<T>({
       {visible === null ? (
         <div className="flex flex-col gap-2">
           {Array.from({ length: 4 }, (_, index) => (
-            <Skeleton key={index} className="h-14 w-full rounded-xl" />
+            <Skeleton key={index} className="h-14 w-full rounded-md" />
           ))}
         </div>
       ) : visible.length === 0 ? (
-        <p className="py-6 text-center text-sm text-coyote-ash">{emptyLabel}</p>
+        <p className="py-6 text-center text-sm text-ink-soft">{emptyLabel}</p>
       ) : (
         <ul className="flex max-h-[45dvh] flex-col gap-1.5 overflow-y-auto">
           {visible.map((item) => {
@@ -129,12 +129,12 @@ function PickList<T>({
                   aria-pressed={selected}
                   onClick={() => onPick(item)}
                   className={[
-                    'flex min-h-14 w-full items-center gap-3 rounded-xl p-2.5 pr-3 text-left transition-[background-color,box-shadow] duration-150 ease-out',
-                    selected ? 'bg-coyote-ember shadow-gold' : 'bg-coyote-black/60 shadow-border hover:bg-coyote-ember/60 hover:shadow-border-hover',
+                    'flex min-h-14 w-full items-center gap-3 rounded-md p-2.5 pr-3 text-left transition-[background-color,box-shadow] duration-150 ease-out',
+                    selected ? 'bg-floor-deep shadow-tape-club' : 'bg-floor-deep/40 shadow-tape hover:bg-ink/8 hover:shadow-tape-hover',
                   ].join(' ')}
                 >
                   {render(item)}
-                  <ChevronRightIcon className="size-4 shrink-0 text-coyote-ash" />
+                  <ChevronRightIcon className="size-4 shrink-0 text-ink-soft" />
                 </button>
               </li>
             )
@@ -156,15 +156,15 @@ type LeagueRowProps = {
 function LeagueRow({ league, busy, onSync, onDelete, onStandings }: LeagueRowProps) {
   const archived = league.archived_at !== null
   return (
-    <li className="flex flex-col gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+    <li className="flex flex-col gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
       <div className="flex items-start gap-3">
         <Logo src={league.team_logo_url} fallback={<TrophyIcon className="size-5" />} />
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="text-sm font-medium text-balance text-coyote-silver">{league.season_label}</span>
-          <span className="text-xs text-pretty text-coyote-ash">
+          <span className="text-sm font-medium text-balance text-ink">{league.season_label}</span>
+          <span className="text-xs text-pretty text-ink-soft">
             {league.competition.name} · {league.cliente_name ?? 'CourtTrack'} · como {league.team_name}
           </span>
-          <span className="text-xs text-coyote-ash tabular-nums">
+          <span className="text-xs text-ink-soft tabular-nums">
             {archived
               ? `Finalizada el ${formatDateShort(league.archived_at!.slice(0, 10))}${league.archive_reason ? ` · ${ARCHIVE_REASONS[league.archive_reason]}` : ''}`
               : league.last_sync
@@ -186,7 +186,7 @@ function LeagueRow({ league, busy, onSync, onDelete, onStandings }: LeagueRowPro
             Clasificación
           </Button>
         )}
-        <Button size="sm" variant="ghost" onClick={onDelete} disabled={busy} className="ml-auto text-coyote-orange">
+        <Button size="sm" variant="ghost" onClick={onDelete} disabled={busy} className="ml-auto text-antenna-deep">
           Quitar
         </Button>
       </div>
@@ -211,20 +211,20 @@ function StandingsView({ snapshot, teamName }: { snapshot: CourtrackLeagueSnapsh
   })
 
   if (tables.length === 0) {
-    return <p className="text-sm text-coyote-ash">Esta temporada no tiene clasificación guardada.</p>
+    return <p className="text-sm text-ink-soft">Esta temporada no tiene clasificación guardada.</p>
   }
   return (
     <div className="flex flex-col gap-4">
       {snapshot.snapshot_at && (
-        <p className="text-xs text-coyote-ash tabular-nums">Instantánea de CourtTrack del {formatInstant(snapshot.snapshot_at)}.</p>
+        <p className="text-xs text-ink-soft tabular-nums">Instantánea de CourtTrack del {formatInstant(snapshot.snapshot_at)}.</p>
       )}
       {tables.map((table) => (
         <section key={table.label} className="flex flex-col gap-2">
-          <h3 className="text-xs font-semibold tracking-wide text-coyote-ash uppercase">{table.label}</h3>
-          <div className="overflow-x-auto rounded-xl bg-coyote-black/60 shadow-border">
+          <h3 className="text-xs font-semibold tracking-wide text-ink-soft uppercase">{table.label}</h3>
+          <div className="overflow-x-auto rounded-md bg-floor-deep/40 shadow-tape">
             <table className="w-full text-sm tabular-nums">
               <thead>
-                <tr className="text-left text-xs text-coyote-ash">
+                <tr className="text-left text-xs text-ink-soft">
                   <th className="px-3 py-2 font-medium">#</th>
                   <th className="px-2 py-2 font-medium">Equipo</th>
                   <th className="px-2 py-2 text-right font-medium">Pts</th>
@@ -238,7 +238,7 @@ function StandingsView({ snapshot, teamName }: { snapshot: CourtrackLeagueSnapsh
                   const name = String(row[1] ?? '')
                   const own = normalize(name) === normalize(teamName)
                   return (
-                    <tr key={index} className={own ? 'bg-coyote-ember/70 text-coyote-gold' : 'text-coyote-silver'}>
+                    <tr key={index} className={own ? 'bg-ink/10 text-ink' : 'text-ink'}>
                       <td className="px-3 py-1.5">{String(row[0] ?? index + 1)}</td>
                       <td className="px-2 py-1.5 font-medium">{name}</td>
                       <td className="px-2 py-1.5 text-right">{String(row[2] ?? '')}</td>
@@ -454,10 +454,10 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
             : isWizard
               ? WIZARD_TITLES[step as WizardStep]
               : 'Ligas de CourtTrack'
-  const eyebrow = isWizard ? (
+  const meta = isWizard ? (
     <Chip tone="gold">Agregar liga</Chip>
   ) : step === 'safeword' ? (
-    <Chip tone="ash">Acceso restringido</Chip>
+    null
   ) : step === 'standings' && target ? (
     <Chip tone="gold" className="max-w-full truncate">
       {target.season_label}
@@ -542,7 +542,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
       open={open}
       onClose={handleClose}
       title={title}
-      eyebrow={eyebrow}
+      meta={meta}
       footer={footer}
       dismissible={dismissible}
       scrollResetKey={step}
@@ -565,7 +565,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
 
       {step === 'list' && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-pretty text-coyote-ash">
+          <p className="text-sm text-pretty text-ink-soft">
             Cada liga de CourtTrack alimenta una competición del dashboard. Cuando CourtTrack reinicia una liga al
             terminar, la temporada se cierra sola al sincronizar, con su clasificación, y empieza la siguiente.
           </p>
@@ -573,16 +573,16 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
             <Callout tone="gold" icon={<CheckIcon className="size-5" strokeWidth={2} />}>
               {justAdded.length === 1 ? (
                 <>
-                  <span className="text-coyote-silver">{justAdded[0]!.season_label}</span> añadida a {justAdded[0]!.competition.name}.{' '}
+                  <span className="text-ink">{justAdded[0]!.season_label}</span> añadida a {justAdded[0]!.competition.name}.{' '}
                 </>
               ) : (
                 <>
-                  <span className="text-coyote-silver">{justAdded.length} ligas</span> añadidas.{' '}
+                  <span className="text-ink">{justAdded.length} ligas</span> añadidas.{' '}
                 </>
               )}
               <button
                 type="button"
-                className="font-medium text-coyote-gold underline-offset-2 hover:underline"
+                className="font-medium text-ink underline-offset-2 hover:underline"
                 onClick={() => onSyncLeague(justAdded[0]!.id)}
               >
                 Ver vista previa
@@ -594,14 +594,14 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
             <RetryError error={statusError} onRetry={() => void statusQuery.refetch()} />
           ) : !status ? (
             <div className="flex flex-col gap-2">
-              <Skeleton className="h-28 w-full rounded-xl" />
-              <Skeleton className="h-28 w-full rounded-xl" />
+              <Skeleton className="h-28 w-full rounded-md" />
+              <Skeleton className="h-28 w-full rounded-md" />
             </div>
           ) : (
             <>
               {openLeagues.length === 0 ? (
                 <Callout tone="ash" icon={<TrophyIcon className="size-5" />}>
-                  No sigues ninguna liga en curso. Pulsa <span className="text-coyote-silver">Agregar liga</span> para
+                  No sigues ninguna liga en curso. Pulsa <span className="text-ink">Agregar liga</span> para
                   buscarla en CourtTrack.
                 </Callout>
               ) : (
@@ -627,7 +627,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
                     type="button"
                     aria-expanded={showArchived}
                     onClick={() => setShowArchived((value) => !value)}
-                    className="flex min-h-11 items-center gap-2 self-start rounded-lg pr-3 pl-1 text-sm font-medium text-coyote-ash transition-colors duration-150 hover:text-coyote-silver md:min-h-9"
+                    className="flex min-h-11 items-center gap-2 self-start rounded-sm pr-3 pl-1 text-sm font-medium text-ink-soft transition-colors duration-150 hover:text-ink md:min-h-9"
                   >
                     <ChevronRightIcon
                       className={`size-4 transition-transform duration-150 ease-out ${showArchived ? 'rotate-90' : ''}`}
@@ -677,8 +677,8 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
             <>
               <Logo src={item.logo} fallback={<TrophyIcon className="size-5" />} />
               <span className="flex min-w-0 flex-1 flex-col">
-                <span className="truncate text-sm font-medium text-coyote-silver">{item.nombre}</span>
-                {item.titulo && <span className="truncate text-xs text-coyote-ash">{item.titulo}</span>}
+                <span className="truncate text-sm font-medium text-ink">{item.nombre}</span>
+                {item.titulo && <span className="truncate text-xs text-ink-soft">{item.titulo}</span>}
               </span>
             </>
           )}
@@ -687,8 +687,8 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
 
       {step === 'descubrir' && wizard.cliente && (
         <div className="flex flex-col gap-4">
-          <p className="text-sm text-pretty text-coyote-ash">
-            Ligas de <span className="text-coyote-silver">{wizard.cliente.nombre}</span> en las que juega {TEAM_NAME}. Solo
+          <p className="text-sm text-pretty text-ink-soft">
+            Ligas de <span className="text-ink">{wizard.cliente.nombre}</span> en las que juega {TEAM_NAME}. Solo
             se pueden seguir estas: el equipo se busca por su nombre en el fixture de cada liga.
           </p>
           {catalogError ? (
@@ -711,13 +711,13 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
                   <li key={item.liga.id}>
                     <label
                       className={[
-                        'flex min-h-14 cursor-pointer items-center gap-3 rounded-xl p-2.5 pr-3 transition-[background-color,box-shadow] duration-150 ease-out',
-                        already ? 'bg-coyote-black/40 opacity-60' : checked ? 'bg-coyote-ember shadow-gold' : 'bg-coyote-black/60 shadow-border hover:bg-coyote-ember/60',
+                        'flex min-h-14 cursor-pointer items-center gap-3 rounded-md p-2.5 pr-3 transition-[background-color,box-shadow] duration-150 ease-out',
+                        already ? 'bg-floor-deep/30 opacity-60' : checked ? 'bg-floor-deep shadow-tape-club' : 'bg-floor-deep/40 shadow-tape hover:bg-ink/8',
                       ].join(' ')}
                     >
                       <input
                         type="checkbox"
-                        className="size-4 shrink-0 accent-coyote-gold"
+                        className="size-4 shrink-0 accent-ink"
                         checked={checked}
                         disabled={already}
                         onChange={(event) => {
@@ -731,8 +731,8 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
                       />
                       <Logo src={item.team.logo} fallback={<TrophyIcon className="size-5" />} />
                       <span className="flex min-w-0 flex-1 flex-col">
-                        <span className="text-sm font-medium text-pretty text-coyote-silver">{item.liga.nombre}</span>
-                        <span className="truncate text-xs text-coyote-ash tabular-nums">
+                        <span className="text-sm font-medium text-pretty text-ink">{item.liga.nombre}</span>
+                        <span className="truncate text-xs text-ink-soft tabular-nums">
                           {already
                             ? 'Ya configurada'
                             : `como ${item.team.display_name} · ${item.played_matches} de ${item.total_matches} partidos jugados`}
@@ -745,7 +745,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
             </ul>
           )}
           {discovered && discovered.length > 0 && (
-            <p className="text-xs text-pretty text-coyote-ash">
+            <p className="text-xs text-pretty text-ink-soft">
               Cada liga se guarda como una competición con su nombre; las temporadas siguientes de la misma liga se
               cuelgan de ella solas.
             </p>
@@ -756,10 +756,10 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
 
       {step === 'confirm-delete' && target && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-pretty text-coyote-silver">
+          <p className="text-sm text-pretty text-ink">
             ¿Quitar <span className="font-medium">{target.season_label}</span> de las ligas que sigues?
           </p>
-          <p className="text-sm text-pretty text-coyote-ash">
+          <p className="text-sm text-pretty text-ink-soft">
             Los partidos ya importados y la competición "{target.competition.name}" se conservan, pero se pierde la
             clasificación guardada de esta temporada. Si vuelves a añadir la liga, los partidos se reconocen y no se
             duplican.
@@ -774,7 +774,7 @@ export default function ManageLeaguesDialog({ open, onClose, onSyncLeague }: Man
         ) : !snapshot ? (
           <div className="flex flex-col gap-2">
             <Skeleton className="h-6 w-1/2 rounded-md" />
-            <Skeleton className="h-40 w-full rounded-xl" />
+            <Skeleton className="h-40 w-full rounded-md" />
           </div>
         ) : (
           <StandingsView snapshot={snapshot} teamName={target.team_name} />

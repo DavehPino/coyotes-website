@@ -28,14 +28,14 @@ type PlayerStatsTableProps = {
 
 /** Acciones por jugador: puntos primero, errores después. En móvil la tabla se desplaza en horizontal. */
 export function PlayerStatsTable({ rows, matchColumns = false, emptyMessage }: PlayerStatsTableProps) {
-  if (rows.length === 0) return <p className="text-sm text-coyote-ash">{emptyMessage}</p>
+  if (rows.length === 0) return <p className="text-sm text-ink-soft">{emptyMessage}</p>
   const sorted = [...rows].sort(comparePlayerLines)
 
   return (
     <div className="-mx-5 overflow-x-auto px-5">
       <table className="w-full min-w-[30rem] border-separate border-spacing-0 text-sm tabular-nums">
         <thead>
-          <tr className="text-[11px] font-medium tracking-wide text-coyote-ash uppercase">
+          <tr className="text-[11px] font-medium tracking-wide text-ink-soft uppercase">
             <th scope="col" className="pb-2 text-left font-medium">
               Jugador
             </th>
@@ -70,10 +70,10 @@ export function PlayerStatsTable({ rows, matchColumns = false, emptyMessage }: P
         <tbody>
           {sorted.map((row) => (
             <tr key={row.key}>
-              <th scope="row" className="border-t border-coyote-steel/60 py-2 pr-2 text-left font-normal whitespace-nowrap">
+              <th scope="row" className="border-t border-ink/15 py-2 pr-2 text-left font-normal whitespace-nowrap">
                 <span className="inline-flex items-center gap-1.5">
-                  {row.number !== null && <span className="w-7 text-coyote-ash">#{row.number}</span>}
-                  <span className="font-medium text-coyote-silver">{row.name}</span>
+                  {row.number !== null && <span className="w-7 text-ink-soft">#{row.number}</span>}
+                  <span className="font-medium text-ink">{row.name}</span>
                   {row.captain && (
                     <Chip tone="gold" aria-label="Capitán">
                       C
@@ -86,19 +86,19 @@ export function PlayerStatsTable({ rows, matchColumns = false, emptyMessage }: P
                   )}
                 </span>
               </th>
-              <td className="border-t border-coyote-steel/60 py-2 pl-2 text-right font-semibold text-coyote-silver">{row.points}</td>
+              <td className="border-t border-ink/15 py-2 pl-2 text-right font-semibold text-ink">{row.points}</td>
               {STAT_COLUMNS.map(({ key }) => (
                 <td
                   key={key}
-                  className={`border-t border-coyote-steel/60 py-2 pl-2 text-right ${row[key] === 0 ? 'text-coyote-ash' : 'text-coyote-silver'}`}
+                  className={`border-t border-ink/15 py-2 pl-2 text-right ${row[key] === 0 ? 'text-ink-soft' : 'text-ink'}`}
                 >
                   {row[key]}
                 </td>
               ))}
               {matchColumns && (
                 <>
-                  <td className="border-t border-coyote-steel/60 py-2 pl-2 text-right text-coyote-ash">{row.rallies ?? '–'}</td>
-                  <td className="border-t border-coyote-steel/60 py-2 pl-2 text-right text-coyote-ash">{row.rating ?? '–'}</td>
+                  <td className="border-t border-ink/15 py-2 pl-2 text-right text-ink-soft">{row.rallies ?? '–'}</td>
+                  <td className="border-t border-ink/15 py-2 pl-2 text-right text-ink-soft">{row.rating ?? '–'}</td>
                 </>
               )}
             </tr>

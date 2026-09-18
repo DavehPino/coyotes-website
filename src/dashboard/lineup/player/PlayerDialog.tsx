@@ -3,7 +3,7 @@ import { useId, useState, type FormEvent, type ReactNode } from 'react'
 import type { Lineup, Player } from '@shared/schemas'
 import { errorMessage } from '../../admin/adminApi'
 import { SafewordStep } from '../../admin/SafewordStep'
-import { Button, Chip, Field, FormError, Input, Modal } from '../../ui'
+import { Button, Field, FormError, Input, Modal } from '../../ui'
 import { CheckIcon, TrashIcon } from '../../ui/icons'
 import { createPlayer, deletePlayer, refreshLineupData, updatePlayer, useAdminSafeword } from '../api'
 import { JerseyBadge, PlayerPositions } from '../PlayerChip'
@@ -105,10 +105,10 @@ export default function PlayerDialog({ open, player, players, lineups, onClose, 
   const handleClose = () => dismissible && onClose(created !== null)
 
   let title: ReactNode = isEdit ? 'Editar jugador' : 'Cargar jugador'
-  let eyebrow: ReactNode = null
+  let meta: ReactNode = null
   let footer: ReactNode
   if (needsSafeword) {
-    eyebrow = <Chip tone="ash">Acceso restringido</Chip>
+    meta = null
     footer = (
       <>
         <Button variant="ghost" onClick={handleClose} disabled={verifying}>
@@ -152,7 +152,7 @@ export default function PlayerDialog({ open, player, players, lineups, onClose, 
             variant="ghost"
             onClick={() => setStep('confirm-delete')}
             disabled={busy}
-            className="mr-auto pr-3 pl-2.5 text-coyote-orange hover:text-coyote-orange"
+            className="mr-auto pr-3 pl-2.5 text-antenna-deep hover:text-antenna-deep"
           >
             <TrashIcon className="size-4" strokeWidth={2} />
             Borrar jugador
@@ -173,7 +173,7 @@ export default function PlayerDialog({ open, player, players, lineups, onClose, 
       open={open}
       onClose={handleClose}
       title={title}
-      eyebrow={eyebrow}
+      meta={meta}
       footer={footer}
       dismissible={dismissible}
       scrollResetKey={needsSafeword ? 'safeword' : step}
@@ -238,7 +238,7 @@ export default function PlayerDialog({ open, player, players, lineups, onClose, 
       {!needsSafeword && step === 'confirm-delete' && player && (
         <div className="flex flex-col gap-3">
           <PlayerSummary player={player} />
-          <p className="text-sm text-coyote-silver">
+          <p className="text-sm text-ink">
             Se borra del plantel para siempre.
             {inLineups.length > 0 && (
               <>
@@ -248,20 +248,20 @@ export default function PlayerDialog({ open, player, players, lineups, onClose, 
               </>
             )}
           </p>
-          <p className="text-sm text-coyote-ash">Si solo deja de venir, mejor márcalo como inactivo.</p>
+          <p className="text-sm text-ink-soft">Si solo deja de venir, mejor márcalo como inactivo.</p>
           {saveError && <FormError>{saveError}</FormError>}
         </div>
       )}
 
       {!needsSafeword && step === 'done' && created && (
         <div className="flex flex-col gap-3">
-          <div className="flex items-center gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
-            <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-gold text-coyote-black">
+          <div className="flex items-center gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+            <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-ink text-club">
               <CheckIcon className="size-5" strokeWidth={2} />
             </span>
             <PlayerSummary player={created} />
           </div>
-          <p className="text-sm text-coyote-ash">Ya aparece en el plantel y en el banco de la cancha.</p>
+          <p className="text-sm text-ink-soft">Ya aparece en el plantel y en el banco de la cancha.</p>
         </div>
       )}
     </Modal>
@@ -273,7 +273,7 @@ function PlayerSummary({ player }: { player: Player }) {
     <div className="flex min-w-0 items-center gap-3">
       <JerseyBadge player={player} />
       <div className="flex min-w-0 flex-col gap-1">
-        <span className="truncate font-medium text-coyote-silver">{player.name}</span>
+        <span className="truncate font-medium text-ink">{player.name}</span>
         <PlayerPositions player={player} />
       </div>
     </div>
@@ -283,12 +283,12 @@ function PlayerSummary({ player }: { player: Player }) {
 function ActiveSwitch({ checked, onChange }: { checked: boolean; onChange: (value: boolean) => void }) {
   const id = useId()
   return (
-    <div className="flex items-center justify-between gap-4 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+    <div className="flex items-center justify-between gap-4 rounded-md bg-floor-deep/40 p-3 shadow-tape">
       <div className="flex min-w-0 flex-col">
-        <span id={`${id}-label`} className="text-sm font-medium text-coyote-silver">
+        <span id={`${id}-label`} className="text-sm font-medium text-ink">
           Activo
         </span>
-        <span id={`${id}-hint`} className="text-xs text-coyote-ash">
+        <span id={`${id}-hint`} className="text-xs text-ink-soft">
           Los inactivos no aparecen en el banco ni pueden estar en cancha.
         </span>
       </div>
@@ -305,13 +305,13 @@ function ActiveSwitch({ checked, onChange }: { checked: boolean; onChange: (valu
           aria-hidden
           className={[
             'h-7 w-12 rounded-full transition-colors duration-150 ease-out',
-            checked ? 'bg-coyote-gold' : 'bg-coyote-steel',
+            checked ? 'bg-ink' : 'bg-ink/20',
           ].join(' ')}
         />
         <span
           aria-hidden
           className={[
-            'absolute top-1/2 left-2 size-5 -translate-y-1/2 rounded-full bg-coyote-black shadow transition-transform duration-150 ease-out',
+            'absolute top-1/2 left-2 size-5 -translate-y-1/2 rounded-full bg-ink shadow transition-transform duration-150 ease-out',
             checked ? 'translate-x-5' : 'translate-x-0',
           ].join(' ')}
         />

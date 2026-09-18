@@ -18,7 +18,7 @@ type RivalFieldProps = {
 export function RivalField({ value, onChange, newTeam, onNewTeamChange, errors, allowNone, autoFocus }: RivalFieldProps) {
   const rivals = useRivalTeams()
 
-  if (rivals.isPending) return <Skeleton className="h-[4.25rem] rounded-lg" />
+  if (rivals.isPending) return <Skeleton className="h-[4.25rem] rounded-sm" />
 
   return (
     <>
@@ -39,7 +39,7 @@ export function RivalField({ value, onChange, newTeam, onNewTeamChange, errors, 
       </Field>
 
       {value === NEW_TEAM && (
-        <div className="rounded-xl bg-coyote-black/40 p-3 shadow-border">
+        <div className="rounded-md bg-floor-deep/30 p-3 shadow-tape">
           <NewTeamFields autoFocus team={newTeam} errors={errors} onChange={onNewTeamChange} />
         </div>
       )}

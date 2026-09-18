@@ -31,7 +31,7 @@ export function MatchCarouselSkeleton() {
       <div className={CAROUSEL_TRACK_CLASSES}>
         {[0, 1, 2].map((i) => (
           <div key={i} className={carouselSlideClasses(SLIDE_WIDTH)}>
-            <Skeleton className="aspect-[16/10] rounded-2xl" />
+            <Skeleton className="aspect-[16/10] rounded-md" />
           </div>
         ))}
       </div>

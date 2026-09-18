@@ -61,7 +61,7 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
               <OptionButton key={palette} selected={selected} onClick={() => onChange({ palette })}>
                 <span
                   aria-hidden
-                  className="flex size-5 shrink-0 items-center justify-center rounded-full shadow-border"
+                  className="flex size-5 shrink-0 items-center justify-center rounded-full shadow-tape"
                   style={{ background: `linear-gradient(135deg, ${colors.background.join(', ')})` }}
                 >
                   <span className="size-2 rounded-full" style={{ background: colors.title }} />
@@ -79,8 +79,8 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
             <span
               aria-hidden
               className={[
-                'flex size-5 items-center justify-center rounded-md shadow-border',
-                flyer.showLogo ? 'bg-coyote-gold text-coyote-black' : 'bg-coyote-black',
+                'flex size-5 items-center justify-center rounded-md shadow-tape',
+                flyer.showLogo ? 'bg-ink text-club' : 'bg-line/40 text-ink shadow-tape',
               ].join(' ')}
             >
               {flyer.showLogo && <CheckIcon className="size-3.5" strokeWidth={2} />}
@@ -109,11 +109,11 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
             </Button>
           )}
         </div>
-        <p className="text-xs text-coyote-ash">La foto solo se usa en este navegador: no se sube ni se envía a la IA.</p>
+        <p className="text-xs text-ink-soft">La foto solo se usa en este navegador: no se sube ni se envía a la IA.</p>
       </Group>
 
       <Group label="Logos de otros equipos">
-        <p className="text-xs text-coyote-ash">
+        <p className="text-xs text-ink-soft">
           Sube PNG con fondo transparente y ponles el nombre del equipo: así la IA sabe cuál usar. Se guardan en el
           bucket y las ve todo el equipo.
         </p>
@@ -121,7 +121,7 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
           <>
             {WITH_OPPONENT.has(flyer.template) && (
               <div className="flex flex-col gap-2">
-                <span className="text-sm font-medium text-coyote-silver">Rival (junto al escudo de Coyotes)</span>
+                <span className="text-sm font-medium text-ink">Rival (junto al escudo de Coyotes)</span>
                 <ImagePicker
                   label="Logo del rival"
                   images={library.images}
@@ -138,9 +138,9 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
               </div>
             )}
             <div className="flex flex-col gap-2">
-              <span className="text-sm font-medium text-coyote-silver">
+              <span className="text-sm font-medium text-ink">
                 Fila de logos
-                <span className="ml-1.5 text-xs font-normal text-coyote-ash">
+                <span className="ml-1.5 text-xs font-normal text-ink-soft">
                   Auspiciantes, liga… hasta {FLYER_MAX_LOGOS}
                 </span>
               </span>
@@ -208,7 +208,7 @@ export function EditorPanel({ flyer, onChange, photoUrl, onPhotoChange, library,
 function Group({ label, children }: { label: string; children: ReactNode }) {
   return (
     <fieldset className="flex min-w-0 flex-col gap-2.5">
-      <legend className="mb-2.5 text-xs font-semibold tracking-wide text-coyote-ash uppercase">{label}</legend>
+      <legend className="mb-2.5 text-xs font-semibold tracking-wide text-ink-soft uppercase">{label}</legend>
       {children}
     </fieldset>
   )
@@ -221,11 +221,11 @@ function OptionButton({ selected, onClick, children }: { selected: boolean; onCl
       aria-pressed={selected}
       onClick={onClick}
       className={[
-        'flex min-h-11 items-center gap-2 rounded-lg px-3 text-sm font-medium select-none md:min-h-10',
+        'flex min-h-11 items-center gap-2 rounded-sm px-3 text-sm font-medium select-none md:min-h-10',
         'transition-[background-color,color,box-shadow] duration-150 ease-out',
         selected
-          ? 'bg-coyote-ember text-coyote-gold shadow-gold'
-          : 'bg-coyote-black text-coyote-ash shadow-border hover:text-coyote-silver hover:shadow-border-hover',
+          ? 'bg-floor-deep text-ink shadow-tape-club'
+          : 'bg-line/40 text-ink shadow-tape hover:shadow-tape-hover',
       ].join(' ')}
     >
       {children}

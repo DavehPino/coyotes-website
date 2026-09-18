@@ -32,8 +32,8 @@ const SAFEWORD_REJECTED = 'La palabra clave ya no es válida. Escríbela de nuev
 function DetailField({ label, children }: { label: string; children: ReactNode }) {
   return (
     <div className="flex flex-col gap-0.5">
-      <dt className="text-xs font-medium tracking-wide text-coyote-ash uppercase">{label}</dt>
-      <dd className="text-coyote-silver">{children}</dd>
+      <dt className="text-xs font-medium tracking-wide text-ink-soft uppercase">{label}</dt>
+      <dd className="text-ink">{children}</dd>
     </div>
   )
 }
@@ -142,7 +142,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
     shown !== null && draft !== null && JSON.stringify(draft) !== JSON.stringify(draftFromActivity(shown))
 
   let title: ReactNode = shown?.title ?? ''
-  let eyebrow: ReactNode = shown?.category === 'podio' && <Chip tone="podio">Podio</Chip>
+  let meta: ReactNode = shown?.category === 'podio' && <Chip tone="podio">Podio</Chip>
   let footer: ReactNode = null
 
   switch (mode) {
@@ -161,7 +161,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
       )
       break
     case 'safeword':
-      eyebrow = <Chip tone="ash">Acceso restringido</Chip>
+      meta = null
       footer = (
         <>
           <Button variant="ghost" onClick={() => setMode('view')} disabled={verifying}>
@@ -175,7 +175,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
       break
     case 'edit':
       title = 'Editar actividad'
-      eyebrow = null
+      meta = null
       footer = (
         <>
           <Button variant="ghost" onClick={() => setMode('view')} disabled={busy}>
@@ -188,7 +188,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
       )
       break
     case 'delete':
-      eyebrow = <Chip tone="orange">Eliminar actividad</Chip>
+      meta = <Chip tone="orange">Eliminar actividad</Chip>
       footer = (
         <>
           <Button variant="ghost" onClick={() => setMode('view')} disabled={busy}>
@@ -209,7 +209,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
       open={activity !== null}
       onClose={handleClose}
       title={title}
-      eyebrow={eyebrow}
+      meta={meta}
       footer={footer}
       dismissible={dismissible}
       scrollResetKey={mode}
@@ -236,7 +236,7 @@ export function ActivityDetailModal({ activity, onClose }: ActivityDetailModalPr
 
       {shown && mode === 'delete' && (
         <div className="flex flex-col gap-3">
-          <p className="text-coyote-silver">
+          <p className="text-ink">
             Se elimina <span className="font-medium">{shown.title}</span> ({formatDateFull(shown.activity_date)}) y
             deja de aparecer en el carrusel. No se puede deshacer.
           </p>

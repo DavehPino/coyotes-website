@@ -1,0 +1,184 @@
+{
+  "schemaVersion": 2,
+  "generatedAt": "2026-09-18T00:00:00Z",
+  "title": "Design System: Coyotes Volley · Dashboard",
+  "extensions": {
+    "colorMeta": {
+      "floor": { "role": "neutral", "displayName": "Parquet", "canonical": "oklch(88% 0.068 85)", "tonalRamp": ["oklch(15% 0.023 85)", "oklch(26% 0.030 85)", "oklch(38% 0.037 85)", "oklch(49% 0.044 85)", "oklch(61% 0.051 85)", "oklch(72% 0.058 85)", "oklch(84% 0.065 85)", "oklch(95% 0.063 85)"] },
+      "floor-deep": { "role": "neutral", "displayName": "Zona libre", "canonical": "oklch(80% 0.087 82)", "tonalRamp": ["oklch(15% 0.036 82)", "oklch(26% 0.045 82)", "oklch(38% 0.054 82)", "oklch(49% 0.063 82)", "oklch(61% 0.072 82)", "oklch(72% 0.081 82)", "oklch(84% 0.085 82)", "oklch(95% 0.076 82)"] },
+      "floor-seam": { "role": "neutral", "displayName": "Junta", "canonical": "oklch(74% 0.095 82)", "tonalRamp": ["oklch(15% 0.045 82)", "oklch(26% 0.055 82)", "oklch(38% 0.064 82)", "oklch(49% 0.074 82)", "oklch(61% 0.084 82)", "oklch(72% 0.094 82)", "oklch(84% 0.087 82)", "oklch(95% 0.077 82)"] },
+      "line": { "role": "neutral", "displayName": "Pintura de línea", "canonical": "oklch(97% 0.014 89)", "tonalRamp": ["oklch(15% 0.004 89)", "oklch(26% 0.005 89)", "oklch(38% 0.007 89)", "oklch(49% 0.008 89)", "oklch(61% 0.009 89)", "oklch(72% 0.011 89)", "oklch(84% 0.012 89)", "oklch(95% 0.014 89)"] },
+      "ink": { "role": "primary", "displayName": "Vinilo negro", "canonical": "oklch(19% 0.005 68)", "tonalRamp": ["oklch(15% 0.005 68)", "oklch(26% 0.005 68)", "oklch(38% 0.004 68)", "oklch(49% 0.004 68)", "oklch(61% 0.003 68)", "oklch(72% 0.003 68)", "oklch(84% 0.002 68)", "oklch(95% 0.002 68)"] },
+      "ink-soft": { "role": "neutral", "displayName": "Vinilo suave", "canonical": "oklch(42% 0.047 79)", "tonalRamp": ["oklch(15% 0.036 79)", "oklch(26% 0.040 79)", "oklch(38% 0.045 79)", "oklch(49% 0.044 79)", "oklch(61% 0.039 79)", "oklch(72% 0.034 79)", "oklch(84% 0.029 79)", "oklch(95% 0.025 79)"] },
+      "club": { "role": "primary", "displayName": "Letras del club", "canonical": "oklch(80% 0.163 80)", "tonalRamp": ["oklch(15% 0.067 80)", "oklch(26% 0.084 80)", "oklch(38% 0.101 80)", "oklch(49% 0.118 80)", "oklch(61% 0.135 80)", "oklch(72% 0.151 80)", "oklch(84% 0.158 80)", "oklch(95% 0.141 80)"] },
+      "tape": { "role": "primary", "displayName": "Cinta del club", "canonical": "oklch(71% 0.173 54)", "tonalRamp": ["oklch(15% 0.086 54)", "oklch(26% 0.104 54)", "oklch(38% 0.122 54)", "oklch(49% 0.140 54)", "oklch(61% 0.158 54)", "oklch(72% 0.170 54)", "oklch(84% 0.153 54)", "oklch(95% 0.135 54)"] },
+      "antenna": { "role": "tertiary", "displayName": "Antena", "canonical": "oklch(55% 0.185 29)", "tonalRamp": ["oklch(15% 0.117 29)", "oklch(26% 0.136 29)", "oklch(38% 0.155 29)", "oklch(49% 0.174 29)", "oklch(61% 0.176 29)", "oklch(72% 0.157 29)", "oklch(84% 0.138 29)", "oklch(95% 0.119 29)"] },
+      "antenna-deep": { "role": "tertiary", "displayName": "Antena profunda", "canonical": "oklch(46% 0.158 30)", "tonalRamp": ["oklch(15% 0.114 30)", "oklch(26% 0.131 30)", "oklch(38% 0.147 30)", "oklch(49% 0.153 30)", "oklch(61% 0.136 30)", "oklch(72% 0.120 30)", "oklch(84% 0.104 30)", "oklch(95% 0.088 30)"] },
+      "line-green": { "role": "tertiary", "displayName": "Línea verde", "canonical": "oklch(53% 0.107 154)", "tonalRamp": ["oklch(15% 0.070 154)", "oklch(26% 0.081 154)", "oklch(38% 0.092 154)", "oklch(49% 0.103 154)", "oklch(61% 0.099 154)", "oklch(72% 0.088 154)", "oklch(84% 0.077 154)", "oklch(95% 0.066 154)"] },
+      "podio": { "role": "secondary", "displayName": "Cinta Podio", "canonical": "oklch(51% 0.096 235)", "tonalRamp": ["oklch(15% 0.065 235)", "oklch(26% 0.075 235)", "oklch(38% 0.085 235)", "oklch(49% 0.095 235)", "oklch(61% 0.088 235)", "oklch(72% 0.078 235)", "oklch(84% 0.068 235)", "oklch(95% 0.058 235)"] },
+      "podio-mist": { "role": "secondary", "displayName": "Bruma Podio", "canonical": "oklch(93% 0.031 225)", "tonalRamp": ["oklch(15% 0.009 225)", "oklch(26% 0.012 225)", "oklch(38% 0.016 225)", "oklch(49% 0.019 225)", "oklch(61% 0.022 225)", "oklch(72% 0.025 225)", "oklch(84% 0.028 225)", "oklch(95% 0.031 225)"] }
+    },
+    "typographyMeta": {
+      "display": { "displayName": "Display (Stencil)", "purpose": "Números de cancha a escala monumental: fecha del próximo partido, marcador de sets de Inicio y del detalle. 4.5rem en móvil hasta 7.5rem en escritorio." },
+      "headline": { "displayName": "Headline", "purpose": "Título de la banda de cabecera (h1): 2.75rem en móvil, 3.75rem desde 768 px, line-height 0.9, mayúsculas." },
+      "title": { "displayName": "Title", "purpose": "Rótulo de zona (h2) pegado bajo la línea pintada: 1.5rem / 1.75rem. Títulos de diálogo y de artículo a 1.875rem–2.25rem con el mismo peso." },
+      "mark": { "displayName": "Mark (Stencil)", "purpose": "Parciales como marcas sobre la línea lateral, marcador de portadas y resultado en cada fila: 1.5rem–3rem." },
+      "body": { "displayName": "Body", "purpose": "Descripciones, metadatos y campos; números tabulares en todo el body. Nombres de fila en 700 a 1.125rem." },
+      "action": { "displayName": "Action", "purpose": "Botones, pestañas, filtros, enlaces «ver más» y navegación: 700, mayúsculas, tracking 0.025em." },
+      "label": { "displayName": "Label", "purpose": "Cintas (chips), rótulos de dato, día de la semana, «Set n», navegación móvil: 700, mayúsculas, tracking 0.05em." }
+    },
+    "shadows": [
+      { "name": "tape", "value": "0 0 0 2px var(--paint)", "purpose": "Contorno pintado de 2 px: blanco (line) sobre el parquet, vinilo al 35 % dentro de superficies on-line." },
+      { "name": "tape-hover", "value": "0 0 0 2px var(--paint-hover)", "purpose": "El mismo contorno en vinilo negro al pasar el puntero (portadas)." },
+      { "name": "tape-club", "value": "0 0 0 2px var(--color-tape)", "purpose": "Contorno de cinta del club para el rectángulo destacado." },
+      { "name": "tape-club-strong", "value": "0 0 0 3px var(--color-tape)", "purpose": "Versión fuerte del contorno de cinta." },
+      { "name": "lift-floor", "value": "0 14px 32px rgb(58 34 6 / 0.35), 0 2px 6px rgb(58 34 6 / 0.2)", "purpose": "Lo único que flota: diálogos y fichas levantadas. Nunca en reposo sobre la página." }
+    ],
+    "motion": [
+      { "name": "ease-soft", "value": "cubic-bezier(0.2, 0, 0, 1)", "purpose": "La línea de sección activa del nav (200 ms): el único movimiento orquestado." },
+      { "name": "state", "value": "150ms ease-out", "purpose": "Cambios de color, fondo, contorno y escala (0.96 al pulsar) en botones, filas, filtros, pestañas." },
+      { "name": "dialog", "value": "200ms ease-out", "purpose": "Entrada y salida del diálogo: fundido más 8 px de desplazamiento; con motion-reduce solo el fundido." }
+    ],
+    "breakpoints": [
+      { "name": "sm", "value": "640px" },
+      { "name": "md", "value": "768px" },
+      { "name": "lg", "value": "1024px" },
+      { "name": "wide", "value": "(min-width: 48rem) or (orientation: landscape)" }
+    ],
+    "paint": {
+      "default": { "--paint": "var(--color-line)", "--paint-hover": "var(--color-ink)" },
+      "on-line": { "--paint": "color-mix(in oklab, var(--color-ink) 35%, transparent)", "--paint-hover": "var(--color-ink)" }
+    },
+    "sectionLines": { "Inicio": "line (banda: floor-seam)", "Actividades": "line-green", "Partidos": "tape", "Alineación": "antenna", "Flyers": "ink" }
+  },
+  "components": [
+    {
+      "name": "Botón primario",
+      "kind": "button",
+      "refersTo": "button-primary",
+      "description": "Vinilo negro con letras del club; una acción principal por vista.",
+      "html": "<button class=\"ds-btn-primary\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M12 5v14M5 12h14\"/></svg>Cargar partido</button>",
+      "css": ".ds-btn-primary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 20px 8px 16px; border: 0; border-radius: 4px; background: var(--color-ink, #161412); color: var(--color-club, #f5b014); font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; cursor: pointer; user-select: none; transition: background-color 150ms ease-out, scale 150ms ease-out; } .ds-btn-primary:hover { background: rgb(22 20 18 / 0.88); } .ds-btn-primary:active { scale: 0.96; } .ds-btn-primary:focus-visible { outline: 2px solid var(--color-ink, #161412); outline-offset: 2px; } .ds-btn-primary:disabled { opacity: 0.5; pointer-events: none; }"
+    },
+    {
+      "name": "Botón secundario",
+      "kind": "button",
+      "refersTo": "button-secondary",
+      "description": "Rectángulo pintado: relleno de línea al 40 % y contorno de 2 px de pintura, texto en vinilo.",
+      "html": "<button class=\"ds-btn-secondary\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/></svg>Cargar actividad</button>",
+      "css": ".ds-btn-secondary { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 20px 8px 16px; border: 0; border-radius: 4px; background: rgb(248 244 234 / 0.4); color: var(--color-ink, #161412); box-shadow: 0 0 0 2px var(--paint, #f8f4ea); font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; cursor: pointer; user-select: none; transition: background-color 150ms ease-out, box-shadow 150ms ease-out, scale 150ms ease-out; } .ds-btn-secondary:hover { background: rgb(248 244 234 / 0.8); } .ds-btn-secondary:active { scale: 0.96; } .ds-btn-secondary:focus-visible { outline: 2px solid var(--color-ink, #161412); outline-offset: 2px; }"
+    },
+    {
+      "name": "Botón de borrar",
+      "kind": "button",
+      "refersTo": "button-danger",
+      "description": "Antena: rojo con texto blanco, solo para acciones que borran datos.",
+      "html": "<button class=\"ds-btn-danger\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 7h16M10 11v6M14 11v6M6 7l1 13h10l1-13M9 7V4h6v3\"/></svg>Eliminar</button>",
+      "css": ".ds-btn-danger { display: inline-flex; align-items: center; justify-content: center; gap: 8px; min-height: 44px; padding: 8px 16px 8px 14px; border: 0; border-radius: 4px; background: var(--color-antenna, #c8362b); color: #fff; font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; cursor: pointer; transition: background-color 150ms ease-out, scale 150ms ease-out; } .ds-btn-danger:hover { background: rgb(200 54 43 / 0.88); } .ds-btn-danger:active { scale: 0.96; } .ds-btn-danger:focus-visible { outline: 2px solid var(--color-ink, #161412); outline-offset: 2px; }"
+    },
+    {
+      "name": "Cinta (chip)",
+      "kind": "chip",
+      "refersTo": "chip-tape",
+      "description": "Cintas de suelo: naranja del club para hoy y la derrota; vinilo negro con letras del club para la victoria; blanca para neutros; azul para Liga Podio.",
+      "html": "<span class=\"ds-chip ds-chip-tape\">Hoy</span> <span class=\"ds-chip ds-chip-club\">Victoria</span> <span class=\"ds-chip ds-chip-line\">4 videos</span> <span class=\"ds-chip ds-chip-podio\">Liga Podio</span>",
+      "css": ".ds-chip { display: inline-flex; align-items: center; gap: 4px; padding: 2px 6px; border-radius: 2px; font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 0.75rem; line-height: 1rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; white-space: nowrap; } .ds-chip-tape { background: var(--color-tape, #f07c13); color: var(--color-ink, #161412); } .ds-chip-club { background: var(--color-ink, #161412); color: var(--color-club, #f5b014); } .ds-chip-line { background: var(--color-line, #f8f4ea); color: var(--color-ink, #161412); } .ds-chip-podio { background: var(--color-podio, #1f6f96); color: #fff; }"
+    },
+    {
+      "name": "Campo de texto",
+      "kind": "input",
+      "refersTo": "input",
+      "description": "Rectángulo pintado de blanco con borde de vinilo al 60 % que pasa a pleno al enfocar; antena si es inválido.",
+      "html": "<label class=\"ds-field\"><span class=\"ds-field-label\">Palabra clave <small>Opcional</small></span><input class=\"ds-input\" type=\"text\" placeholder=\"Escribe la palabra clave\"></label>",
+      "css": ".ds-field { display: flex; flex-direction: column; gap: 6px; font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; color: var(--color-ink, #161412); } .ds-field-label { font-size: 0.875rem; font-weight: 500; } .ds-field-label small { margin-left: 6px; font-size: 0.75rem; font-weight: 400; color: var(--color-ink-soft, #5b4a2f); } .ds-input { min-height: 44px; width: 100%; padding: 0 12px; border: 2px solid rgb(22 20 18 / 0.6); border-radius: 4px; background: var(--color-line, #f8f4ea); color: var(--color-ink, #161412); caret-color: var(--color-ink, #161412); font: inherit; font-size: 1rem; transition: border-color 150ms ease-out; } .ds-input::placeholder { color: rgb(91 74 47 / 0.8); } .ds-input:hover, .ds-input:focus { border-color: var(--color-ink, #161412); outline: none; } .ds-input[aria-invalid='true'] { border-color: var(--color-antenna, #c8362b); } .ds-input:disabled { opacity: 0.5; }"
+    },
+    {
+      "name": "Navegación (pasillo lateral)",
+      "kind": "nav",
+      "refersTo": "nav-link",
+      "description": "Zona libre con la línea pintada de 6 px hacia la pista; la línea del color de la sección activa se desliza hasta el enlace activo (único movimiento orquestado).",
+      "html": "<nav class=\"ds-nav\" aria-label=\"Secciones\"><span class=\"ds-nav-line\" aria-hidden=\"true\"></span><a class=\"ds-nav-link\" href=\"#\" aria-current=\"page\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M3 11l9-8 9 8v10a1 1 0 0 1-1 1h-5v-7H9v7H4a1 1 0 0 1-1-1z\"/></svg>Inicio</a><a class=\"ds-nav-link\" href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><rect x=\"3\" y=\"5\" width=\"18\" height=\"16\" rx=\"2\"/><path d=\"M3 10h18M8 3v4M16 3v4\"/></svg>Actividades</a><a class=\"ds-nav-link\" href=\"#\"><svg width=\"20\" height=\"20\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><circle cx=\"12\" cy=\"12\" r=\"9\"/><path d=\"M3.5 9.5c5 1 9 4 11.5 9M6 18c2.5-5 7-8 14-8\"/></svg>Partidos</a></nav>",
+      "css": ".ds-nav { position: relative; display: flex; flex-direction: column; gap: 2px; width: 224px; padding: 4px 0; background: var(--color-floor-deep, #dab97c); border-right: 6px solid var(--color-line, #f8f4ea); font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; } .ds-nav-line { position: absolute; left: 0; top: 4px; width: 6px; height: 44px; background: var(--color-line, #f8f4ea); transition: top 200ms cubic-bezier(0.2, 0, 0, 1), background-color 200ms cubic-bezier(0.2, 0, 0, 1); } .ds-nav-link { display: flex; align-items: center; gap: 12px; min-height: 44px; padding: 0 20px; color: rgb(22 20 18 / 0.7); font-size: 1rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; text-decoration: none; transition: color 150ms ease-out, background-color 150ms ease-out; } .ds-nav-link:hover { color: var(--color-ink, #161412); background: rgb(22 20 18 / 0.06); } .ds-nav-link[aria-current='page'] { color: var(--color-ink, #161412); } .ds-nav-link:focus-visible { outline: 2px solid var(--color-ink, #161412); outline-offset: -2px; } @media (prefers-reduced-motion: reduce) { .ds-nav-line { transition: none; } }"
+    },
+    {
+      "name": "Zona",
+      "kind": "card",
+      "refersTo": "outline-rect",
+      "description": "El bloque de página: línea pintada de 6 px arriba, rótulo pegado a ella y el contenido sobre el parquet; sustituye a la tarjeta.",
+      "html": "<section class=\"ds-zone\" aria-labelledby=\"ds-zone-title\"><div class=\"ds-zone-head\"><h2 id=\"ds-zone-title\">Próximo partido</h2><a class=\"ds-zone-more\" href=\"#\">Agenda<svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M4 12h15M13 6l6 6-6 6\"/></svg></a></div><p class=\"ds-zone-body\">Contenido apoyado en el parquet, sin caja.</p></section>",
+      "css": ".ds-zone { padding-top: 8px; border-top: 6px solid var(--color-line, #f8f4ea); background: var(--color-floor, #ecd5a5); font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; color: var(--color-ink, #161412); } .ds-zone-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-height: 44px; margin-bottom: 12px; } .ds-zone-head h2 { margin: 0; font-size: 1.75rem; line-height: 1; font-weight: 800; text-transform: uppercase; } .ds-zone-more { display: inline-flex; align-items: center; gap: 4px; min-height: 44px; padding: 0 8px; margin-right: -8px; border-radius: 4px; color: var(--color-ink-soft, #5b4a2f); font-size: 0.875rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; text-decoration: none; transition: color 150ms ease-out; } .ds-zone-more:hover { color: var(--color-ink, #161412); } .ds-zone-more:hover svg { translate: 2px 0; } .ds-zone-more svg { transition: translate 150ms ease-out; } .ds-zone-more:focus-visible { outline: 2px solid var(--color-ink, #161412); outline-offset: 2px; } .ds-zone-body { margin: 0; font-size: 1rem; line-height: 1.5; }"
+    },
+    {
+      "name": "Banda de la red (cabecera)",
+      "kind": "custom",
+      "refersTo": "page-header",
+      "description": "Franja blanca de lado a lado con el título en vinilo negro y, debajo, la línea de 6 px del color de la sección.",
+      "html": "<header class=\"ds-band\"><a class=\"ds-band-back\" href=\"#\"><svg width=\"16\" height=\"16\" viewBox=\"0 0 24 24\" fill=\"none\" stroke=\"currentColor\" stroke-width=\"2\" stroke-linecap=\"round\" stroke-linejoin=\"round\"><path d=\"M15 6l-6 6 6 6\"/></svg>Partidos</a><div class=\"ds-band-row\"><div><h1>Coyotes vs Titanes Voley</h1><p>Resultados y videos de los partidos jugados.</p></div><button class=\"ds-band-action\">Editar partido</button></div></header>",
+      "css": ".ds-band { --paint: color-mix(in oklab, var(--color-ink, #161412) 35%, transparent); display: flex; flex-direction: column; gap: 12px; padding: 24px 32px 20px; background: var(--color-line, #f8f4ea); border-bottom: 6px solid var(--color-tape, #f07c13); font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; color: var(--color-ink, #161412); } .ds-band-back { display: inline-flex; align-items: center; gap: 4px; width: fit-content; min-height: 36px; padding: 0 12px 0 4px; margin-left: -4px; border-radius: 4px; color: var(--color-ink-soft, #5b4a2f); font-size: 0.875rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; text-decoration: none; transition: color 150ms ease-out; } .ds-band-back:hover { color: var(--color-ink, #161412); } .ds-band-row { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px 24px; } .ds-band h1 { margin: 0; font-size: 3.75rem; line-height: 0.9; font-weight: 800; text-transform: uppercase; } .ds-band p { margin: 6px 0 0; font-size: 1rem; color: var(--color-ink-soft, #5b4a2f); } .ds-band-action { min-height: 44px; padding: 8px 16px; border: 0; border-radius: 4px; background: rgb(248 244 234 / 0.4); color: var(--color-ink, #161412); box-shadow: 0 0 0 2px var(--paint); font: inherit; font-size: 0.9375rem; font-weight: 700; letter-spacing: 0.025em; text-transform: uppercase; cursor: pointer; transition: background-color 150ms ease-out, scale 150ms ease-out; } .ds-band-action:hover { background: rgb(248 244 234 / 0.8); } .ds-band-action:active { scale: 0.96; } .ds-band-action:focus-visible { outline: 2px solid var(--color-ink, #161412); outline-offset: 2px; }"
+    },
+    {
+      "name": "Marcas sobre la línea lateral (parciales)",
+      "kind": "custom",
+      "refersTo": "mark",
+      "description": "Firma del sistema: cada parcial es una marca en Stencil sobre una regla de cinta; el set ganado lleva cinta del club encima.",
+      "html": "<ol class=\"ds-marks\" aria-label=\"Parciales\"><li class=\"ds-mark\"><span class=\"ds-mark-score\">28-30</span><span class=\"ds-mark-label\">Set 1</span></li><li class=\"ds-mark ds-mark-won\"><span class=\"ds-mark-score\">25-22</span><span class=\"ds-mark-label\">Set 2</span></li><li class=\"ds-mark\"><span class=\"ds-mark-score\">23-25</span><span class=\"ds-mark-label\">Set 3</span></li><li class=\"ds-mark\"><span class=\"ds-mark-score\">19-25</span><span class=\"ds-mark-label\">Set 4</span></li></ol>",
+      "css": ".ds-marks { display: flex; gap: 0 24px; margin: 0; padding: 0; list-style: none; border-top: 2px solid color-mix(in oklab, var(--color-ink, #161412) 18%, transparent); background: var(--color-floor, #ecd5a5); font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; } .ds-mark { display: flex; flex-direction: column; align-items: center; min-width: 80px; margin-top: -2px; padding: 8px 0 4px; border-top: 4px solid transparent; line-height: 1; color: var(--color-ink-soft, #5b4a2f); } .ds-mark-won { border-top-color: var(--color-tape, #f07c13); color: var(--color-ink, #161412); } .ds-mark-score { font-family: 'Big Shoulders Stencil', 'Big Shoulders', 'Arial Narrow', sans-serif; font-size: 2.25rem; font-weight: 900; font-variant-numeric: tabular-nums; } .ds-mark-label { margin-top: 4px; font-size: 0.625rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; opacity: 0.8; }"
+    },
+    {
+      "name": "Fila de dato (Fact)",
+      "kind": "custom",
+      "refersTo": "label",
+      "description": "Un dato como fila sobre regla de cinta: rótulo a la izquierda, valor a la derecha. Sustituye al tile de métrica.",
+      "html": "<dl class=\"ds-facts\"><div class=\"ds-fact\"><dt>Duración</dt><dd>27 min</dd></div><div class=\"ds-fact\"><dt>Tiempos</dt><dd>2<span> / </span>1</dd></div><div class=\"ds-fact\"><dt>Mayor racha</dt><dd>5<span> / </span>4</dd></div></dl>",
+      "css": ".ds-facts { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 0 24px; margin: 0; background: var(--color-floor, #ecd5a5); font-family: 'Big Shoulders', 'Arial Narrow', sans-serif; } .ds-fact { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding: 6px 0; border-top: 2px solid color-mix(in oklab, var(--color-ink, #161412) 18%, transparent); } .ds-fact dt { font-size: 0.6875rem; font-weight: 700; letter-spacing: 0.05em; text-transform: uppercase; color: var(--color-ink-soft, #5b4a2f); } .ds-fact dd { margin: 0; font-size: 0.875rem; font-weight: 700; font-variant-numeric: tabular-nums; text-align: right; color: var(--color-ink, #161412); } .ds-fact dd span { color: var(--color-ink-soft, #5b4a2f); }"
+    }
+  ],
+  "narrative": {
+    "northStar": "El suelo del pabellón",
+    "overview": "El dashboard es el suelo de un polideportivo visto desde el banquillo: parquet de arce rubio con las juntas de los tablones apenas marcadas, líneas pintadas de 6 px que estructuran la página y reglas de cinta de 2 px que separan las filas. El contenido se apoya sobre el parquet, nunca dentro de una caja: cada bloque es una zona con su línea arriba y su rótulo pegado a ella, y lo que en otro sitio sería una tarjeta aquí es, como mucho, un rectángulo pintado. El texto es vinilo negro en una sola familia (Big Shoulders); los números de cancha (fechas, horas, marcadores, parciales) van en su variante Stencil, negros y monumentales, como los números pintados en el suelo. Las acciones son rótulos de vinilo: la principal, vinilo negro con las letras en el dorado del club; el resto, rectángulos pintados con el texto en negro.\n\nEs una herramienta con piel de club. La estructura (suelo, líneas, vinilo, tipografía, composición) la heredaría cualquier club; lo que es de los Coyotes cabe en una capa finísima: el escudo, el nombre, las letras doradas sobre vinilo (`club`) y la cinta naranja (`tape`) que marca lo de hoy y lo nuestro. La Liga Podio tiene su cinta azul propia, y el peligro y el error se avisan con la antena a rayas rojas y blancas, no con un texto rojo que se pierde en el parquet. Cada sección tiene el color de su línea, como cada deporte en un suelo compartido, y ese color solo aparece en dos sitios: la marca de navegación y la línea bajo la banda de cabecera.\n\nDensidad media, mobile first, luz de pabellón: fondo claro con `color-scheme: light`, contraste AA en todo texto y objetivos táctiles de 44 px. Se rechaza el andamio de la categoría (saludo, tiles de métricas, paneles iguales, accesos rápidos en tarjeta), la estética de videojuego y el modo oscuro, que no se construye en esta ronda. La única coreografía es la línea pintada de la sección activa deslizándose por la navegación; todo lo demás cambia de estado en 150 ms sin moverse.",
+    "keyCharacteristics": [
+      "Contenido entre líneas pintadas (6 px) y reglas de cinta (2 px), nunca dentro de tarjetas.",
+      "Una sola familia tipográfica, Big Shoulders; Stencil reservada a los números de cancha.",
+      "Vinilo negro con letras del club para la acción principal y el estado seleccionado; cinta naranja para lo de hoy y lo nuestro.",
+      "Profundidad por contornos pintados con `--paint`, no por sombras; solo los diálogos flotan.",
+      "Marca del club como capa de tokens (escudo, nombre, `club`, `tape`) sobre una estructura reutilizable.",
+      "Un solo movimiento orquestado: la línea de la sección activa en la navegación (200 ms).",
+      "Ningún estado depende solo del color: letra V/D, chip con texto, cinta más rótulo."
+    ],
+    "rules": [
+      { "name": "La regla de la capa del club", "body": "Lo único del club es el escudo, el nombre y dos tokens: `club` y `tape`. Todo lo demás (`floor`, `line`, `ink`, tipografía, composición) es estructura que otro club heredaría cambiando esa capa. Un color nuevo que solo tenga sentido para los Coyotes no entra en el sistema.", "section": "colors" },
+      { "name": "La regla del vinilo negro", "body": "`ink` con letras `club` está reservado a la acción principal y al estado seleccionado: un botón primario por vista, la pestaña o el filtro marcados, el video que suena, la victoria. Si aparece dos veces sin motivo, uno de los dos deja de ser principal.", "section": "colors" },
+      { "name": "La regla de la cinta", "body": "La cinta naranja marca, no decora: hoy, el set ganado, la derrota que hay que revisar, el rectángulo destacado. Nunca como fondo de página, texto corriente ni relleno de botón.", "section": "colors" },
+      { "name": "La regla del color de sección", "body": "El color de cada sección (Inicio `line`, Actividades `line-green`, Partidos `tape`, Alineación `antenna`, Flyers `ink`) aparece exactamente en dos sitios: la marca de navegación y la línea bajo la banda de cabecera. En Inicio la línea bajo la banda es `floor-seam` porque `line` sobre la banda blanca es invisible; la marca del nav sigue siendo blanca.", "section": "colors" },
+      { "name": "La regla de la plantilla", "body": "Stencil se usa solo para los números de cancha: fechas abreviadas, horas, marcadores y parciales. Ningún título, rótulo ni párrafo va en Stencil; ningún número de cancha va sin ella.", "section": "typography" },
+      { "name": "La regla de la familia única", "body": "Todo el dashboard es Big Shoulders. Inter y Teko están cargadas porque la web pública y los lienzos de Alineación y Flyers las siguen leyendo; en el marco del dashboard no aparecen.", "section": "typography" },
+      { "name": "La regla del rótulo", "body": "Lo que se toca o etiqueta va en mayúsculas 700 con tracking (0.025em en acciones, 0.05em en cintas y rótulos de dato). Lo que se lee (descripciones, metadatos) va en caja normal y peso 400.", "section": "typography" },
+      { "name": "La regla de la línea", "body": "Los bloques se separan con líneas pintadas de 6 px y las filas con reglas de cinta de 2 px; nunca con cajas, bordes cerrados ni cambios de fondo. Si hace falta agrupar, se pinta una línea arriba y se pone el rótulo debajo.", "section": "layout" },
+      { "name": "La regla del pulgar", "body": "Todo objetivo mide 44 px como mínimo (56–64 px en filas); la acción primaria de Inicio queda al alcance del pulgar sobre la barra inferior. Los tamaños `sm` e `icon` de los botones solo bajan a 40 px desde 768 px.", "section": "layout" },
+      { "name": "La regla del contorno pintado", "body": "Un borde es pintura: 2 px de `--paint` por `box-shadow`, sin `border` salvo en los campos de formulario (2 px de `ink` al 60 %) y en el rectángulo discontinuo del estado vacío. Nada proyecta sombra en reposo; solo lo que se levanta del suelo (diálogos) lleva `shadow-lift-floor`.", "section": "elevation" }
+    ],
+    "dos": [
+      "Do apoyar cada bloque de página sobre una línea pintada de 6 px con su rótulo `h2` debajo (`Zone`, `line-top`), y separar las filas con reglas de cinta de 2 px (`tape-rule`, `divide-tape`).",
+      "Do escribir los números de cancha (fechas abreviadas, horas, marcadores, parciales) en Big Shoulders Stencil 900 y todo lo demás en Big Shoulders; el guion de un marcador va en `ink-soft`.",
+      "Do poner rótulos, botones, cintas, pestañas y navegación en mayúsculas 700 con tracking (0.025em en acciones, 0.05em en cintas y rótulos de dato).",
+      "Do reservar el vinilo negro con letras del club (`ink` / `club`) a la acción principal y al estado seleccionado, y la cinta naranja (`tape`) a hoy, el set ganado, la derrota y el rectángulo destacado.",
+      "Do pintar los contornos con `shadow-tape` (2 px de `--paint`) y marcar con `on-line` toda superficie blanca (banda de cabecera, diálogos) para que el contorno pase a vinilo al 35 %.",
+      "Do acompañar cada estado con texto o forma además del color: letra V/D, chip con palabra, cinta más rótulo «Set n», `aria-pressed` en filtros, `aria-current` en el video activo.",
+      "Do mantener 44 px de objetivo (56–64 px en filas), foco visible de 2 px `ink` separado 2 px, y una alternativa `motion-reduce` en cada transición (la línea del nav salta, el diálogo solo funde, los iconos de carga no giran).",
+      "Do tratar el escudo, el nombre del club, `club` y `tape` como la capa del club; todo lo nuevo que no sea de esa capa debe funcionar con otro escudo y otros dos colores.",
+      "Do avisar de un error con la antena a rayas (`bg-antenna-stripes`) en el borde superior y el texto en `antenna-deep`; usar `danger` (antena) solo en acciones que borran."
+    ],
+    "donts": [
+      "Don't usar tarjetas: ni rellenos opacos, ni sombras en reposo, ni cajas con borde cerrado. `Card` es un rectángulo pintado (2 px de contorno, `line` al 25 %) para listas pequeñas y portadas; los bloques de página son zonas sobre línea.",
+      "Don't poner kickers ni eyebrows encima de un título: la nota (`meta`, descripción, procedencia) va siempre debajo, como en `Modal` y `PageHeader`.",
+      "Don't construir tiles de métricas ni paneles iguales: un dato es una fila sobre regla de cinta (`Fact`), un parcial es una marca sobre la línea lateral y los números de temporada caben en una sola línea de fondo.",
+      "Don't añadir un segundo movimiento orquestado: solo la línea de la sección activa se desliza (200 ms). Nada de entradas escalonadas ni apariciones en cascada (`animate-rise` pertenece a la cancha oscura, no al dashboard); las transiciones de estado son de 150 ms y no desplazan nada.",
+      "Don't hacer que un estado dependa solo del color: sin V/D no hay victoria ni derrota, sin cinta más rótulo no hay set ganado, sin texto no hay chip.",
+      "Don't usar rayas ni degradados como decoración: las rayas son solo las juntas del parquet (`bg-planks`) y la antena de error; `bg-podio-fade` y `bg-ember-fade` son de la web pública.",
+      "Don't usar los tokens `coyote-*`, `podio-mist` fuera del logo de Podio, ni Teko o Inter dentro del marco del dashboard; solo la cancha de Alineación (`PositionFilter` con `onBoard`, `LineupBoard`, `FullscreenDialog`) y el lienzo de Flyers conservan la paleta oscura, porque los lienzos leen los tokens `@theme static` en tiempo de ejecución.",
+      "Don't pintar `club` como fondo ni como texto sobre el parquet: solo existe como letras sobre `ink`. `tape` no es color de texto.",
+      "Don't construir modo oscuro ni bajar el contraste del suelo: el dashboard es `color-scheme: light`, y el tema de noche queda sin resolver en esta ronda.",
+      "Don't proyectar sombra sobre la página: `shadow-lift-floor` es solo para diálogos y fichas levantadas."
+    ]
+  }
+}

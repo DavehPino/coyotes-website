@@ -1,7 +1,7 @@
 import { lazy, Suspense, useState } from 'react'
 import { useSearchParams } from 'react-router'
 import { useDialogSession } from '../admin/useDialogSession'
-import { Button, EmptyState, ErrorState, Field, PageHeader, Select } from '../ui'
+import { Button, EmptyState, ErrorState, Field, PageHeader, Select, Zone } from '../ui'
 import { BallIcon, PlusIcon, RefreshIcon, TrophyIcon } from '../ui/icons'
 import { useMatches } from './api'
 import { CompetitionFilter } from './CompetitionFilter'
@@ -146,17 +146,13 @@ export function MatchesPage() {
           />
         )
       ) : (
-        <div className="flex flex-col gap-8">
-          <div>
-            <h2 className="mb-3 text-3xl leading-none text-balance text-coyote-silver">
-              Últimos partidos{filterLabel ? ` · ${filterLabel}` : ''}
-            </h2>
+        <div className="flex flex-col gap-10">
+          <Zone id="matches-latest" label={`Últimos partidos${filterLabel ? ` · ${filterLabel}` : ''}`}>
             <MatchCarousel matches={query.data.slice(0, CAROUSEL_SIZE)} label="Últimos partidos" />
-          </div>
-          <div>
-            <h2 className="mb-3 text-3xl leading-none text-coyote-silver">Todos los partidos</h2>
+          </Zone>
+          <Zone id="matches-all" label="Todos los partidos">
             <MatchList matches={query.data} />
-          </div>
+          </Zone>
         </div>
       )}
 

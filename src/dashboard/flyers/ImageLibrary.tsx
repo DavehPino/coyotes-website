@@ -6,7 +6,7 @@ import type { FlyerImage, ImageLibrary } from './assetLibrary'
 
 // Fondo a cuadros: deja ver la transparencia de los logos.
 const CHECKER =
-  'bg-coyote-black bg-[length:12px_12px] bg-[image:repeating-conic-gradient(oklch(1_0_0/0.06)_0_25%,transparent_0_50%)]'
+  'bg-ink bg-[length:12px_12px] bg-[image:repeating-conic-gradient(oklch(1_0_0/0.06)_0_25%,transparent_0_50%)]'
 
 type ImageLibraryManagerProps = {
   library: ImageLibrary
@@ -38,7 +38,7 @@ export function ImageLibraryManager({ library, onRemove }: ImageLibraryManagerPr
         <ul className="flex flex-col gap-2">
           {library.images.map((image) => (
             <li key={image.id} className="flex items-center gap-2">
-              <span className={`flex size-11 shrink-0 items-center justify-center rounded-lg p-1 shadow-border ${CHECKER}`}>
+              <span className={`flex size-11 shrink-0 items-center justify-center rounded-sm p-1 shadow-tape ${CHECKER}`}>
                 <img src={image.url} alt="" className="max-h-full max-w-full object-contain outline-none" />
               </span>
               <NameInput
@@ -64,7 +64,7 @@ export function ImageLibraryManager({ library, onRemove }: ImageLibraryManagerPr
         </ul>
       )}
 
-      {library.loading && <p className="text-sm text-coyote-ash">Cargando imágenes…</p>}
+      {library.loading && <p className="text-sm text-ink-soft">Cargando imágenes…</p>}
       <Button
         onClick={() => fileRef.current?.click()}
         disabled={full || library.busy || library.loading}
@@ -120,7 +120,7 @@ export function ImagePicker({ images, selected, onToggle, noneLabel, onNone, lab
       {noneLabel && onNone && (
         <li>
           <Tile selected={selected.length === 0} onClick={onNone} label={noneLabel}>
-            <span className="text-xs text-coyote-ash">{noneLabel}</span>
+            <span className="text-xs text-ink-soft">{noneLabel}</span>
           </Tile>
         </li>
       )}
@@ -162,14 +162,14 @@ function Tile({
       disabled={disabled}
       onClick={onClick}
       className={[
-        `relative flex size-16 items-center justify-center rounded-lg p-1.5 select-none ${CHECKER}`,
+        `relative flex size-16 items-center justify-center rounded-sm p-1.5 select-none ${CHECKER}`,
         'transition-[box-shadow,opacity] duration-150 ease-out disabled:opacity-40',
-        selected ? 'shadow-gold-strong' : 'shadow-border hover:shadow-border-hover',
+        selected ? 'shadow-tape-club-strong' : 'shadow-tape hover:shadow-tape-hover',
       ].join(' ')}
     >
       {children}
       {selected && (
-        <span className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-coyote-gold text-coyote-black">
+        <span className="absolute -top-1.5 -right-1.5 flex size-5 items-center justify-center rounded-full bg-ink text-club">
           <CheckIcon className="size-3.5" strokeWidth={2} />
         </span>
       )}

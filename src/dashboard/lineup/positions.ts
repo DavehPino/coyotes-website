@@ -25,7 +25,7 @@ export const POSITION_STYLES: Record<PlayerPosition, PositionStyle> = {
   },
   punta: {
     bg: 'bg-pos-punta',
-    text: 'text-coyote-black',
+    text: 'text-ink',
     ring: 'ring-pos-punta',
     cssVar: '--color-pos-punta',
     onColor: 'dark',
@@ -46,14 +46,14 @@ export const POSITION_STYLES: Record<PlayerPosition, PositionStyle> = {
   },
   libero: {
     bg: 'bg-pos-libero',
-    text: 'text-coyote-black',
+    text: 'text-ink',
     ring: 'ring-pos-libero',
     cssVar: '--color-pos-libero',
     onColor: 'dark',
   },
   comodin: {
     bg: 'bg-pos-comodin',
-    text: 'text-coyote-black',
+    text: 'text-ink',
     ring: 'ring-pos-comodin',
     cssVar: '--color-pos-comodin',
     onColor: 'dark',

@@ -84,6 +84,7 @@ export function Bench({
 
       <PositionFilter
         compact
+        onBoard
         label="Filtrar el banco por posición"
         value={filter}
         onChange={onFilterChange}

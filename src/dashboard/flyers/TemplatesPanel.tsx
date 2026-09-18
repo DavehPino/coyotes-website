@@ -20,7 +20,7 @@ export function TemplatesPanel({ flyer, onApply }: TemplatesPanelProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-coyote-ash">
+      <p className="text-sm text-ink-soft">
         Elige un punto de partida. Se cargan textos de ejemplo que luego puedes editar o pedirle a la IA que adapte.
       </p>
       <ul className="grid grid-cols-2 gap-3">
@@ -35,9 +35,9 @@ export function TemplatesPanel({ flyer, onApply }: TemplatesPanelProps) {
                 aria-pressed={selected}
                 onClick={() => onApply(sample)}
                 className={[
-                  'flex w-full flex-col gap-2 rounded-xl bg-coyote-night p-2 text-left select-none',
+                  'flex w-full flex-col gap-2 rounded-md bg-line p-2 text-left select-none',
                   'transition-[box-shadow,scale] duration-150 ease-out active:scale-[0.98]',
-                  selected ? 'shadow-gold-strong' : 'shadow-border hover:shadow-border-hover',
+                  selected ? 'shadow-tape-club-strong' : 'shadow-tape hover:shadow-tape-hover',
                 ].join(' ')}
               >
                 <FlyerCanvas
@@ -46,11 +46,11 @@ export function TemplatesPanel({ flyer, onApply }: TemplatesPanelProps) {
                   ready={ready}
                   pixelRatio={0.3}
                   label={`Plantilla ${info.label}`}
-                  className="block h-auto w-full rounded-lg"
+                  className="block h-auto w-full rounded-sm"
                 />
                 <span className="flex flex-col px-1 pb-1">
-                  <span className="text-sm font-medium text-coyote-silver">{info.label}</span>
-                  <span className="text-xs text-coyote-ash">{info.description}</span>
+                  <span className="text-sm font-medium text-ink">{info.label}</span>
+                  <span className="text-xs text-ink-soft">{info.description}</span>
                 </span>
               </button>
             </li>

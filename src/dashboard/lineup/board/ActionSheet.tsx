@@ -1,7 +1,7 @@
 import { useId, useState, type ReactNode } from 'react'
 import { errorMessage } from '../../admin/adminApi'
 import { SafewordStep } from '../../admin/SafewordStep'
-import { Button, Chip, FormError, Modal } from '../../ui'
+import { Button, FormError, Modal } from '../../ui'
 import { useAdminSafeword } from '../api'
 
 type ActionSheetProps = {
@@ -71,7 +71,7 @@ export function ActionSheet({
       open={open}
       onClose={handleCancel}
       title={title}
-      eyebrow={askSafeword ? <Chip tone="ash">Acceso restringido</Chip> : null}
+      meta={null}
       dismissible={!locked}
       scrollResetKey={askSafeword ? 'safeword' : 'form'}
       footer={

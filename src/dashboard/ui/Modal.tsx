@@ -6,8 +6,8 @@ type ModalProps = {
   open: boolean
   onClose: () => void
   title: ReactNode
-  /** Texto pequeño encima del título (p.ej. tipo o fecha). */
-  eyebrow?: ReactNode
+  /** Nota bajo el título (paso del formulario, procedencia, aviso). Nunca encima: el título manda. */
+  meta?: ReactNode
   children: ReactNode
   /** Pie fijo bajo el contenido desplazable (botones de acción). */
   footer?: ReactNode
@@ -29,7 +29,7 @@ export function Modal({
   open,
   onClose,
   title,
-  eyebrow,
+  meta,
   children,
   footer,
   dismissible = true,
@@ -73,8 +73,8 @@ export function Modal({
         if (dismissible && event.target === event.currentTarget) onClose()
       }}
       className={[
-        `m-auto w-[calc(100%-2rem)] ${SIZES[size]} rounded-2xl bg-coyote-night p-0 text-coyote-silver shadow-border`,
-        'backdrop:bg-coyote-black/75',
+        `m-auto w-[calc(100%-2rem)] ${SIZES[size]} on-line rounded-md bg-line p-0 text-ink shadow-lift-floor`,
+        'backdrop:bg-ink/70',
         // Entrada y salida suaves: opacidad + desplazamiento corto, ease-out en ambas.
         'translate-y-2 opacity-0 transition-[opacity,translate,display,overlay] duration-200 ease-out transition-discrete',
         'open:translate-y-0 open:opacity-100 starting:open:translate-y-2 starting:open:opacity-0',
@@ -86,10 +86,10 @@ export function Modal({
       <div className="flex max-h-[85dvh] flex-col">
         <header className="flex min-h-14 shrink-0 items-start gap-3 p-4 pb-2 pl-5">
           <div className="min-w-0 flex-1">
-            {eyebrow && <div className="mb-1.5 flex flex-wrap items-center gap-1.5">{eyebrow}</div>}
-            <h2 id={titleId} className="text-3xl leading-none text-coyote-gold">
+            <h2 id={titleId} className="text-3xl leading-none text-ink">
               {title}
             </h2>
+            {meta && <div className="mt-1.5 flex flex-wrap items-center gap-1.5 text-sm text-ink-soft">{meta}</div>}
           </div>
           {dismissible && (
             <Button variant="ghost" size="icon" onClick={onClose} aria-label="Cerrar" className="-mt-1 -mr-1">
@@ -101,7 +101,7 @@ export function Modal({
           {children}
         </div>
         {footer && (
-          <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-coyote-steel/60 px-5 py-3">
+          <footer className="flex shrink-0 flex-wrap items-center justify-end gap-2 border-t border-ink/15 px-5 py-3">
             {footer}
           </footer>
         )}

@@ -14,12 +14,12 @@ export function StartingLineup({ lineup }: StartingLineupProps) {
   const byZone = new Map(lineup.filter((player) => player.position >= 1 && player.position <= 6).map((player) => [player.position, player]))
   const liberos = lineup.filter((player) => player.position === 0)
   if (byZone.size === 0 && liberos.length === 0) {
-    return <p className="text-sm text-coyote-ash">CourtTrack no registró la formación de este set.</p>
+    return <p className="text-sm text-ink-soft">CourtTrack no registró la formación de este set.</p>
   }
 
   return (
     <div className="flex flex-col gap-2">
-      <div className="rounded-xl border-t-4 border-court-line bg-court p-2" role="group" aria-label="Formación inicial en cancha">
+      <div className="rounded-md border-t-4 border-court-line bg-court p-2" role="group" aria-label="Formación inicial en cancha">
         <p className="mb-2 text-center text-[10px] font-medium tracking-[0.2em] text-court-line/70 uppercase">Red</p>
         <div className="grid grid-cols-3 gap-2">
           {ROWS.flat().map((zone) => {
@@ -27,7 +27,7 @@ export function StartingLineup({ lineup }: StartingLineupProps) {
             return (
               <div
                 key={zone}
-                className="relative flex min-h-16 flex-col items-center justify-center rounded-lg bg-coyote-black/45 px-1 py-2 text-center"
+                className="relative flex min-h-16 flex-col items-center justify-center rounded-sm bg-floor-deep/35 px-1 py-2 text-center"
               >
                 <span className="sr-only">
                   Zona {zone}
@@ -38,13 +38,13 @@ export function StartingLineup({ lineup }: StartingLineupProps) {
                 </span>
                 {player ? (
                   <>
-                    <span className="font-display text-2xl leading-none text-coyote-gold tabular-nums">
+                    <span className="font-bold text-2xl leading-none text-ink tabular-nums">
                       {player.number ?? '–'}
                     </span>
-                    <span className="mt-0.5 line-clamp-1 text-[11px] text-coyote-silver">{player.short_name}</span>
+                    <span className="mt-0.5 line-clamp-1 text-[11px] text-ink">{player.short_name}</span>
                     {player.serving && (
                       <>
-                        <BallIcon className="absolute top-1 right-1 size-3.5 text-coyote-yellow" strokeWidth={2} filled />
+                        <BallIcon className="absolute top-1 right-1 size-3.5 text-ink" strokeWidth={2} filled />
                         <span className="sr-only">, saca primero</span>
                       </>
                     )}
@@ -59,9 +59,9 @@ export function StartingLineup({ lineup }: StartingLineupProps) {
           })}
         </div>
       </div>
-      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-coyote-ash">
+      <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-ink-soft">
         <span className="inline-flex items-center gap-1">
-          <BallIcon className="size-3.5 text-coyote-yellow" strokeWidth={2} filled />
+          <BallIcon className="size-3.5 text-ink" strokeWidth={2} filled />
           saca primero
         </span>
         {liberos.length > 0 && (

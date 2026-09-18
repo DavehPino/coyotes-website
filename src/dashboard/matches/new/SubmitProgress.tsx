@@ -16,30 +16,30 @@ type SubmitProgressProps = {
 type Tone = 'busy' | 'done' | 'error' | 'idle'
 
 function StatusIcon({ tone }: { tone: Tone }) {
-  const base = 'flex size-9 shrink-0 items-center justify-center rounded-lg'
+  const base = 'flex size-9 shrink-0 items-center justify-center rounded-sm'
   if (tone === 'done') {
     return (
-      <span className={`${base} bg-coyote-gold text-coyote-black`}>
+      <span className={`${base} bg-ink text-club`}>
         <CheckIcon className="size-5" strokeWidth={2} />
       </span>
     )
   }
   if (tone === 'error') {
     return (
-      <span className={`${base} bg-coyote-orange/15 text-coyote-orange`}>
+      <span className={`${base} bg-antenna/12 text-antenna-deep`}>
         <AlertIcon className="size-5" />
       </span>
     )
   }
   if (tone === 'busy') {
     return (
-      <span className={`${base} bg-coyote-ember text-coyote-gold`}>
+      <span className={`${base} bg-floor-deep text-ink`}>
         <RefreshIcon className="size-5 animate-spin motion-reduce:animate-none" />
       </span>
     )
   }
   return (
-    <span className={`${base} bg-coyote-black text-coyote-ash`}>
+    <span className={`${base} bg-line text-ink-soft`}>
       <CloseIcon className="size-4.5" />
     </span>
   )
@@ -47,12 +47,12 @@ function StatusIcon({ tone }: { tone: Tone }) {
 
 function Row({ tone, title, detail, children }: { tone: Tone; title: string; detail: ReactNode; children?: ReactNode }) {
   return (
-    <li className="flex flex-col gap-2.5 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+    <li className="flex flex-col gap-2.5 rounded-md bg-floor-deep/40 p-3 shadow-tape">
       <div className="flex items-center gap-3">
         <StatusIcon tone={tone} />
         <div className="flex min-w-0 flex-1 flex-col">
-          <span className="truncate text-sm font-medium text-coyote-silver">{title}</span>
-          <span className="text-xs text-coyote-ash tabular-nums">{detail}</span>
+          <span className="truncate text-sm font-medium text-ink">{title}</span>
+          <span className="text-xs text-ink-soft tabular-nums">{detail}</span>
         </div>
       </div>
       {children}
@@ -121,15 +121,15 @@ export function VideoUploadRows({ videos, uploads, canRetry, onRetryVideo }: Vid
             aria-valuemin={0}
             aria-valuemax={100}
             aria-valuenow={Math.floor(ratio * 100)}
-            className="h-1.5 overflow-hidden rounded-full bg-coyote-steel/70"
+            className="h-1.5 overflow-hidden rounded-full bg-ink/15"
           >
             <div
-              className="h-full origin-left rounded-full bg-coyote-gold transition-transform duration-300 ease-out"
+              className="h-full origin-left rounded-full bg-ink transition-transform duration-300 ease-out"
               style={{ transform: `scaleX(${ratio})` }}
             />
           </div>
         )}
-        {upload.error && <p className="text-xs text-coyote-orange">{upload.error}</p>}
+        {upload.error && <p className="text-xs text-antenna-deep">{upload.error}</p>}
         {retryable && (
           <Button size="sm" className="self-start pr-3.5 pl-3" onClick={() => onRetryVideo(video.key)}>
             <RefreshIcon className="size-4" strokeWidth={2} />

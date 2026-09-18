@@ -4,7 +4,7 @@ import { lazy, Suspense, useMemo, useState } from 'react'
 import type { PlayerPosition } from '@shared/domain'
 import type { Lineup, Player } from '@shared/schemas'
 import { useDialogSession } from '../admin/useDialogSession'
-import { Button, Card, EmptyState, ErrorState, PageHeader, Skeleton } from '../ui'
+import { Button, EmptyState, ErrorState, PageHeader, Skeleton, Zone } from '../ui'
 import { ChevronRightIcon, CourtIcon, PlusIcon, UsersIcon } from '../ui/icons'
 import { useLineups, usePlayers } from './api'
 import { indexPlayers, lineupSummary, type PlayersById } from './board/rules'
@@ -58,24 +58,25 @@ export function LineupPage() {
       <PageHeader title="Alineación" description="El plantel y las formaciones del equipo." actions={addButton} />
 
       {/* ─── Formaciones ─────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <h2 className="text-3xl leading-none text-coyote-silver">Formaciones</h2>
+      <Zone
+        id="lineups-title"
+        label="Formaciones"
+        actions={
           <Button onClick={() => openBoard(null)} disabled={!players.data} className="pr-4 pl-3.5">
             <CourtIcon className="size-4" strokeWidth={2} />
             Armar en cancha
           </Button>
-        </div>
-
+        }
+      >
         {lineups.isPending || players.isPending ? (
-          <Card className="divide-y divide-coyote-steel/50" aria-busy aria-label="Cargando formaciones">
+          <div className="divide-tape tape-rule" aria-busy aria-label="Cargando formaciones">
             {[0, 1].map((i) => (
-              <div key={i} className="flex min-h-16 items-center gap-3 px-4">
-                <Skeleton className="h-4 w-32" />
-                <Skeleton className="ml-auto h-4 w-20" />
+              <div key={i} className="flex min-h-16 items-center gap-3 px-1">
+                <Skeleton className="h-5 w-32" />
+                <Skeleton className="ml-auto h-5 w-20" />
               </div>
             ))}
-          </Card>
+          </div>
         ) : lineups.isError ? (
           <ErrorState
             title="No se pudieron cargar las formaciones"
@@ -98,28 +99,22 @@ export function LineupPage() {
         ) : (
           <LineupList lineups={lineups.data} players={roster} byId={byId} onOpen={(lineup) => openBoard(lineup.id)} />
         )}
-      </div>
+      </Zone>
 
       {/* ─── Plantel ─────────────────────────────────────────────────── */}
-      <div className="flex flex-col gap-3">
-        <div className="flex flex-col gap-3">
-          <h2 className="text-3xl leading-none text-coyote-silver">
-            Plantel
-            {players.data && (
-              <span className="ml-2 font-sans text-base font-medium text-coyote-ash tabular-nums">
-                ({roster.length})
-              </span>
-            )}
-          </h2>
-          {roster.length > 0 && (
-            <PositionFilter
-              label="Filtrar el plantel por posición"
-              value={filter}
-              onChange={setFilter}
-              className="scrollbar-none -mx-4 overflow-x-auto px-4 py-1 md:mx-0 md:flex-wrap md:px-0"
-            />
-          )}
-        </div>
+      <Zone
+        id="roster-title"
+        label={players.data ? `Plantel · ${roster.length}` : 'Plantel'}
+        actions={<span className="sr-only" />}
+      >
+        {roster.length > 0 && (
+          <PositionFilter
+            label="Filtrar el plantel por posición"
+            value={filter}
+            onChange={setFilter}
+            className="scrollbar-none -mx-4 mb-3 overflow-x-auto px-4 py-1 md:mx-0 md:flex-wrap md:px-0"
+          />
+        )}
 
         {players.isPending ? (
           <PlayerListSkeleton />
@@ -142,7 +137,7 @@ export function LineupPage() {
         ) : (
           <PlayerList players={visible} onSelect={openEdit} />
         )}
-      </div>
+      </Zone>
 
       {dialog.mounted && (
         <Suspense fallback={null}>
@@ -183,7 +178,7 @@ type LineupListProps = {
 
 function LineupList({ lineups, players, byId, onOpen }: LineupListProps) {
   return (
-    <Card as="ul" className="divide-y divide-coyote-steel/50 overflow-hidden">
+    <ul className="divide-tape tape-rule">
       {lineups.map((lineup) => {
         const edited = formatDistanceToNowStrict(new Date(lineup.updated_at), { locale: es, addSuffix: true })
         const summary = lineupSummary(lineup.slots, byId)
@@ -192,18 +187,18 @@ function LineupList({ lineups, players, byId, onOpen }: LineupListProps) {
             <button
               type="button"
               onClick={() => onOpen(lineup)}
-              className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pr-2 pl-4 text-left transition-colors duration-150 ease-out hover:bg-coyote-ember/50 focus-visible:-outline-offset-2"
+              className="flex min-h-16 min-w-0 flex-1 items-center gap-3 py-2.5 pr-2 pl-1 text-left transition-colors duration-150 ease-out hover:bg-line/50 focus-visible:-outline-offset-2"
             >
               <span className="flex min-w-0 flex-1 flex-col gap-0.5 sm:flex-row sm:items-baseline sm:gap-3">
-                <span className="truncate font-medium text-coyote-silver">{lineup.name}</span>
-                <span className="text-sm text-coyote-ash tabular-nums">
-                  <span className="font-semibold text-coyote-gold">{summary}</span>
+                <span className="truncate text-lg font-bold text-ink">{lineup.name}</span>
+                <span className="text-sm text-ink-soft">
+                  <span className="font-bold text-ink">{summary}</span>
                   <span aria-hidden> · </span>
                   <span className="sr-only">, </span>
                   editada {edited}
                 </span>
               </span>
-              <ChevronRightIcon aria-hidden className="size-4 shrink-0 text-coyote-ash" />
+              <ChevronRightIcon aria-hidden className="size-4 shrink-0 text-ink-soft" />
             </button>
             <div className="shrink-0 pr-2">
               <ShareLineupButton lineup={lineup} players={players} variant="icon" />
@@ -211,6 +206,6 @@ function LineupList({ lineups, players, byId, onOpen }: LineupListProps) {
           </li>
         )
       })}
-    </Card>
+    </ul>
   )
 }

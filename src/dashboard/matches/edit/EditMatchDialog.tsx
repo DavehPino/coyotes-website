@@ -193,7 +193,7 @@ export default function EditMatchDialog({ open, match, initialTab, onClose }: Ed
       open={open}
       onClose={handleClose}
       title={askSafeword ? 'Editar partido' : TAB_LABELS[tab]}
-      eyebrow={askSafeword ? <Chip tone="ash">Acceso restringido</Chip> : <Chip tone="gold">Editar partido</Chip>}
+      meta={askSafeword ? null : <Chip tone="gold">Editar partido</Chip>}
       footer={footer}
       dismissible={!busy}
       scrollResetKey={askSafeword ? 'safeword' : tab}
@@ -231,7 +231,7 @@ export default function EditMatchDialog({ open, match, initialTab, onClose }: Ed
                     errors={errors}
                     onChange={patchMatch}
                   />
-                  <p className="text-xs text-coyote-ash">
+                  <p className="text-xs text-ink-soft">
                     La dirección del partido y la carpeta de sus videos no cambian aunque cambies la fecha o el rival.
                   </p>
                   {saveError && <FormError>{saveError}</FormError>}
@@ -239,7 +239,7 @@ export default function EditMatchDialog({ open, match, initialTab, onClose }: Ed
               ) : (
                 <>
                   <section aria-labelledby={`${formId}-saved`} className="flex flex-col gap-2">
-                    <h3 id={`${formId}-saved`} className="text-2xl leading-none text-coyote-silver">
+                    <h3 id={`${formId}-saved`} className="text-2xl leading-none text-ink">
                       Subidos
                     </h3>
                     <MatchVideoList
@@ -272,7 +272,7 @@ export default function EditMatchDialog({ open, match, initialTab, onClose }: Ed
                     aria-labelledby={`${formId}-new`}
                     className="flex flex-col gap-3"
                   >
-                    <h3 id={`${formId}-new`} className="pt-1 text-2xl leading-none text-coyote-silver">
+                    <h3 id={`${formId}-new`} className="pt-1 text-2xl leading-none text-ink">
                       Añadir videos
                     </h3>
                     {uploading ? (
@@ -282,14 +282,14 @@ export default function EditMatchDialog({ open, match, initialTab, onClose }: Ed
                     ) : (
                       <>
                         {uploadedCount > 0 && pending.length === 0 && (
-                          <p role="status" className="text-sm text-coyote-gold">
+                          <p role="status" className="text-sm text-ink">
                             {uploadedCount === 1 ? 'Video subido.' : `${uploadedCount} videos subidos.`}
                           </p>
                         )}
                         <VideoPicker onAdd={(added) => setPending((prev) => [...prev, ...added])} />
                         <VideoDraftList videos={pending} errors={videoErrors} notes={uploadNotes} onChange={setPending} />
                         {pending.length > 0 && (
-                          <p className="text-xs text-coyote-ash">
+                          <p className="text-xs text-ink-soft">
                             Se suben directamente al almacenamiento del equipo. Mantén esta ventana abierta hasta que
                             terminen.
                           </p>
@@ -316,6 +316,6 @@ function TabSwitch({ value, disabled }: { value: EditTab; disabled: boolean }) {
   }))
   return (
     // Radio exterior 12 px = interior 8 px + 4 px de padding
-    <TabList label="Qué editar" items={items} className="grid grid-cols-2 gap-1 rounded-xl bg-coyote-black p-1 shadow-border" />
+    <TabList label="Qué editar" items={items} className="grid grid-cols-2 gap-1 rounded-md bg-line/40 p-1 shadow-tape" />
   )
 }

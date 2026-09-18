@@ -74,7 +74,7 @@ export function Carousel<T>({ items, label, getKey, renderSlide, slideClassName 
       aria-label={label}
       tabIndex={0}
       onKeyDown={onKeyDown}
-      className="rounded-2xl outline-offset-4"
+      className="rounded-md outline-offset-4"
     >
       <div ref={viewportRef} className="overflow-hidden">
         <div className={`${CAROUSEL_TRACK_CLASSES} touch-pan-y`}>
@@ -114,7 +114,7 @@ export function Carousel<T>({ items, label, getKey, renderSlide, slideClassName 
                   <span
                     className={[
                       'block h-1.5 rounded-full transition-[width,background-color] duration-200 ease-out',
-                      active ? 'w-5 bg-coyote-gold' : 'w-1.5 bg-coyote-steel group-hover:bg-coyote-ash',
+                      active ? 'w-5 bg-ink' : 'w-1.5 bg-ink/20 group-hover:bg-ink-soft',
                     ].join(' ')}
                   />
                 </button>

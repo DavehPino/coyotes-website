@@ -49,11 +49,11 @@ export function SafewordStep({
 
   return (
     <form id={formId} onSubmit={handleSubmit} noValidate className="flex flex-col gap-4">
-      <div className="flex items-start gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-ember text-coyote-gold">
+      <div className="flex items-start gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink">
           <LockIcon />
         </span>
-        <p className="text-sm text-coyote-ash">{description}</p>
+        <p className="text-sm text-ink-soft">{description}</p>
       </div>
       {notice && <FormError>{notice}</FormError>}
       <Field label="Palabra clave" error={error}>

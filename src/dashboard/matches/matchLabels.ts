@@ -11,7 +11,7 @@ export const OUTCOME_LABELS: Record<MatchOutcome, string> = {
 }
 
 export const OUTCOME_TONES: Record<MatchOutcome, ChipTone> = {
-  win: 'gold-solid',
+  win: 'gold',
   loss: 'orange',
   pending: 'ash',
 }
@@ -46,9 +46,9 @@ export function ourScoreLabel(match: MatchSummary): string {
 }
 
 export const OUTCOME_TEXT_CLASSES: Record<MatchOutcome, string> = {
-  win: 'text-coyote-gold',
-  loss: 'text-coyote-orange',
-  pending: 'text-coyote-ash',
+  win: 'text-ink',
+  loss: 'text-ink-soft',
+  pending: 'text-ink-soft',
 }
 
 /** Parcial en el orden del título. */

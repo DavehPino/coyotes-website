@@ -164,3 +164,126 @@
     animation: none;
   }
 }
+
+/*
+ * ─── Dashboard: el suelo del pabellón ────────────────────────────────────────────────────────────
+ * El dashboard vive sobre un parquet de arce con líneas pintadas; el texto es vinilo negro y las
+ * acciones, rótulos de vinilo con las letras en el dorado del club. La marca del club es una capa
+ * (club, tape) sobre una estructura que cualquier club podría heredar.
+ * Solo aplica con `html[data-app="dashboard"]`; la web pública sigue con la paleta de arriba.
+ */
+@theme {
+  --color-floor: #ecd5a5; /* parquet de arce rubio */
+  --color-floor-deep: #dab97c; /* zona libre: pasillo lateral y barra inferior */
+  --color-floor-seam: #c9a562; /* junta entre tablones, estados pulsados */
+  --color-line: #f8f4ea; /* pintura de línea */
+  --color-ink: #161412; /* vinilo negro: texto principal, rótulos */
+  --color-ink-soft: #5b4a2f; /* texto secundario · 6:1 sobre floor, 7,8:1 sobre line */
+  --color-club: #f5b014; /* letras del club sobre vinilo negro · 9,7:1 */
+  --color-tape: #f07c13; /* cinta del club: lo de hoy, lo nuestro · texto ink 6,7:1 */
+  --color-antenna: #c8362b; /* rayas de antena: peligro y error · texto blanco 5,2:1 */
+  --color-antenna-deep: #9c2419; /* texto de error sobre el suelo · 4,8:1 */
+  --color-line-green: #2f7d4e; /* línea de Actividades · texto blanco 5:1 */
+
+  --font-vinyl: 'Big Shoulders', 'Arial Narrow', 'Roboto Condensed', sans-serif;
+  --font-stencil: 'Big Shoulders Stencil', 'Big Shoulders', 'Arial Narrow', sans-serif;
+
+  /* Contornos pintados en lugar de sombras: 2 px de línea o de cinta. */
+  --shadow-tape: 0 0 0 2px var(--paint);
+  --shadow-tape-hover: 0 0 0 2px var(--paint-hover);
+  --shadow-tape-club: 0 0 0 2px var(--color-tape);
+  --shadow-tape-club-strong: 0 0 0 3px var(--color-tape);
+  /* Lo único que flota sobre el suelo: diálogos y fichas levantadas. */
+  --shadow-lift-floor: 0 14px 32px rgb(58 34 6 / 0.35), 0 2px 6px rgb(58 34 6 / 0.2);
+}
+
+@layer base {
+  html[data-app='dashboard'] {
+    color-scheme: light;
+    background-color: var(--color-floor);
+    scrollbar-color: var(--color-ink-soft) transparent;
+    /* Pintura de los contornos: línea blanca sobre el parquet; vinilo sobre superficies blancas (.on-line). */
+    --paint: var(--color-line);
+    --paint-hover: var(--color-ink);
+  }
+
+  html[data-app='dashboard'] body {
+    @apply bg-planks font-vinyl text-ink;
+    caret-color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+
+  html[data-app='dashboard'] :is(h1, h2, h3) {
+    @apply font-vinyl font-extrabold tracking-normal;
+  }
+
+  html[data-app='dashboard'] ::selection {
+    background-color: var(--color-tape);
+    color: var(--color-ink);
+  }
+
+  html[data-app='dashboard'] :focus-visible {
+    @apply outline-ink;
+  }
+
+  html[data-app='dashboard'] img {
+    outline-color: rgb(0 0 0 / 0.12);
+  }
+
+  html[data-app='dashboard'] a {
+    text-underline-offset: 3px;
+  }
+}
+
+/* Parquet: tablones a lo largo, con juntas apenas marcadas para que el texto no compita con la veta. */
+@utility bg-planks {
+  background-color: var(--color-floor);
+  background-image:
+    repeating-linear-gradient(
+      90deg,
+      transparent 0 96px,
+      rgb(0 0 0 / 0.05) 96px 97px,
+      transparent 97px 230px,
+      rgb(0 0 0 / 0.05) 230px 231px,
+      transparent 231px 372px,
+      rgb(0 0 0 / 0.05) 372px 373px
+    ),
+    repeating-linear-gradient(
+      90deg,
+      rgb(255 255 255 / 0.045) 0 132px,
+      transparent 132px 280px,
+      rgb(0 0 0 / 0.025) 280px 430px,
+      transparent 430px 505px
+    );
+}
+
+/* Líneas pintadas (5 cm → 6 px) y reglas de cinta (2 px) que separan filas. */
+@utility line-top {
+  border-top: 6px solid var(--color-line);
+}
+@utility line-bottom {
+  border-bottom: 6px solid var(--color-line);
+}
+@utility tape-rule {
+  border-top: 2px solid color-mix(in oklab, var(--color-ink) 18%, transparent);
+}
+@utility divide-tape {
+  & > :not(:last-child) {
+    border-bottom: 2px solid color-mix(in oklab, var(--color-ink) 18%, transparent);
+  }
+}
+
+/* Antena: rayas rojas y blancas en el borde de lo que avisa de un error. */
+@utility bg-antenna-stripes {
+  background-image: repeating-linear-gradient(
+    135deg,
+    var(--color-antenna) 0 10px,
+    var(--color-line) 10px 20px
+  );
+}
+
+/* Sobre una superficie blanca (banda de la red, diálogos) la línea pintada no se ve: el contorno pasa a vinilo. */
+@utility on-line {
+  --paint: color-mix(in oklab, var(--color-ink) 35%, transparent);
+  --paint-hover: var(--color-ink);
+}

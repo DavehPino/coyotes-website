@@ -1,34 +1,44 @@
 import { lazy, Suspense, useState } from 'react'
 import { todayIsoDate } from '@shared/dates'
 import type { Activity } from '@shared/schemas'
-import { formatDateFull } from '@/lib/dates'
+import { endOfWeek, format, parseISO, startOfWeek } from 'date-fns'
+import { es } from 'date-fns/locale'
+import { formatDayMonth, formatWeekdayShort } from '@/lib/dates'
 import { ActivityDetailModal } from '../activities/ActivityDetailModal'
 import { useUpcomingActivities } from '../activities/api'
 import { filterUpcoming } from '../activities/upcoming'
 import { useMatches } from '../matches/api'
 import { PageHeader } from '../ui'
-import { LastMatchPanel } from './LastMatchPanel'
-import { NextUpPanel } from './NextUpPanel'
-import { QuickActions } from './QuickActions'
-import { SummaryTiles, SummaryTilesSkeleton } from './SummaryTiles'
+import { ActionStrip } from './ActionStrip'
+import { LastResultZone } from './LastResultZone'
+import { NextMatchZone } from './NextMatchZone'
+import { SeasonLine } from './SeasonLine'
 import { useDialogSession } from '../admin/useDialogSession'
 
 // Los formularios de alta solo se descargan la primera vez que se abren.
 const NewActivityDialog = lazy(() => import('../activities/new/NewActivityDialog'))
 const NewMatchDialog = lazy(() => import('../matches/new/NewMatchDialog'))
 
-function greeting(now = new Date()): string {
-  const hour = now.getHours()
-  if (hour < 6) return 'Buenas noches'
-  if (hour < 13) return 'Buenos días'
-  if (hour < 20) return 'Buenas tardes'
-  return 'Buenas noches'
+/** "VIE 18 SEP": el día de hoy como número de cancha. */
+function todayLabel(today: string): string {
+  return `${formatWeekdayShort(today)} ${formatDayMonth(today)}`.replace(/\./g, '')
 }
 
-/** Cada bloque entra 80 ms después del anterior: se lee la jerarquía sin que la espera se note. */
-const rise = (delayMs: number) => ({ className: 'animate-rise', style: { animationDelay: `${delayMs}ms` } })
+/** "Semana del 14 al 20 de septiembre" (de lunes a domingo). */
+function weekLabel(today: string): string {
+  const date = parseISO(today)
+  const from = startOfWeek(date, { weekStartsOn: 1 })
+  const to = endOfWeek(date, { weekStartsOn: 1 })
+  const sameMonth = from.getMonth() === to.getMonth()
+  const fromLabel = format(from, sameMonth ? 'd' : "d 'de' MMMM", { locale: es })
+  return `Semana del ${fromLabel} al ${format(to, "d 'de' MMMM", { locale: es })}`
+}
 
-/** Resumen del equipo: lo que viene, el último partido y las acciones de siempre. */
+/**
+ * Inicio: la pista vista desde el banquillo. Zona de ataque con lo próximo, línea de ataque y el último
+ * resultado; en escritorio la línea central parte la página en agenda y resultados. Las acciones van en una
+ * tira de rótulos y los números de temporada, en la línea de fondo.
+ */
 export function HomePage() {
   const today = todayIsoDate()
   const [selected, setSelected] = useState<Activity | null>(null)
@@ -42,38 +52,23 @@ export function HomePage() {
 
   return (
     <section>
-      {/* El margen inferior del encabezado es el mismo que en el resto de secciones. */}
-      <div {...rise(0)}>
-        <PageHeader title={greeting()} description={formatDateFull(today)} />
-      </div>
+      <PageHeader title={todayLabel(today)} description={weekLabel(today)} />
 
-      <div className="flex flex-col gap-8">
-        <div {...rise(80)}>
-          {activitiesQuery.isPending || matchesQuery.isPending ? (
-            <SummaryTilesSkeleton />
-          ) : (
-            <SummaryTiles activities={upcoming} matches={matchesQuery.data ?? []} today={today} />
-          )}
-        </div>
+      <div className="flex flex-col gap-8 md:grid md:grid-cols-[minmax(0,1fr)_6px_minmax(0,1fr)] md:gap-x-8 md:gap-y-10">
+        <NextMatchZone
+          query={activitiesQuery}
+          items={upcoming}
+          today={today}
+          onOpen={setSelected}
+          onAdd={activityDialog.openDialog}
+        />
+        {/* Línea central: en escritorio separa las dos mitades de la pista. */}
+        <div aria-hidden className="hidden bg-line md:block" />
+        <LastResultZone query={matchesQuery} onAdd={matchDialog.openDialog} />
 
-        <div className="grid gap-8 xl:grid-cols-2 xl:gap-6">
-          <div {...rise(160)}>
-            <NextUpPanel
-              query={activitiesQuery}
-              items={upcoming}
-              today={today}
-              onOpen={setSelected}
-              onAdd={activityDialog.openDialog}
-            />
-          </div>
-          <div {...rise(240)}>
-            <LastMatchPanel query={matchesQuery} onAdd={matchDialog.openDialog} />
-          </div>
-        </div>
-
-        <div {...rise(320)}>
-          <h2 className="mb-3 text-3xl leading-none text-coyote-silver">Accesos rápidos</h2>
-          <QuickActions onNewActivity={activityDialog.openDialog} />
+        <div className="flex flex-col gap-8 md:col-span-3">
+          <ActionStrip onNewActivity={activityDialog.openDialog} onNewMatch={matchDialog.openDialog} />
+          <SeasonLine matches={matchesQuery.data ?? []} pending={matchesQuery.isPending} />
         </div>
       </div>
 

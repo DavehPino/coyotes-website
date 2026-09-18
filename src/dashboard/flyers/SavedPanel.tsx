@@ -17,7 +17,7 @@ export function SavedPanel({ saved, current, onOpen }: SavedPanelProps) {
     return (
       <div className="grid grid-cols-2 gap-3" aria-busy aria-label="Cargando flyers guardados">
         {[0, 1].map((i) => (
-          <Skeleton key={i} className="aspect-[4/5] rounded-xl" />
+          <Skeleton key={i} className="aspect-[4/5] rounded-md" />
         ))}
       </div>
     )
@@ -39,7 +39,7 @@ export function SavedPanel({ saved, current, onOpen }: SavedPanelProps) {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-coyote-ash">
+      <p className="text-sm text-ink-soft">
         Se guardan en el bucket (hasta {SAVED_FLYERS_LIMIT}) y los ve todo el equipo. Abrir uno lo carga en el editor
         sin modificar el guardado; la foto de fondo queda en la imagen, pero no en la copia editable.
       </p>
@@ -52,32 +52,32 @@ export function SavedPanel({ saved, current, onOpen }: SavedPanelProps) {
             <li
               key={item.id}
               className={[
-                'flex flex-col gap-2 rounded-xl bg-coyote-night p-2',
-                isCurrent ? 'shadow-gold-strong' : 'shadow-border',
+                'flex flex-col gap-2 rounded-md bg-line p-2',
+                isCurrent ? 'shadow-tape-club-strong' : 'shadow-tape',
               ].join(' ')}
             >
               <button
                 type="button"
                 onClick={() => onOpen(item.flyer)}
                 aria-label={`Abrir ${title}`}
-                className="flex items-center justify-center rounded-lg transition-[scale] duration-150 ease-out active:scale-[0.98]"
+                className="flex items-center justify-center rounded-sm transition-[scale] duration-150 ease-out active:scale-[0.98]"
               >
                 <img
                   src={item.imageUrl}
                   alt=""
                   loading="lazy"
-                  className="block h-auto max-h-56 w-auto max-w-full rounded-lg"
+                  className="block h-auto max-h-56 w-auto max-w-full rounded-sm"
                 />
               </button>
               <div className="flex items-start gap-1 px-1 pb-1">
                 <div className="flex min-w-0 flex-1 flex-col gap-1">
                   <span className="flex items-center gap-1.5">
                     <Chip tone={item.source === 'ia' ? 'gold' : 'ash'}>{item.source === 'ia' ? 'IA' : 'Manual'}</Chip>
-                    <span className="truncate text-xs text-coyote-ash tabular-nums">
+                    <span className="truncate text-xs text-ink-soft tabular-nums">
                       {dateFormat.format(new Date(item.savedAt))}
                     </span>
                   </span>
-                  <span className="line-clamp-2 text-sm text-coyote-silver" title={item.label || title}>
+                  <span className="line-clamp-2 text-sm text-ink" title={item.label || title}>
                     {item.label || title}
                   </span>
                 </div>

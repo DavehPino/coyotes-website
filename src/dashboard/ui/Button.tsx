@@ -10,18 +10,22 @@ export type ButtonProps = ButtonHTMLAttributes<HTMLButtonElement> & {
   static?: boolean
 }
 
+/**
+ * Rótulos de vinilo pegados al suelo: la acción principal es vinilo negro con las letras del club;
+ * la secundaria, un rectángulo pintado (línea blanca de 2 px) con el texto en negro.
+ */
 const VARIANTS: Record<Variant, string> = {
-  primary: 'bg-coyote-gold text-coyote-black hover:bg-coyote-yellow',
-  secondary: 'bg-coyote-ember text-coyote-silver shadow-border hover:shadow-border-hover hover:bg-coyote-rust/50',
-  ghost: 'text-coyote-ash hover:bg-coyote-ember/60 hover:text-coyote-silver',
+  primary: 'bg-ink text-club hover:bg-ink/88',
+  secondary: 'bg-line/40 text-ink shadow-tape hover:bg-line/80',
+  ghost: 'text-ink-soft hover:bg-ink/8 hover:text-ink',
   /** Acciones que borran datos. */
-  danger: 'bg-coyote-orange text-coyote-black hover:bg-coyote-orange/85',
+  danger: 'bg-antenna text-white hover:bg-antenna/88',
 }
 
 // Área de pulsación mínima de 44 px en todos los tamaños (uso principal desde el móvil).
 const SIZES: Record<Size, string> = {
-  md: 'min-h-11 px-4 py-2 text-sm',
-  sm: 'min-h-11 px-3 py-1.5 text-sm md:min-h-10',
+  md: 'min-h-11 px-4 py-2 text-[0.9375rem]',
+  sm: 'min-h-11 px-3 py-1.5 text-[0.9375rem] md:min-h-10',
   icon: 'size-11 p-0 md:size-10',
 }
 
@@ -33,7 +37,7 @@ export function buttonClasses({
   className = '',
 }: Pick<ButtonProps, 'variant' | 'size' | 'static' | 'className'> = {}) {
   return [
-    'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-medium select-none',
+    'inline-flex shrink-0 items-center justify-center gap-2 rounded-sm font-bold tracking-wide uppercase select-none',
     'transition-[background-color,color,box-shadow,scale] duration-150 ease-out',
     'disabled:pointer-events-none disabled:opacity-50',
     isStatic ? '' : 'active:scale-[0.96]',

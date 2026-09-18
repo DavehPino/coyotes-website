@@ -10,11 +10,12 @@ import {
 } from 'react'
 
 // 16 px en móvil: iOS no hace zoom al enfocar. Área de pulsación de 44 px.
+// Los campos son rectángulos pintados: fondo blanco de línea y contorno de vinilo de 2 px.
 const CONTROL = [
-  'min-h-11 w-full rounded-lg bg-coyote-black px-3 text-base text-coyote-silver shadow-border md:min-h-10 md:text-sm',
-  'transition-[box-shadow] duration-150 ease-out hover:shadow-border-hover',
-  'placeholder:text-coyote-ash/80 disabled:opacity-50',
-  'aria-invalid:shadow-[0_0_0_1px_var(--color-coyote-orange)]',
+  'min-h-11 w-full rounded-sm border-2 border-ink/60 bg-line px-3 text-base text-ink md:min-h-10 md:text-[0.9375rem]',
+  'transition-[border-color] duration-150 ease-out hover:border-ink focus:border-ink focus:outline-none',
+  'placeholder:text-ink-soft/80 disabled:opacity-50',
+  'aria-invalid:border-antenna',
 ].join(' ')
 
 export function Input({ className = '', ...rest }: InputHTMLAttributes<HTMLInputElement>) {
@@ -56,13 +57,13 @@ export function Field({ label, children, hint, error, optional, className = '' }
 
   return (
     <div className={`flex min-w-0 flex-col gap-1.5 ${className}`}>
-      <label htmlFor={id} className="text-sm font-medium text-coyote-silver">
+      <label htmlFor={id} className="text-sm font-medium text-ink">
         {label}
-        {optional && <span className="ml-1.5 text-xs font-normal text-coyote-ash">Opcional</span>}
+        {optional && <span className="ml-1.5 text-xs font-normal text-ink-soft">Opcional</span>}
       </label>
       {control}
       {message && (
-        <p id={messageId} className={`text-xs ${error ? 'text-coyote-orange' : 'text-coyote-ash'}`}>
+        <p id={messageId} className={`text-xs ${error ? 'font-bold text-antenna-deep' : 'text-ink-soft'}`}>
           {message}
         </p>
       )}
@@ -70,11 +71,12 @@ export function Field({ label, children, hint, error, optional, className = '' }
   )
 }
 
-/** Error general de un paso del formulario (p.ej. respuesta de la API). */
+/** Error general de un paso del formulario (p.ej. respuesta de la API): la misma antena a rayas que ErrorState. */
 export function FormError({ children, className = '' }: { children: ReactNode; className?: string }) {
   return (
-    <p role="alert" className={`rounded-lg bg-coyote-orange/12 px-3 py-2 text-sm text-coyote-orange ${className}`}>
-      {children}
-    </p>
+    <div role="alert" className={`overflow-hidden rounded-sm bg-line ${className}`}>
+      <div aria-hidden className="bg-antenna-stripes h-1.5" />
+      <p className="px-3 py-2 text-sm font-medium text-antenna-deep">{children}</p>
+    </div>
   )
 }

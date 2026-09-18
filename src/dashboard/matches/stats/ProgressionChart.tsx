@@ -80,18 +80,18 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
 
   return (
     <div className="flex flex-col gap-2">
-      <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-coyote-ash" aria-label="Leyenda">
+      <ul className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs text-ink-soft" aria-label="Leyenda">
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="size-2.5 rounded-sm bg-coyote-gold" />
+          <span aria-hidden className="size-2.5 rounded-sm bg-tape" />
           {usLabel} por delante
         </li>
         <li className="flex items-center gap-1.5">
-          <span aria-hidden className="size-2.5 rounded-sm bg-coyote-ash" />
+          <span aria-hidden className="size-2.5 rounded-sm bg-ink-soft" />
           {themLabel} por delante
         </li>
         {timeouts.length > 0 && (
           <li className="flex items-center gap-1.5">
-            <span aria-hidden className="size-2.5 rounded-full border-2 border-coyote-silver" />
+            <span aria-hidden className="size-2.5 rounded-full border-2 border-ink" />
             Tiempo técnico
           </li>
         )}
@@ -128,10 +128,10 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
                   x2={width - PAD.right}
                   y1={y(tick)}
                   y2={y(tick)}
-                  className={tick === 0 ? 'stroke-coyote-silver/40' : 'stroke-coyote-steel/70'}
+                  className={tick === 0 ? 'stroke-ink/30' : 'stroke-ink/20'}
                   strokeWidth={1}
                 />
-                <text x={PAD.left - 6} y={y(tick)} dy="0.35em" textAnchor="end" className="fill-coyote-ash text-[10px] tabular-nums">
+                <text x={PAD.left - 6} y={y(tick)} dy="0.35em" textAnchor="end" className="fill-ink-soft text-[10px] tabular-nums">
                   {signed(tick)}
                 </text>
               </g>
@@ -139,10 +139,10 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
 
             {total > 0 && (
               <>
-                <path d={area} className="fill-coyote-gold/20" clipPath={`url(#${clipId}-above)`} />
-                <path d={area} className="fill-coyote-ash/20" clipPath={`url(#${clipId}-below)`} />
-                <path d={path} fill="none" className="stroke-coyote-gold" strokeWidth={2} strokeLinejoin="round" clipPath={`url(#${clipId}-above)`} />
-                <path d={path} fill="none" className="stroke-coyote-ash" strokeWidth={2} strokeLinejoin="round" clipPath={`url(#${clipId}-below)`} />
+                <path d={area} className="fill-tape/25" clipPath={`url(#${clipId}-above)`} />
+                <path d={area} className="fill-ink/15" clipPath={`url(#${clipId}-below)`} />
+                <path d={path} fill="none" className="stroke-tape" strokeWidth={2} strokeLinejoin="round" clipPath={`url(#${clipId}-above)`} />
+                <path d={path} fill="none" className="stroke-ink-soft" strokeWidth={2} strokeLinejoin="round" clipPath={`url(#${clipId}-below)`} />
               </>
             )}
 
@@ -152,28 +152,28 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
                 cx={x(timeout.after)}
                 cy={timeout.team === 'us' ? PAD.top - 6 : HEIGHT - PAD.bottom + 6}
                 r={4}
-                className="fill-coyote-night stroke-coyote-silver"
+                className="fill-line stroke-ink"
                 strokeWidth={2}
               >
                 <title>{`Tiempo técnico de ${timeout.team === 'us' ? usLabel : themLabel} tras ${timeout.after} puntos`}</title>
               </circle>
             ))}
 
-            <text x={PAD.left} y={HEIGHT - 6} className="fill-coyote-ash text-[10px]">
+            <text x={PAD.left} y={HEIGHT - 6} className="fill-ink-soft text-[10px]">
               Inicio
             </text>
-            <text x={width - PAD.right} y={HEIGHT - 6} textAnchor="end" className="fill-coyote-ash text-[10px] tabular-nums">
+            <text x={width - PAD.right} y={HEIGHT - 6} textAnchor="end" className="fill-ink-soft text-[10px] tabular-nums">
               {total} puntos
             </text>
 
             {hover !== null && hovered && (
               <g pointerEvents="none">
-                <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={HEIGHT - PAD.bottom} className="stroke-coyote-silver/60" strokeWidth={1} />
+                <line x1={x(hover)} x2={x(hover)} y1={PAD.top} y2={HEIGHT - PAD.bottom} className="stroke-ink/50" strokeWidth={1} />
                 <circle
                   cx={x(hover)}
                   cy={y(diffs[hover - 1] ?? 0)}
                   r={5}
-                  className={`${scorer(hovered) === 'us' ? 'fill-coyote-gold' : 'fill-coyote-ash'} stroke-coyote-night`}
+                  className={`${scorer(hovered) === 'us' ? 'fill-tape' : 'fill-ink-soft'} stroke-line`}
                   strokeWidth={2}
                 />
               </g>
@@ -185,17 +185,17 @@ export function ProgressionChart({ events, usLabel, themLabel }: ProgressionChar
           // Detalle visual del punto: el gráfico es una imagen y el punto a punto de abajo es su versión accesible.
           <div
             aria-hidden
-            className="pointer-events-none absolute top-0 z-10 w-max max-w-[14rem] rounded-lg bg-coyote-black px-2.5 py-1.5 text-xs text-coyote-silver shadow-border-hover"
+            className="pointer-events-none absolute top-0 z-10 w-max max-w-[14rem] rounded-sm bg-ink px-2.5 py-1.5 text-xs text-line"
             style={x(hover) > width / 2 ? { right: width - x(hover) + 8 } : { left: x(hover) + 8 }}
           >
-            <p className="font-display text-xl leading-none tabular-nums">
+            <p className="font-bold text-xl leading-none tabular-nums">
               {hovered.us}–{hovered.them}
             </p>
-            <p className="mt-1 text-coyote-ash">
+            <p className="mt-1 text-ink-soft">
               Punto {hover} · {EVENT_KIND_LABELS[hovered.kind]}
               {hovered.player && ` · ${playerLabel(hovered.player)}`}
             </p>
-            <p className="text-coyote-ash">{hovered.team === 'us' ? usLabel : themLabel}</p>
+            <p className="text-ink-soft">{hovered.team === 'us' ? usLabel : themLabel}</p>
           </div>
         )}
       </div>

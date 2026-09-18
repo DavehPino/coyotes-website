@@ -100,14 +100,14 @@ export function lastSyncLabel(entry: CourtrackSyncLogEntry, leagueId?: string): 
 
 export function Callout({ tone, icon, children }: { tone: 'gold' | 'orange' | 'ash'; icon: ReactNode; children: ReactNode }) {
   const iconTone = {
-    gold: 'bg-coyote-ember text-coyote-gold',
-    orange: 'bg-coyote-orange/15 text-coyote-orange',
-    ash: 'bg-coyote-black text-coyote-ash',
+    gold: 'bg-floor-deep text-ink',
+    orange: 'bg-antenna/12 text-antenna-deep',
+    ash: 'bg-line text-ink-soft',
   }[tone]
   return (
-    <div className="flex items-start gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
-      <span className={`flex size-9 shrink-0 items-center justify-center rounded-lg ${iconTone}`}>{icon}</span>
-      <div className="min-w-0 flex-1 self-center text-sm text-coyote-ash">{children}</div>
+    <div className="flex items-start gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
+      <span className={`flex size-9 shrink-0 items-center justify-center rounded-sm ${iconTone}`}>{icon}</span>
+      <div className="min-w-0 flex-1 self-center text-sm text-ink-soft">{children}</div>
     </div>
   )
 }
@@ -147,8 +147,8 @@ function StatusView({ status, error, leagueId, onLeagueChange, onRetry, onManage
   if (!status) {
     return (
       <div className="flex flex-col gap-3">
-        <Skeleton className="h-11 w-full rounded-lg" />
-        <Skeleton className="h-15 w-full rounded-xl" />
+        <Skeleton className="h-11 w-full rounded-sm" />
+        <Skeleton className="h-15 w-full rounded-md" />
       </div>
     )
   }
@@ -172,11 +172,11 @@ function StatusView({ status, error, leagueId, onLeagueChange, onRetry, onManage
   const chosen = active.find((item) => item.id === leagueId) ?? null
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-pretty text-coyote-ash">
+      <p className="text-sm text-pretty text-ink-soft">
         Trae de CourtTrack los partidos jugados de tus ligas: parciales, rival, fase y cancha. Los ya importados se
         actualizan y los cargados a mano el mismo día contra el mismo rival se vinculan sin duplicarlos. Si CourtTrack
         reinició una liga, la temporada anterior se archiva con su clasificación.{' '}
-        <span className="text-coyote-silver">Vista previa</span> muestra qué haría sin guardar nada ni gastar cupo.
+        <span className="text-ink">Vista previa</span> muestra qué haría sin guardar nada ni gastar cupo.
       </p>
       {active.length > 1 ? (
         <Field label="Qué sincronizar" hint="Todas las ligas juntas consumen un solo cupo.">
@@ -193,7 +193,7 @@ function StatusView({ status, error, leagueId, onLeagueChange, onRetry, onManage
         <LeagueSummary league={active[0]!} />
       )}
       {(chosen ?? (active.length === 1 ? active[0] : null)) && (
-        <p className="text-xs text-coyote-ash tabular-nums">
+        <p className="text-xs text-ink-soft tabular-nums">
           {(() => {
             const league = chosen ?? active[0]!
             return league.last_sync
@@ -214,21 +214,21 @@ function StatusView({ status, error, leagueId, onLeagueChange, onRetry, onManage
 
 function LeagueSummary({ league }: { league: CourtrackSyncLeague }) {
   return (
-    <div className="flex items-center gap-3 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+    <div className="flex items-center gap-3 rounded-md bg-floor-deep/40 p-3 shadow-tape">
       {league.team_logo_url ? (
         <img
           src={league.team_logo_url}
           alt=""
-          className="size-9 shrink-0 rounded-lg bg-white/90 object-contain p-0.5 outline-1 outline-white/10"
+          className="size-9 shrink-0 rounded-sm bg-white/90 object-contain p-0.5 outline-1 outline-white/10"
         />
       ) : (
-        <span className="flex size-9 shrink-0 items-center justify-center rounded-lg bg-coyote-ember text-coyote-gold">
+        <span className="flex size-9 shrink-0 items-center justify-center rounded-sm bg-floor-deep text-ink">
           <TrophyIcon className="size-5" />
         </span>
       )}
       <div className="flex min-w-0 flex-col">
-        <span className="truncate text-sm font-medium text-coyote-silver">{league.season_label}</span>
-        <span className="truncate text-xs text-coyote-ash">
+        <span className="truncate text-sm font-medium text-ink">{league.season_label}</span>
+        <span className="truncate text-xs text-ink-soft">
           {league.competition.name} · {league.cliente_name ?? 'CourtTrack'} · como {league.team_name}
         </span>
       </div>
@@ -246,9 +246,9 @@ function Counters({ summary, dryRun }: { summary: CourtrackSyncSummary; dryRun: 
   return (
     <dl className="grid grid-cols-2 gap-2 sm:grid-cols-4">
       {counters.map((counter) => (
-        <div key={counter.label} className="flex flex-col gap-0.5 rounded-xl bg-coyote-black/60 px-3 py-2.5 shadow-border">
-          <dt className="text-xs text-coyote-ash">{counter.label}</dt>
-          <dd className="text-2xl leading-none text-coyote-gold tabular-nums">{counter.value}</dd>
+        <div key={counter.label} className="flex flex-col gap-0.5 rounded-md bg-floor-deep/40 px-3 py-2.5 shadow-tape">
+          <dt className="text-xs text-ink-soft">{counter.label}</dt>
+          <dd className="text-2xl leading-none text-ink tabular-nums">{counter.value}</dd>
         </div>
       ))}
     </dl>
@@ -272,10 +272,10 @@ function LeagueResultView({
   return (
     <section className="flex flex-col gap-3" aria-label={result.league.season_label}>
       <div className="flex flex-col gap-1">
-        <p className="text-sm font-medium text-balance text-coyote-silver">
+        <p className="text-sm font-medium text-balance text-ink">
           {result.league.season_label} · {result.league.competition.name}
         </p>
-        <p className="text-xs text-coyote-ash tabular-nums">
+        <p className="text-xs text-ink-soft tabular-nums">
           {result.own} de {result.scanned} partidos de la liga son nuestros
           {compact ? ` · ${summaryLabel(result)}` : ''}
         </p>
@@ -290,9 +290,9 @@ function LeagueResultView({
       {!compact && <Counters summary={result} dryRun={dryRun} />}
 
       {result.rivals_created.length > 0 && (
-        <p className="text-sm text-pretty text-coyote-ash">
+        <p className="text-sm text-pretty text-ink-soft">
           {dryRun ? 'Rivales que se crearían: ' : 'Rivales creados: '}
-          <span className="text-coyote-silver">{result.rivals_created.join(', ')}</span>
+          <span className="text-ink">{result.rivals_created.join(', ')}</span>
           {onLinkRival && ' Si alguno ya está cargado con otro nombre, vincúlalo abajo antes de sincronizar.'}
         </p>
       )}
@@ -314,14 +314,14 @@ function OutcomeView({ outcome, onLinkRival }: { outcome: Outcome; onLinkRival: 
     <div className="flex flex-col gap-5">
       {several && (
         <div className="flex flex-col gap-3">
-          <p className="text-xs text-coyote-ash tabular-nums">{outcome.leagues.length} ligas sincronizadas con un solo cupo</p>
+          <p className="text-xs text-ink-soft tabular-nums">{outcome.leagues.length} ligas sincronizadas con un solo cupo</p>
           <Counters summary={outcome.totals} dryRun={outcome.dry_run} />
         </div>
       )}
       {outcome.leagues.map((result) => (
         <LeagueResultView key={result.league.id} result={result} dryRun={outcome.dry_run} onLinkRival={onLinkRival} compact={several} />
       ))}
-      <p className="text-xs text-coyote-ash tabular-nums">{quotaLabel(outcome.quota)}</p>
+      <p className="text-xs text-ink-soft tabular-nums">{quotaLabel(outcome.quota)}</p>
     </div>
   )
 }
@@ -341,13 +341,13 @@ function MatchRow({ match, dryRun, onLinkRival }: MatchRowProps) {
   const showLink = !dryRun && match.slug && match.action !== 'skipped'
   const canLink = onLinkRival !== null && match.opponent?.created === true
   return (
-    <li className="flex flex-col gap-2.5 rounded-xl bg-coyote-black/60 p-3 shadow-border">
+    <li className="flex flex-col gap-2.5 rounded-md bg-floor-deep/40 p-3 shadow-tape">
       <div className="flex items-center gap-3">
         <div className="flex min-w-0 flex-1 flex-col gap-0.5">
-          <span className="truncate text-sm font-medium text-coyote-silver">
-            {match.home} <span className="text-coyote-gold tabular-nums">{score}</span> {match.away}
+          <span className="truncate text-sm font-medium text-ink">
+            {match.home} <span className="text-ink tabular-nums">{score}</span> {match.away}
           </span>
-          <span className="truncate text-xs text-coyote-ash tabular-nums">
+          <span className="truncate text-xs text-ink-soft tabular-nums">
             {formatDateShort(match.played_on)}
             {match.start_time ? ` · ${match.start_time}` : ''}
             {detail ? ` · ${detail}` : ''}
@@ -541,9 +541,9 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
     error: 'No se pudo sincronizar',
   }
 
-  const eyebrow =
+  const meta =
     step === 'safeword' ? (
-      <Chip tone="ash">Acceso restringido</Chip>
+      null
     ) : (
       <Chip tone="gold" className="max-w-full truncate">
         {scopeLabel ? `CourtTrack · ${scopeLabel}` : 'CourtTrack'}
@@ -614,7 +614,7 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
       open={open}
       onClose={handleClose}
       title={titles[step]}
-      eyebrow={eyebrow}
+      meta={meta}
       footer={footer}
       dismissible={!busy}
       scrollResetKey={step}
@@ -668,7 +668,7 @@ export default function SyncCourtrackDialog({ open, initialLeagueId, onClose, on
       {step === 'error' && error && (
         <div className="flex flex-col gap-3">
           <FormError>{error.message}</FormError>
-          {error.quota && <p className="text-xs text-coyote-ash tabular-nums">{quotaLabel(error.quota)}</p>}
+          {error.quota && <p className="text-xs text-ink-soft tabular-nums">{quotaLabel(error.quota)}</p>}
         </div>
       )}
     </Modal>

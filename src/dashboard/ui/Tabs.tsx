@@ -64,11 +64,11 @@ type TabListProps<T extends TabValue> = {
 }
 
 const TAB_BASE = [
-  'flex min-h-11 items-center justify-center rounded-lg text-sm font-medium select-none md:min-h-10',
+  'flex min-h-11 items-center justify-center rounded-sm text-sm font-bold tracking-wide uppercase select-none md:min-h-10',
   'transition-[background-color,color] duration-150 ease-out disabled:opacity-50',
 ].join(' ')
-const TAB_SELECTED = 'bg-coyote-ember text-coyote-gold'
-const TAB_IDLE = 'text-coyote-ash hover:text-coyote-silver'
+const TAB_SELECTED = 'bg-ink text-club'
+const TAB_IDLE = 'text-ink-soft hover:bg-ink/8 hover:text-ink'
 
 export function TabList<T extends TabValue>({ label, items, className = '', tabClassName = 'px-3' }: TabListProps<T>) {
   const { id, value, onChange } = useTabs()
