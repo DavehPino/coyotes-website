@@ -9,6 +9,7 @@ export const EVENT_KIND_LABELS: Record<MatchSetEventKind, string> = {
   unforced_error: 'Error no forzado',
   timeout: 'Tiempo técnico',
   substitution: 'Sustitución',
+  sanction: 'Sanción',
   other: 'Punto',
 }
 
@@ -24,11 +25,11 @@ export const STAT_COLUMNS: { key: StatKey; label: string; short: string }[] = [
 ]
 
 const ERROR_KINDS = new Set<MatchSetEventKind>(['serve_error', 'unforced_error'])
-const NON_POINT_KINDS = new Set<MatchSetEventKind>(['timeout', 'substitution'])
+const NON_POINT_KINDS = new Set<MatchSetEventKind>(['timeout', 'substitution', 'sanction'])
 
 export const other = (side: MatchSide): MatchSide => (side === 'us' ? 'them' : 'us')
 
-/** Tiempos y cambios no mueven el marcador. */
+/** Tiempos, cambios y sanciones no mueven el marcador. */
 export const isPoint = (event: MatchSetEvent) => !NON_POINT_KINDS.has(event.kind)
 
 /** Quién sumó el punto: el protagonista, salvo en los errores. */
