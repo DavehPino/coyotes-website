@@ -9,7 +9,16 @@ import { useMatchStats } from '../api'
 import { matchTitle, opponentLabel } from '../matchLabels'
 import { PlayerStatsTable, type PlayerStatsRow } from './PlayerStatsTable'
 import { ProgressionChart } from './ProgressionChart'
-import { EVENT_KIND_LABELS, isPoint, longestRuns, maxLeads, playerLabel, playerLines, scorer } from './setStats'
+import {
+  EVENT_KIND_LABELS,
+  forcedErrorsByNumber,
+  isPoint,
+  longestRuns,
+  maxLeads,
+  playerLabel,
+  playerLines,
+  scorer,
+} from './setStats'
 import { StartingLineup } from './StartingLineup'
 import { TeamStatBars } from './TeamStatBars'
 
@@ -64,7 +73,7 @@ export default function SetStatsDialog({ open, match, initialSet, onClose }: Set
             ) : tab === 'match' ? (
               <MatchPanel stats={stats!} themLabel={themLabel} />
             ) : currentSet ? (
-              <SetPanel set={currentSet} themLabel={themLabel} />
+              <SetPanel set={currentSet} themLabel={themLabel} playDetail={stats!.play_detail ?? false} />
             ) : (
               <EmptyState title="Sin datos de este set" description="CourtTrack no tiene registrado este set del partido." />
             )}
@@ -131,10 +140,11 @@ function Fact({ label, children }: { label: string; children: ReactNode }) {
   )
 }
 
-function SetPanel({ set, themLabel }: { set: MatchSetStats; themLabel: string }) {
+function SetPanel({ set, themLabel, playDetail }: { set: MatchSetStats; themLabel: string; playDetail: boolean }) {
   const runs = longestRuns(set.events)
   const leads = maxLeads(set.events)
-  const rows: PlayerStatsRow[] = playerLines(set.events, 'us')
+  // `roster` falta en las respuestas que el navegador cacheó antes del cambio.
+  const rows: PlayerStatsRow[] = playerLines(set.events, 'us', set.roster ?? [])
 
   return (
     <>
@@ -188,7 +198,11 @@ function SetPanel({ set, themLabel }: { set: MatchSetStats; themLabel: string })
       </Section>
 
       <Section title={`Jugadores de ${TEAM_NAME}`}>
-        <PlayerStatsTable rows={rows} emptyMessage="Sin acciones registradas de nuestros jugadores en este set." />
+        <PlayerStatsTable
+          rows={rows}
+          forcedColumn={playDetail}
+          emptyMessage="Sin acciones registradas de nuestros jugadores en este set."
+        />
       </Section>
 
       <Section title="Formación inicial">
@@ -239,6 +253,7 @@ function PointByPoint({ events, themLabel }: { events: MatchSetEvent[]; themLabe
 }
 
 function MatchPanel({ stats, themLabel }: { stats: MatchStats; themLabel: string }) {
+  const forced = forcedErrorsByNumber(stats.sets.flatMap((set) => set.events))
   const rows: PlayerStatsRow[] = stats.players.map((player) => ({
     key: String(player.id),
     number: player.number,
@@ -252,6 +267,7 @@ function MatchPanel({ stats, themLabel }: { stats: MatchStats; themLabel: string
     blocks: player.blocks,
     serve_errors: player.serve_errors,
     unforced_errors: player.unforced_errors,
+    forced_errors: player.number === null ? 0 : (forced.get(player.number) ?? 0),
     rallies: player.rallies,
     rating: player.rating,
   }))
@@ -279,7 +295,12 @@ function MatchPanel({ stats, themLabel }: { stats: MatchStats; themLabel: string
       </Section>
 
       <Section title={`Jugadores de ${TEAM_NAME}`}>
-        <PlayerStatsTable rows={rows} matchColumns emptyMessage="CourtTrack no registró estadísticas de nuestros jugadores." />
+        <PlayerStatsTable
+          rows={rows}
+          matchColumns
+          forcedColumn={stats.play_detail ?? false}
+          emptyMessage="CourtTrack no registró estadísticas de nuestros jugadores."
+        />
       </Section>
     </>
   )

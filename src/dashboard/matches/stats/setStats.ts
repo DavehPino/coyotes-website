@@ -1,5 +1,5 @@
 // Cálculos sobre la progresión de un set (MatchStats de CourtTrack): puntos, rachas y líneas por jugador.
-import type { MatchSetEvent, MatchSetEventKind, MatchSide, MatchStatLine } from '@shared/schemas'
+import type { MatchSetEvent, MatchSetEventKind, MatchSetRosterPlayer, MatchSide, MatchStatLine } from '@shared/schemas'
 
 export const EVENT_KIND_LABELS: Record<MatchSetEventKind, string> = {
   attack: 'Ataque',
@@ -49,6 +49,9 @@ export type PlayerLine = {
   blocks: number
   serve_errors: number
   unforced_errors: number
+  /** Veces que un ataque o un saque rival le forzó el error (solo si el partido trae el detalle de las jugadas). */
+  forced_errors: number
+  libero: boolean
   points: number
   errors: number
 }
@@ -61,31 +64,59 @@ const KIND_TO_STAT: Partial<Record<MatchSetEventKind, StatKey>> = {
   unforced_error: 'unforced_errors',
 }
 
-/** Acciones de cada jugador de `team` en el set, a partir de la progresión. Ordenadas por puntos y menos errores. */
-export function playerLines(events: MatchSetEvent[], team: MatchSide): PlayerLine[] {
+/**
+ * Acciones de cada jugador de `team` en el set, a partir de la progresión, más los errores que le forzó el rival.
+ * `roster` (quienes estuvieron en cancha) añade con ceros a los que no hicieron nada y da nombre y líbero.
+ * Ordenadas por puntos y menos errores.
+ */
+export function playerLines(events: MatchSetEvent[], team: MatchSide, roster: MatchSetRosterPlayer[] = []): PlayerLine[] {
   const lines = new Map<string, PlayerLine>()
+  const lineFor = (player: { number: number | null; name: string }, libero = false): PlayerLine => {
+    const key = player.number === null ? `-${player.name}` : String(player.number)
+    let line = lines.get(key)
+    if (!line) {
+      line = {
+        key,
+        number: player.number,
+        name: player.name,
+        attacks: 0,
+        aces: 0,
+        blocks: 0,
+        serve_errors: 0,
+        unforced_errors: 0,
+        forced_errors: 0,
+        libero,
+        points: 0,
+        errors: 0,
+      }
+      lines.set(key, line)
+    }
+    return line
+  }
+  for (const player of roster) lineFor(player, player.libero)
   for (const event of events) {
     const stat = KIND_TO_STAT[event.kind]
-    if (event.team !== team || !stat || !event.player) continue
-    const key = `${event.player.number ?? ''}-${event.player.name}`
-    const line = lines.get(key) ?? {
-      key,
-      number: event.player.number,
-      name: event.player.name,
-      attacks: 0,
-      aces: 0,
-      blocks: 0,
-      serve_errors: 0,
-      unforced_errors: 0,
-      points: 0,
-      errors: 0,
+    if (event.team === team && stat && event.player) {
+      const line = lineFor(event.player)
+      line[stat] += 1
+      if (ERROR_KINDS.has(event.kind)) line.errors += 1
+      else line.points += 1
+    } else if (event.team !== team && event.opponent?.relation === 'forced_error') {
+      lineFor(event.opponent).forced_errors += 1
     }
-    line[stat] += 1
-    if (ERROR_KINDS.has(event.kind)) line.errors += 1
-    else line.points += 1
-    lines.set(key, line)
   }
   return [...lines.values()].sort(comparePlayerLines)
+}
+
+/** Errores que el rival le forzó a cada jugador propio (por dorsal), en los eventos dados. */
+export function forcedErrorsByNumber(events: MatchSetEvent[]): Map<number, number> {
+  const counts = new Map<number, number>()
+  for (const event of events) {
+    const number = event.opponent?.number
+    if (event.team !== 'them' || event.opponent?.relation !== 'forced_error' || number === null || number === undefined) continue
+    counts.set(number, (counts.get(number) ?? 0) + 1)
+  }
+  return counts
 }
 
 export function comparePlayerLines(a: { points: number; errors: number; number: number | null }, b: typeof a): number {

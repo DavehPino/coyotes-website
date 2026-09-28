@@ -14,6 +14,7 @@ export type PlayerStatsRow = {
   blocks: number
   serve_errors: number
   unforced_errors: number
+  forced_errors?: number
   /** Solo en los totales del partido. */
   rallies?: number
   rating?: number | null
@@ -23,11 +24,13 @@ type PlayerStatsTableProps = {
   rows: PlayerStatsRow[]
   /** Añade "En cancha" (puntos disputados) y el puntaje de CourtTrack. */
   matchColumns?: boolean
+  /** Añade "E. F" (errores forzados por el rival): solo si el partido trae el detalle de las jugadas. */
+  forcedColumn?: boolean
   emptyMessage: string
 }
 
 /** Acciones por jugador: puntos primero, errores después. En móvil la tabla se desplaza en horizontal. */
-export function PlayerStatsTable({ rows, matchColumns = false, emptyMessage }: PlayerStatsTableProps) {
+export function PlayerStatsTable({ rows, matchColumns = false, forcedColumn = false, emptyMessage }: PlayerStatsTableProps) {
   if (rows.length === 0) return <p className="text-sm text-ink-soft">{emptyMessage}</p>
   const sorted = [...rows].sort(comparePlayerLines)
 
@@ -51,6 +54,13 @@ export function PlayerStatsTable({ rows, matchColumns = false, emptyMessage }: P
                 </abbr>
               </th>
             ))}
+            {forcedColumn && (
+              <th scope="col" className="pb-2 pl-2 text-right font-medium">
+                <abbr title="Errores forzados: el ataque o el saque rival le forzó el error (punto del rival)" className="no-underline">
+                  E. F
+                </abbr>
+              </th>
+            )}
             {matchColumns && (
               <>
                 <th scope="col" className="pb-2 pl-2 text-right font-medium">
@@ -95,6 +105,11 @@ export function PlayerStatsTable({ rows, matchColumns = false, emptyMessage }: P
                   {row[key]}
                 </td>
               ))}
+              {forcedColumn && (
+                <td className={`border-t border-ink/15 py-2 pl-2 text-right ${row.forced_errors ? 'text-ink' : 'text-ink-soft'}`}>
+                  {row.forced_errors ?? 0}
+                </td>
+              )}
               {matchColumns && (
                 <>
                   <td className="border-t border-ink/15 py-2 pl-2 text-right text-ink-soft">{row.rallies ?? '–'}</td>
